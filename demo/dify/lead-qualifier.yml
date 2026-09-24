@@ -1,0 +1,240 @@
+app:
+  description: 'BizGPT demo: paste a sales enquiry, get extracted details, a lead score and a ready-to-send reply.'
+  icon: "\U0001F3AF"
+  icon_background: '#E0F2FE'
+  mode: workflow
+  name: Lead Qualifier
+  use_icon_as_answer_icon: false
+kind: app
+version: 0.1.5
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        sourceType: start
+        targetType: llm
+      id: start-extract
+      source: 'start'
+      sourceHandle: source
+      target: 'extract'
+      targetHandle: target
+      type: custom
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: code
+      id: extract-score
+      source: 'extract'
+      sourceHandle: source
+      target: 'score'
+      targetHandle: target
+      type: custom
+    - data:
+        isInIteration: false
+        sourceType: code
+        targetType: llm
+      id: score-reply
+      source: 'score'
+      sourceHandle: source
+      target: 'reply'
+      targetHandle: target
+      type: custom
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: end
+      id: reply-end
+      source: 'reply'
+      sourceHandle: source
+      target: 'end'
+      targetHandle: target
+      type: custom
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: Start
+        type: start
+        variables:
+        - label: Sales enquiry
+          max_length: 4000
+          options: []
+          required: true
+          type: paragraph
+          variable: query
+      height: 90
+      id: 'start'
+      position:
+        x: 80
+        y: 280
+      positionAbsolute:
+        x: 80
+        y: 280
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        model:
+          # After import, open this node and pick any model you have configured.
+          completion_params:
+            temperature: 0.1
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: extract-system
+          role: system
+          text: 'Extract details from a B2B sales enquiry. Reply with ONLY a JSON object, no code fences:
+            {"company": string, "contact_name": string, "team_size": number or null, "budget": string or null,
+            "timeline": string or null, "need": string, "urgency": "high"|"medium"|"low"}'
+        - id: extract-user
+          role: user
+          text: '{{#start.query#}}'
+        selected: false
+        title: Extract lead details
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 98
+      id: 'extract'
+      position:
+        x: 380
+        y: 280
+      positionAbsolute:
+        x: 380
+        y: 280
+      type: custom
+      width: 244
+    - data:
+        code: "import json\n\n\ndef main(extracted: str) -> dict:\n    text = extracted.strip().removeprefix('```json').removeprefix('```').removesuffix('```')\n\
+          \    try:\n        lead = json.loads(text)\n    except Exception:\n        lead = {}\n    score = 20\n\
+          \    size = lead.get('team_size') or 0\n    score += 25 if size >= 50 else 15 if size >= 10 else 5\n\
+          \    score += 25 if lead.get('budget') else 0\n    score += {'high': 30, 'medium': 15}.get(lead.get('urgency'), 0)\n\
+          \    tier = 'Hot' if score >= 70 else 'Warm' if score >= 45 else 'Cold'\n    return {\n        'score':\
+          \ score,\n        'tier': tier,\n        'lead_json': json.dumps(lead, indent=2),\n    }\n"
+        code_language: python3
+        desc: ''
+        outputs:
+          lead_json:
+            children: null
+            type: string
+          score:
+            children: null
+            type: number
+          tier:
+            children: null
+            type: string
+        selected: false
+        title: Score lead
+        type: code
+        variables:
+        - value_selector:
+          - 'extract'
+          - text
+          variable: extracted
+      height: 54
+      id: 'score'
+      position:
+        x: 680
+        y: 280
+      positionAbsolute:
+        x: 680
+        y: 280
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        model:
+          completion_params:
+            temperature: 0.5
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: reply-system
+          role: system
+          text: 'You are a sales assistant. Write a markdown report with exactly these sections:
+
+            ## Lead assessment: <company>
+
+            A table with rows: Score (x / 100), Tier (use 🔥 for Hot, 🌤 for Warm, ❄️ for Cold), Team size, Budget, Timeline, Need.
+
+            ### Recommended next step
+            One sentence.
+
+            ### Suggested reply
+            A short, friendly email reply to the contact, tuned to the tier (Hot: propose a demo this week; Warm: share a case study; Cold: send resources).'
+        - id: reply-user
+          role: user
+          text: 'Lead details:
+
+            {{#score.lead_json#}}
+
+            Score: {{#score.score#}} / 100
+
+            Tier: {{#score.tier#}}'
+        selected: false
+        title: Draft reply
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 98
+      id: 'reply'
+      position:
+        x: 980
+        y: 280
+      positionAbsolute:
+        x: 980
+        y: 280
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - 'reply'
+          - text
+          variable: report
+        selected: false
+        title: End
+        type: end
+      height: 90
+      id: 'end'
+      position:
+        x: 1280
+        y: 280
+      positionAbsolute:
+        x: 1280
+        y: 280
+      type: custom
+      width: 244
+    viewport:
+      x: 0
+      y: 0
+      zoom: 0.8
