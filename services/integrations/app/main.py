@@ -1,5 +1,5 @@
 """
-BizGPT Integrations service.
+Biz GPT Integrations service.
 
 Stable contracts over Nango so Open WebUI and future MCP/gateway layers can ask:
 - get_integration_status
@@ -40,7 +40,7 @@ SUPPORTED_INTEGRATIONS = {
 }
 EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 
-app = FastAPI(title='BizGPT Integrations', version='1.0.0')
+app = FastAPI(title='Biz GPT Integrations', version='1.0.0')
 
 
 class ConnectRequest(BaseModel):
@@ -298,9 +298,9 @@ def connect_page_html(integration: str, connect_url: str) -> str:
     <div class="shell">
       <div class="card">
         <div class="header">
-          <div class="eyebrow">BizGPT Integration</div>
+          <div class="eyebrow">Biz GPT Integration</div>
           <h1>{safe_title}</h1>
-          <p>Finish authorization in this panel, then return to chat. The connection window stays inside BizGPT so you do not need to open a raw URL.</p>
+          <p>Finish authorization in this panel, then return to chat. The connection window stays inside Biz GPT so you do not need to open a raw URL.</p>
         </div>
         <div class="frame-wrap">
           <iframe src="{safe_connect_url}" title="{safe_title}" allow="clipboard-read; clipboard-write"></iframe>
@@ -329,7 +329,7 @@ def nango_headers() -> dict[str, str]:
     if not NANGO_SECRET_KEY:
         raise HTTPException(
             503,
-            'NANGO_SECRET_KEY is not configured. Set it in bizgpt/.env so BizGPT can create connect sessions.',
+            'NANGO_SECRET_KEY is not configured. Set it in bizgpt/.env so Biz GPT can create connect sessions.',
         )
     return {'Authorization': f'Bearer {NANGO_SECRET_KEY}'}
 
@@ -738,7 +738,7 @@ async def fetch_status(integration: str, *, user_id: str, user_email: str = '') 
             'status': 'not_configured',
             'connected': False,
             'action': 'connect_integration',
-            'message': 'Nango API key is not configured yet. BizGPT wiring is ready, but OAuth setup is still pending.',
+            'message': 'Nango API key is not configured yet. Biz GPT wiring is ready, but OAuth setup is still pending.',
             'connect_url': connect_hint(integration),
         }
 
@@ -918,7 +918,7 @@ async def get_integration_setup(integration: str = 'gmail'):
         raise HTTPException(400, 'Only Gmail setup guidance is available right now.')
     return {
         'integration': name,
-        'message': 'These are the required Gmail setup details BizGPT expects in env-backed configuration.',
+        'message': 'These are the required Gmail setup details Biz GPT expects in env-backed configuration.',
         'items': gmail_setup_checklist(),
     }
 

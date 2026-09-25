@@ -524,7 +524,7 @@ export default function App() {
         <div className="brand-card">
           <div className="brand-mark">DB</div>
           <div>
-            <div className="brand-title">DBiz GPT</div>
+            <div className="brand-title">Biz GPT</div>
             <div className="muted">Workflow Studio</div>
           </div>
         </div>
@@ -587,15 +587,15 @@ export default function App() {
           <>
             <header className="page-header">
               <div>
-                <div className="eyebrow">BizGPT</div>
+                <div className="eyebrow">Biz GPT</div>
                 <h1>General Dashboard</h1>
-                <p className="subtitle">Live health, workflow coverage, and recent execution history across the BizGPT services.</p>
+                <p className="subtitle">Live health, workflow coverage, and recent execution history across the Biz GPT services.</p>
               </div>
             </header>
 
             <section className="stats-grid">
               <StatCard title="Configured Workflows" value={`${overview?.configured_workflow_count ?? 0}/${overview?.workflow_count ?? 0}`} hint="Registry-backed Dify workflows" icon={Workflow} tone="accent" />
-              <StatCard title="Recent Workflow Runs" value={recentRuns.length} hint="Stored in the BizGPT API run store" icon={PlayCircle} />
+              <StatCard title="Recent Workflow Runs" value={recentRuns.length} hint="Stored in the Biz GPT API run store" icon={PlayCircle} />
               <StatCard title="Recent Forms" value={recentForms.length} hint="Pulled from the forms service" icon={Database} />
               <StatCard title="Integrations" value={integrations.status === 'ok' ? 'Healthy' : 'Check'} hint="Live integrations service status" icon={Mail} tone={integrations.status === 'ok' ? 'success' : 'warn'} />
             </section>
@@ -685,7 +685,7 @@ export default function App() {
                 <div className="card studio-main-card">
                   <div className="section-header">
                     <h3>Builder</h3>
-                    <span className="muted">Read-only graph backed by BizGPT studio metadata</span>
+                    <span className="muted">Read-only graph backed by Biz GPT studio metadata</span>
                   </div>
                   {studio ? (
                     <WorkflowCanvas graph={studio.graph} selectedNodeId={selectedNodeId} onSelectNode={setSelectedNodeId} />
@@ -774,7 +774,7 @@ export default function App() {
                     <h3>{activeStudioTab === 'analytics' ? 'Analytics' : 'Settings'}</h3>
                   </div>
                   <div className="muted">
-                    This tab is ready for the next slice. The live studio, runs, and logs are now wired to the existing BizGPT workflow API.
+                    This tab is ready for the next slice. The live studio, runs, and logs are now wired to the existing Biz GPT workflow API.
                   </div>
                 </div>
               </section>
@@ -784,7 +784,7 @@ export default function App() {
               <div className="section-header">
                 <div>
                   <h3>Test Run</h3>
-                  <div className="muted">Execute the selected workflow with live status updates from the BizGPT API.</div>
+                  <div className="muted">Execute the selected workflow with live status updates from the Biz GPT API.</div>
                 </div>
                 <button className="primary-button" onClick={() => void handleRunWorkflow()} disabled={running || !workflowMeta.configured}>
                   <PlayCircle size={16} />

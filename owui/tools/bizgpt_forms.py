@@ -1,8 +1,7 @@
 """
-title: BizGPT Dynamic Forms
-author: BizGPT
-version: 1.0.0
-description: Shows prefilled, validated business forms (cab booking, leave, IT tickets…) inside the chat. Forms are served by the BizGPT forms service.
+title: Biz GPT Dynamic Forms
+author: Biz GPT
+description: Shows prefilled, validated business forms (cab booking, leave, IT tickets…) inside the chat. Forms are served by the Biz GPT forms service.
 """
 
 import json
@@ -32,7 +31,7 @@ class Tools:
 
     async def list_form_types(self) -> str:
         """
-        List the business forms BizGPT can open, with their fields. Call this first whenever the user
+        List the business forms Biz GPT can open, with their fields. Call this first whenever the user
         wants to request, book, apply for, report or submit something, to pick the right form and
         extract field values from the user's message.
         """

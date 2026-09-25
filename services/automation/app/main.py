@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 
 DB_PATH = Path(os.getenv('AUTOMATION_DB_PATH', '/data/executions.jsonl'))
 
-app = FastAPI(title='BizGPT Automation', version='1.0.0')
+app = FastAPI(title='Biz GPT Automation', version='1.0.0')
 
 
 def now_iso() -> str:

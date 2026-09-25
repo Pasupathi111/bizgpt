@@ -46,7 +46,7 @@ TERMINAL_RUN_STATES = {'succeeded', 'failed', 'stopped', 'cancelled', 'completed
 registry = WorkflowRegistry(WORKFLOWS_CONFIG_PATH)
 store = Store(API_DB_PATH)
 
-app = FastAPI(title='BizGPT API', version='1.0.0')
+app = FastAPI(title='Biz GPT API', version='1.0.0')
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
@@ -67,7 +67,7 @@ class RunWorkflowRequest(BaseModel):
 
 
 class StopWorkflowRunRequest(BaseModel):
-    reason: str = 'Stopped from BizGPT dashboard'
+    reason: str = 'Stopped from Biz GPT dashboard'
 
 
 async def json_request(

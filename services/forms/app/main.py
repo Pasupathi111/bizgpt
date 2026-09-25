@@ -1,8 +1,8 @@
 """
-BizGPT Dynamic Forms service.
+Biz GPT Dynamic Forms service.
 
 Internal API (bearer FORMS_API_KEY) is used by the Open WebUI tool and the
-BizGPT gateway. Public API is used by the form page the user sees; the
+Biz GPT gateway. Public API is used by the form page the user sees; the
 unguessable form id is the capability for that one form.
 """
 
@@ -35,7 +35,7 @@ CORS_ORIGINS = [origin.strip() for origin in os.getenv('FORMS_CORS_ORIGINS', 'ht
 registry = Registry(os.getenv('FORMS_CONFIG_DIR') or str(Path(__file__).resolve().parents[3] / 'config' / 'forms'))
 store = Store(os.getenv('FORMS_DB_PATH', '/data/forms.db'))
 
-app = FastAPI(title='BizGPT Forms', version='1.0.0')
+app = FastAPI(title='Biz GPT Forms', version='1.0.0')
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,

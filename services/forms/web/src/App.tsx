@@ -250,7 +250,7 @@ export default function App() {
           )}
 
           {form.status === 'expired' ? (
-            <p className="text-sm text-muted-foreground">This form has expired. Ask BizGPT to open a new one.</p>
+            <p className="text-sm text-muted-foreground">This form has expired. Ask Biz GPT to open a new one.</p>
           ) : form.mode === 'view' ? (
             <div className="space-y-4">
               <div className="rounded-lg border bg-muted/20 p-4 text-sm text-muted-foreground">
@@ -410,7 +410,7 @@ export default function App() {
                 </div>
               )}
 
-              <p className="text-xs text-muted-foreground">Ask BizGPT to open a new form if you need to make another request.</p>
+              <p className="text-xs text-muted-foreground">Ask Biz GPT to open a new form if you need to make another request.</p>
             </div>
           ) : stage === 'edit' ? (
             <>

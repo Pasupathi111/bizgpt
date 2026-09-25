@@ -1,8 +1,7 @@
 """
-title: BizGPT Integrations
-author: BizGPT
-version: 1.1.0
-description: Checks integration status, opens embedded OAuth flows, and performs Gmail mailbox actions through BizGPT-managed integrations.
+title: Biz GPT Integrations
+author: Biz GPT
+description: Checks integration status, opens embedded OAuth flows, and performs Gmail mailbox actions through Biz GPT-managed integrations.
 """
 
 import json
@@ -170,7 +169,7 @@ class Tools:
         __event_emitter__=None,
     ) -> str:
         """
-        Summarize the current inbox using BizGPT-native Inbox Zero heuristics.
+        Summarize the current inbox using Biz GPT-native Inbox Zero heuristics.
         Use this for requests like "summarize my inbox" or "what needs a reply?"
         :param query: Optional Gmail-style search text.
         :param limit: Maximum number of inbox messages to analyze, up to 25.
