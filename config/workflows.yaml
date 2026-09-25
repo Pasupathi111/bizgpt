@@ -1,0 +1,204 @@
+version: 1
+workflows:
+  - id: leave_request
+    name: Leave Request
+    description: Submit annual, sick, or other leave for review.
+    tags: [hr, approval]
+    provider: dify
+    dify:
+      base_url_env: DIFY_BASE_URL
+      api_key_env: DIFY_WORKFLOW_LEAVE_REQUEST_KEY
+      app_mode: workflow
+      response_mode: blocking
+    input:
+      source: dify_parameters
+      schema:
+        type: object
+        required: [leave_type, start_date, end_date, reason]
+        properties:
+          leave_type:
+            type: string
+            title: Leave type
+            enum: [Annual, Sick, Casual, Parental, Unpaid]
+            default: Annual
+          start_date:
+            type: string
+            format: date
+            title: From
+          end_date:
+            type: string
+            format: date
+            title: To
+          half_day:
+            type: boolean
+            title: Half day
+            default: false
+          reason:
+            type: string
+            title: Reason
+          handover_to:
+            type: string
+            title: Work handed over to
+      ui_schema:
+        "ui:order": [leave_type, start_date, end_date, half_day, reason, handover_to]
+        reason:
+          "ui:widget": textarea
+          "ui:options":
+            rows: 2
+    execution:
+      requires_confirmation: true
+      expose_as_form: true
+      expose_as_tool: true
+    access:
+      allowed_groups: [employees, managers]
+
+  - id: it_support_ticket
+    name: IT Support Ticket
+    description: Create and triage an internal IT support request.
+    tags: [it, support]
+    provider: dify
+    dify:
+      base_url_env: DIFY_BASE_URL
+      api_key_env: DIFY_WORKFLOW_IT_SUPPORT_KEY
+      app_mode: workflow
+      response_mode: blocking
+    input:
+      source: dify_parameters
+      schema:
+        type: object
+        required: [category, priority, summary]
+        properties:
+          category:
+            type: string
+            title: Category
+            enum: [Laptop / hardware, Account / access, Email, Software, Network / VPN, Other]
+          priority:
+            type: string
+            title: Priority
+            enum: [Low, Medium, High, Critical]
+            default: Medium
+          summary:
+            type: string
+            title: Summary
+          details:
+            type: string
+            title: Details
+          contact_phone:
+            type: string
+            title: Contact phone
+      ui_schema:
+        "ui:order": [category, priority, summary, details, contact_phone]
+        details:
+          "ui:widget": textarea
+          "ui:options":
+            rows: 3
+    execution:
+      requires_confirmation: true
+      expose_as_form: true
+      expose_as_tool: true
+    access:
+      allowed_groups: [employees]
+
+  - id: lead_qualifier
+    name: Lead Qualifier
+    description: Score and summarize a sales lead with suggested reply content.
+    tags: [sales, qualification]
+    provider: dify
+    dify:
+      base_url_env: DIFY_BASE_URL
+      api_key_env: DIFY_WORKFLOW_LEAD_QUALIFIER_KEY
+      app_mode: workflow
+      response_mode: blocking
+    input:
+      source: dify_parameters
+      schema:
+        type: object
+        required: [company_name]
+        properties:
+          company_name:
+            type: string
+            title: Company name
+          employee_count:
+            type: integer
+            title: Employee count
+          budget_status:
+            type: string
+            title: Budget status
+            enum: [Unknown, Exploring, Approved]
+            default: Unknown
+          timeline:
+            type: string
+            title: Timeline
+          notes:
+            type: string
+            title: Notes
+      ui_schema:
+        "ui:order": [company_name, employee_count, budget_status, timeline, notes]
+        notes:
+          "ui:widget": textarea
+          "ui:options":
+            rows: 3
+    execution:
+      requires_confirmation: false
+      expose_as_form: true
+      expose_as_tool: true
+    access:
+      allowed_groups: [sales, managers]
+
+  - id: company_lead_generation
+    name: Company Lead Generation
+    description: Generate target leads, outreach sequence, and next actions for a company segment.
+    tags: [sales, outbound, enrichment]
+    provider: dify
+    dify:
+      base_url_env: DIFY_BASE_URL
+      api_key_env: DIFY_WORKFLOW_COMPANY_LEAD_GENERATION_KEY
+      app_mode: workflow
+      response_mode: blocking
+    input:
+      source: dify_parameters
+      schema:
+        type: object
+        required: [company_name, target_roles]
+        properties:
+          company_name:
+            type: string
+            title: Company name
+          website:
+            type: string
+            title: Website
+          industry:
+            type: string
+            title: Industry
+          target_region:
+            type: string
+            title: Target region
+          target_roles:
+            type: string
+            title: Target roles
+          lead_count:
+            type: integer
+            title: Lead count
+            default: 5
+          icp_notes:
+            type: string
+            title: ICP notes
+          campaign_goal:
+            type: string
+            title: Campaign goal
+      ui_schema:
+        "ui:order": [company_name, website, industry, target_region, target_roles, lead_count, icp_notes, campaign_goal]
+        icp_notes:
+          "ui:widget": textarea
+          "ui:options":
+            rows: 3
+        campaign_goal:
+          "ui:widget": textarea
+          "ui:options":
+            rows: 2
+    execution:
+      requires_confirmation: false
+      expose_as_form: true
+      expose_as_tool: true
+    access:
+      allowed_groups: [sales, marketing, managers]

@@ -1,20 +1,162 @@
 # BizGPT stack. Open WebUI runs from the official image; our code lives in ./owui
-# and is pushed in with scripts/sync.py. Upgrading = change OWUI_VERSION in .env.
+# and is pushed in with scripts/sync.py. Upgrading = change OPEN_WEBUI_VERSION in .env.
 services:
   open-webui:
-    image: ghcr.io/open-webui/open-webui:${OWUI_VERSION:-v0.11.4}
+    image: ghcr.io/open-webui/open-webui:${OPEN_WEBUI_VERSION:?set OPEN_WEBUI_VERSION in .env}
     container_name: bizgpt-webui
     restart: unless-stopped
     ports:
-      - "${OWUI_PORT:-3000}:8080"
+      - "${OPEN_WEBUI_PORT:-3000}:8080"
     env_file: .env
     environment:
-      # Lets the container reach a Dify running on the Docker host (local testing).
       - ENABLE_API_KEYS=true
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - bizgpt-webui-data:/app/backend/data
+    depends_on:
+      - bizgpt-forms
+      - bizgpt-integrations
+      - nango-server
+
+  nango-db:
+    image: postgres:16.0-alpine
+    container_name: nango-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${NANGO_DB_USER:-nango}
+      - POSTGRES_PASSWORD=${NANGO_DB_PASSWORD:-nango}
+      - POSTGRES_DB=${NANGO_DB_NAME:-nango}
+    volumes:
+      - nango-db-data:/var/lib/postgresql/data
+
+  nango-redis:
+    image: redis:7.2.4
+    container_name: nango-redis
+    restart: unless-stopped
+
+  nango-server:
+    image: nangohq/nango-server:${NANGO_VERSION:-hosted-0.71.10}
+    container_name: nango-server
+    restart: unless-stopped
+    platform: linux/amd64
+    ports:
+      - "${NANGO_SERVER_PORT:-3003}:3003"
+      - "${NANGO_CONNECT_UI_PORT:-3009}:3009"
+    environment:
+      - NANGO_ENCRYPTION_KEY=${NANGO_ENCRYPTION_KEY:?set NANGO_ENCRYPTION_KEY in .env}
+      - NANGO_ADMIN_KEY=${NANGO_ADMIN_KEY:?set NANGO_ADMIN_KEY in .env}
+      - NANGO_DB_USER=${NANGO_DB_USER:-nango}
+      - NANGO_DB_PASSWORD=${NANGO_DB_PASSWORD:-nango}
+      - NANGO_DB_HOST=nango-db
+      - NANGO_DB_NAME=${NANGO_DB_NAME:-nango}
+      - RECORDS_DATABASE_URL=postgresql://${NANGO_DB_USER:-nango}:${NANGO_DB_PASSWORD:-nango}@nango-db:5432/${NANGO_DB_NAME:-nango}
+      - SERVER_PORT=3003
+      - NANGO_SERVER_URL=${NANGO_SERVER_URL:-http://localhost:3003}
+      - NANGO_PUBLIC_SERVER_URL=${NANGO_PUBLIC_SERVER_URL:-http://localhost:3003}
+      - NANGO_PUBLIC_CONNECT_URL=${NANGO_PUBLIC_CONNECT_URL:-http://localhost:3009}
+      - NANGO_SECRET_KEY_DEV=${NANGO_SECRET_KEY:?set NANGO_SECRET_KEY in .env}
+      - FLAG_SERVE_CONNECT_UI=true
+      - FLAG_AUTH_ENABLED=true
+      - NANGO_DASHBOARD_USERNAME=${NANGO_DASHBOARD_USERNAME:-admin}
+      - NANGO_DASHBOARD_PASSWORD=${NANGO_DASHBOARD_PASSWORD:?set NANGO_DASHBOARD_PASSWORD in .env}
+      - LOG_LEVEL=info
+    volumes:
+      - ../reference/nango/packages/providers/providers.yaml:/app/nango/packages/providers/providers.yaml:ro
+    depends_on:
+      - nango-db
+      - nango-redis
+
+  bizgpt-forms:
+    build: ./services/forms
+    image: bizgpt-forms:local
+    container_name: bizgpt-forms
+    restart: unless-stopped
+    ports:
+      - "${FORMS_PORT:-8090}:8000"
+    environment:
+      - FORMS_API_KEY=${FORMS_API_KEY:?set FORMS_API_KEY in .env}
+      - FORMS_PUBLIC_URL=${FORMS_PUBLIC_URL:-http://localhost:8090}
+      - FORMS_FRAME_ANCESTORS=${FORMS_FRAME_ANCESTORS:-http://localhost:3000}
+      - DIFY_BASE_URL=${DIFY_BASE_URL:-}
+      - DIFY_APPS=${DIFY_APPS:-[]}
+      - DIFY_WORKFLOW_LEAD_QUALIFIER_KEY=${DIFY_WORKFLOW_LEAD_QUALIFIER_KEY:-}
+      - DIFY_WORKFLOW_COMPANY_LEAD_GENERATION_KEY=${DIFY_WORKFLOW_COMPANY_LEAD_GENERATION_KEY:-}
+      - DIFY_WORKFLOW_LEAVE_REQUEST_KEY=${DIFY_WORKFLOW_LEAVE_REQUEST_KEY:-}
+      - DIFY_WORKFLOW_IT_SUPPORT_KEY=${DIFY_WORKFLOW_IT_SUPPORT_KEY:-}
+      - DIFY_WORKFLOW_PURCHASE_REQUEST_KEY=${DIFY_WORKFLOW_PURCHASE_REQUEST_KEY:-}
+    volumes:
+      - ./config/forms:/config/forms:ro
+      - bizgpt-forms-data:/data
+    depends_on:
+      - bizgpt-automation
+
+  bizgpt-integrations:
+    build: ./services/integrations
+    image: bizgpt-integrations:local
+    container_name: bizgpt-integrations
+    restart: unless-stopped
+    ports:
+      - "8092:8002"
+    environment:
+      - INTEGRATIONS_API_KEY=${INTEGRATIONS_API_KEY:?set INTEGRATIONS_API_KEY in .env}
+      - INTEGRATIONS_PUBLIC_URL=${INTEGRATIONS_PUBLIC_URL:-http://localhost:8092}
+      - NANGO_SERVER_URL=http://nango-server:3003
+      - NANGO_PUBLIC_SERVER_URL=${NANGO_PUBLIC_SERVER_URL:-http://localhost:3003}
+      - NANGO_PUBLIC_CONNECT_URL=${NANGO_PUBLIC_CONNECT_URL:-http://localhost:3009}
+      - NANGO_SECRET_KEY=${NANGO_SECRET_KEY:-}
+      - NANGO_ENV=${NANGO_ENV:-dev}
+      - NANGO_GMAIL_CONFIG_KEY=${NANGO_GMAIL_CONFIG_KEY:-gmail}
+      - NANGO_OUTLOOK_CONFIG_KEY=${NANGO_OUTLOOK_CONFIG_KEY:-outlook}
+      - GOOGLE_CLOUD_PROJECT_ID=${GOOGLE_CLOUD_PROJECT_ID:-}
+      - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID:-}
+      - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET:-}
+    depends_on:
+      - nango-server
+
+  bizgpt-api:
+    build: ./services/api
+    image: bizgpt-api:local
+    container_name: bizgpt-api
+    restart: unless-stopped
+    ports:
+      - "${BIZGPT_API_PORT:-8093}:8003"
+    environment:
+      - WORKFLOWS_CONFIG_PATH=/config/workflows.yaml
+      - WORKFLOW_STUDIO_DIR=/config/workflow-studio
+      - API_CORS_ORIGINS=${API_CORS_ORIGINS:-http://localhost:3000,http://localhost:8093}
+      - FORMS_API_URL=http://bizgpt-forms:8000
+      - FORMS_API_KEY=${FORMS_API_KEY:?set FORMS_API_KEY in .env}
+      - INTEGRATIONS_API_URL=http://bizgpt-integrations:8002
+      - INTEGRATIONS_API_KEY=${INTEGRATIONS_API_KEY:?set INTEGRATIONS_API_KEY in .env}
+      - DIFY_BASE_URL=${DIFY_BASE_URL:-}
+      - DIFY_APPS=${DIFY_APPS:-[]}
+      - DIFY_WORKFLOW_LEAD_QUALIFIER_KEY=${DIFY_WORKFLOW_LEAD_QUALIFIER_KEY:-}
+      - DIFY_WORKFLOW_COMPANY_LEAD_GENERATION_KEY=${DIFY_WORKFLOW_COMPANY_LEAD_GENERATION_KEY:-}
+      - DIFY_WORKFLOW_LEAVE_REQUEST_KEY=${DIFY_WORKFLOW_LEAVE_REQUEST_KEY:-}
+      - DIFY_WORKFLOW_IT_SUPPORT_KEY=${DIFY_WORKFLOW_IT_SUPPORT_KEY:-}
+      - DIFY_WORKFLOW_PURCHASE_REQUEST_KEY=${DIFY_WORKFLOW_PURCHASE_REQUEST_KEY:-}
+    volumes:
+      - ./config/workflows.yaml:/config/workflows.yaml:ro
+      - ./config/workflow-studio:/config/workflow-studio:ro
+      - bizgpt-api-data:/data
+    depends_on:
+      - bizgpt-forms
+      - bizgpt-integrations
+
+  bizgpt-automation:
+    build: ./services/automation
+    image: bizgpt-automation:local
+    container_name: bizgpt-automation
+    restart: unless-stopped
+    ports:
+      - "8091:8001"
+    volumes:
+      - bizgpt-automation-data:/data
 
 volumes:
+  bizgpt-api-data:
   bizgpt-webui-data:
+  bizgpt-forms-data:
+  bizgpt-automation-data:
+  nango-db-data:

@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "status": "live",
+    "version": "v1.0",
+    "environment": "Production",
+    "accent_color": "blue"
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start",
+      "title": "Start",
+      "subtitle": "Campaign request submitted",
+      "description": "Collect company details, target roles, and campaign goals.",
+      "position": { "x": 48, "y": 92 },
+      "size": { "width": 228, "height": 136 },
+      "inputs": [],
+      "outputs": ["campaign_request"],
+      "config": {
+        "trigger": "Manual run",
+        "input_mode": "Structured form"
+      }
+    },
+    {
+      "id": "enrich_company",
+      "type": "retrieval",
+      "title": "Research Company",
+      "subtitle": "Review website, industry, and region",
+      "description": "Prepare a context packet for the lead generation logic.",
+      "position": { "x": 348, "y": 72 },
+      "size": { "width": 240, "height": 148 },
+      "inputs": ["campaign_request"],
+      "outputs": ["company_context"],
+      "config": {
+        "source": "Workflow inputs",
+        "notes": "Can later attach external enrichment"
+      }
+    },
+    {
+      "id": "generate_targets",
+      "type": "llm",
+      "title": "Generate Targets",
+      "subtitle": "Identify candidate leads and priorities",
+      "description": "Use Dify to build an initial lead list based on the ICP and target roles.",
+      "position": { "x": 664, "y": 72 },
+      "size": { "width": 240, "height": 148 },
+      "inputs": ["company_context"],
+      "outputs": ["lead_list", "persona_notes"],
+      "config": {
+        "model": "Dify workflow runtime",
+        "response_mode": "blocking"
+      }
+    },
+    {
+      "id": "sequence",
+      "type": "generator",
+      "title": "Build Sequence",
+      "subtitle": "Create outreach steps and next actions",
+      "description": "Turn the lead list into a suggested outbound sequence with follow-up tasks.",
+      "position": { "x": 980, "y": 72 },
+      "size": { "width": 240, "height": 148 },
+      "inputs": ["lead_list", "persona_notes"],
+      "outputs": ["sequence", "handoff_actions"],
+      "config": {
+        "format": "Structured JSON",
+        "handoff": "Automation-ready"
+      }
+    },
+    {
+      "id": "result",
+      "type": "result",
+      "title": "Result",
+      "subtitle": "Publish leads and sequence summary",
+      "description": "Return the final result to the workflow dashboard and automation layer.",
+      "position": { "x": 664, "y": 310 },
+      "size": { "width": 240, "height": 148 },
+      "inputs": ["lead_list", "sequence", "handoff_actions"],
+      "outputs": ["final_output"],
+      "config": {
+        "output": "JSON"
+      }
+    }
+  ],
+  "edges": [
+    { "source": "start", "target": "enrich_company" },
+    { "source": "enrich_company", "target": "generate_targets" },
+    { "source": "generate_targets", "target": "sequence" },
+    { "source": "generate_targets", "target": "result" },
+    { "source": "sequence", "target": "result" }
+  ]
+}

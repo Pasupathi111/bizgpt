@@ -1,0 +1,32 @@
+{
+  "id": "lead_qualifier",
+  "title": "Lead qualifier",
+  "description": "Qualify a new inbound lead and generate the next recommended sales response.",
+  "keywords": ["lead", "qualify", "sales", "prospect", "demo", "opportunity"],
+  "schema": {
+    "type": "object",
+    "required": ["company_name", "employee_count", "use_case", "budget_status", "timeline"],
+    "properties": {
+      "company_name": {"type": "string", "title": "Company name", "minLength": 2, "maxLength": 120},
+      "contact_name": {"type": "string", "title": "Contact name", "maxLength": 120},
+      "employee_count": {"type": "integer", "title": "Employee count", "minimum": 1, "maximum": 100000},
+      "use_case": {"type": "string", "title": "Use case", "minLength": 5, "maxLength": 500},
+      "budget_status": {"type": "string", "title": "Budget status", "enum": ["Approved", "Planned", "Unknown", "No budget yet"], "default": "Unknown"},
+      "timeline": {"type": "string", "title": "Timeline", "minLength": 2, "maxLength": 120},
+      "notes": {"type": "string", "title": "Notes", "maxLength": 1000}
+    }
+  },
+  "ui_schema": {
+    "ui:order": ["company_name", "contact_name", "employee_count", "use_case", "budget_status", "timeline", "notes"],
+    "use_case": {"ui:widget": "textarea", "ui:options": {"rows": 3}},
+    "notes": {"ui:widget": "textarea", "ui:options": {"rows": 2}}
+  },
+  "action": {
+    "type": "dify_workflow",
+    "reference_prefix": "LQ",
+    "dify_base_url_env": "DIFY_BASE_URL",
+    "dify_api_key_env": "DIFY_WORKFLOW_LEAD_QUALIFIER_KEY"
+  },
+  "submit_label": "Review",
+  "success_message": "Lead qualification completed for {company_name}. Reference {reference}."
+}

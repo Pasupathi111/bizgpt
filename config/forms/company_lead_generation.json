@@ -1,0 +1,34 @@
+{
+  "id": "company_lead_generation",
+  "title": "Generate company leads",
+  "description": "Run a workflow to generate target leads, suggested outreach, and next actions for a company segment.",
+  "keywords": ["lead generation", "generate leads", "prospects", "company leads", "sales outreach", "pipeline"],
+  "schema": {
+    "type": "object",
+    "required": ["company_name", "industry", "target_region", "target_roles", "lead_count"],
+    "properties": {
+      "company_name": {"type": "string", "title": "Company name", "minLength": 2, "maxLength": 120},
+      "website": {"type": "string", "title": "Website", "maxLength": 200},
+      "industry": {"type": "string", "title": "Industry", "minLength": 2, "maxLength": 80},
+      "target_region": {"type": "string", "title": "Target region", "minLength": 2, "maxLength": 80},
+      "target_roles": {"type": "string", "title": "Target roles", "minLength": 3, "maxLength": 200, "description": "Comma-separated roles such as CTO, Head of Support, RevOps"},
+      "lead_count": {"type": "integer", "title": "How many leads", "minimum": 1, "maximum": 20, "default": 5},
+      "icp_notes": {"type": "string", "title": "ICP notes", "maxLength": 1000},
+      "campaign_goal": {"type": "string", "title": "Campaign goal", "maxLength": 300}
+    }
+  },
+  "ui_schema": {
+    "ui:order": ["company_name", "website", "industry", "target_region", "target_roles", "lead_count", "campaign_goal", "icp_notes"],
+    "icp_notes": {"ui:widget": "textarea", "ui:options": {"rows": 3}},
+    "campaign_goal": {"ui:widget": "textarea", "ui:options": {"rows": 2}}
+  },
+  "action": {
+    "type": "dify_workflow",
+    "reference_prefix": "GLD",
+    "dify_base_url_env": "DIFY_BASE_URL",
+    "dify_api_key_env": "DIFY_WORKFLOW_COMPANY_LEAD_GENERATION_KEY",
+    "url": "http://bizgpt-automation:8001/webhooks/leads"
+  },
+  "submit_label": "Review workflow",
+  "success_message": "Lead generation workflow completed for {company_name}. Reference {reference}."
+}

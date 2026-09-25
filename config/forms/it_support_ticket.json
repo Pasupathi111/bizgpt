@@ -1,0 +1,23 @@
+{
+  "id": "it_support_ticket",
+  "title": "IT support ticket",
+  "description": "Report an IT problem (laptop, access, email, software, network).",
+  "keywords": ["it", "support", "ticket", "laptop", "password", "access", "broken", "vpn"],
+  "schema": {
+    "type": "object",
+    "required": ["category", "priority", "summary"],
+    "properties": {
+      "category": {"type": "string", "title": "Category", "enum": ["Laptop / hardware", "Account / access", "Email", "Software", "Network / VPN", "Other"]},
+      "priority": {"type": "string", "title": "Priority", "enum": ["Low", "Medium", "High", "Critical"], "default": "Medium"},
+      "summary": {"type": "string", "title": "Summary", "minLength": 5, "maxLength": 120},
+      "details": {"type": "string", "title": "Details", "maxLength": 2000},
+      "contact_phone": {"type": "string", "title": "Contact phone", "pattern": "^\\+?[0-9 ()-]{7,20}$"}
+    }
+  },
+  "ui_schema": {
+    "ui:order": ["category", "priority", "summary", "details", "contact_phone"],
+    "details": {"ui:widget": "textarea", "ui:options": {"rows": 3}}
+  },
+  "action": {"type": "record", "reference_prefix": "IT"},
+  "success_message": "{priority} priority ticket created: {summary}. Reference {reference}."
+}

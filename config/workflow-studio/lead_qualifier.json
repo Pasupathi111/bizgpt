@@ -1,0 +1,92 @@
+{
+  "meta": {
+    "status": "live",
+    "version": "v1.1",
+    "environment": "Production",
+    "accent_color": "violet"
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start",
+      "title": "Start",
+      "subtitle": "Lead details received",
+      "description": "Accept company profile and qualification context from the run panel.",
+      "position": { "x": 44, "y": 96 },
+      "size": { "width": 220, "height": 132 },
+      "inputs": [],
+      "outputs": ["lead_payload"],
+      "config": {
+        "trigger": "Manual run",
+        "payload_source": "Workflow input schema"
+      }
+    },
+    {
+      "id": "extract_context",
+      "type": "parser",
+      "title": "Extract Context",
+      "subtitle": "Normalize company and timing details",
+      "description": "Prepare lead fields so the downstream scoring step receives a clean payload.",
+      "position": { "x": 336, "y": 72 },
+      "size": { "width": 236, "height": 148 },
+      "inputs": ["lead_payload"],
+      "outputs": ["normalized_lead"],
+      "config": {
+        "logic": "Schema mapping",
+        "fields": "company_name, employee_count, budget_status, timeline, notes"
+      }
+    },
+    {
+      "id": "score_lead",
+      "type": "llm",
+      "title": "LLM: Score Lead",
+      "subtitle": "Assess budget, urgency, and fit",
+      "description": "Use the Dify workflow model to determine lead quality and confidence.",
+      "position": { "x": 646, "y": 72 },
+      "size": { "width": 236, "height": 148 },
+      "inputs": ["normalized_lead"],
+      "outputs": ["score", "confidence", "summary"],
+      "config": {
+        "model": "Dify workflow runtime",
+        "response_mode": "blocking",
+        "temperature": "0.2"
+      }
+    },
+    {
+      "id": "draft_reply",
+      "type": "generator",
+      "title": "Draft Reply",
+      "subtitle": "Generate suggested next response",
+      "description": "Create a follow-up note tailored to the qualification outcome.",
+      "position": { "x": 954, "y": 72 },
+      "size": { "width": 236, "height": 148 },
+      "inputs": ["score", "summary"],
+      "outputs": ["reply_draft"],
+      "config": {
+        "format": "Markdown",
+        "tone": "Sales follow-up"
+      }
+    },
+    {
+      "id": "result",
+      "type": "result",
+      "title": "Result",
+      "subtitle": "Return score and response draft",
+      "description": "Publish the final structured output for the dashboard and chat consumers.",
+      "position": { "x": 646, "y": 302 },
+      "size": { "width": 236, "height": 148 },
+      "inputs": ["score", "confidence", "summary", "reply_draft"],
+      "outputs": ["final_output"],
+      "config": {
+        "output": "JSON"
+      }
+    }
+  ],
+  "edges": [
+    { "source": "start", "target": "extract_context" },
+    { "source": "extract_context", "target": "score_lead" },
+    { "source": "score_lead", "target": "draft_reply" },
+    { "source": "score_lead", "target": "result" },
+    { "source": "draft_reply", "target": "result" }
+  ]
+}

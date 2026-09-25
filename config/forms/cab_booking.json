@@ -1,0 +1,29 @@
+{
+  "id": "cab_booking",
+  "title": "Book a cab",
+  "description": "Book a company cab for a trip (airport, client visit, office).",
+  "keywords": ["cab", "taxi", "car", "ride", "pickup", "airport"],
+  "schema": {
+    "type": "object",
+    "required": ["pickup_date", "pickup_time", "pickup_location", "destination", "vehicle"],
+    "properties": {
+      "pickup_date": {"type": "string", "format": "date", "title": "Pickup date", "description": "YYYY-MM-DD"},
+      "pickup_time": {"type": "string", "title": "Pickup time", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$", "description": "24h HH:MM"},
+      "pickup_location": {"type": "string", "title": "Pickup", "minLength": 3, "maxLength": 200},
+      "destination": {"type": "string", "title": "Destination", "minLength": 3, "maxLength": 200},
+      "vehicle": {"type": "string", "title": "Vehicle", "enum": ["Standard", "Premium", "SUV", "Van"], "default": "Standard"},
+      "passengers": {"type": "integer", "title": "Passengers", "minimum": 1, "maximum": 8, "default": 1},
+      "notes": {"type": "string", "title": "Notes for the driver", "maxLength": 500}
+    }
+  },
+  "ui_schema": {
+    "ui:order": ["pickup_date", "pickup_time", "pickup_location", "destination", "vehicle", "passengers", "notes"],
+    "pickup_time": {"ui:widget": "time"},
+    "pickup_location": {"ui:placeholder": "e.g. Office, 12 MG Road"},
+    "destination": {"ui:placeholder": "e.g. Airport Terminal 2"},
+    "notes": {"ui:widget": "textarea", "ui:options": {"rows": 2}}
+  },
+  "action": {"type": "record", "reference_prefix": "CAB"},
+  "submit_label": "Continue",
+  "success_message": "Cab booked for {pickup_date} at {pickup_time} from {pickup_location} to {destination} ({vehicle}). Reference {reference}."
+}
