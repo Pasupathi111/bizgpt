@@ -167,7 +167,49 @@ services:
     volumes:
       - bizgpt-automation-data:/data
 
+  # WhatsApp channel: Meta Cloud API webhook -> Biz GPT agent -> reply. See services/whatsapp/README.md.
+  # Only /api/whatsapp/webhook should be published through the reverse proxy.
+  bizgpt-whatsapp:
+    build: ./services/whatsapp
+    image: bizgpt-whatsapp:local
+    container_name: bizgpt-whatsapp
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${WHATSAPP_PORT:-8104}:8001"
+    environment:
+      - WHATSAPP_ACCESS_TOKEN=${WHATSAPP_ACCESS_TOKEN:-}
+      - WHATSAPP_PHONE_NUMBER_ID=${WHATSAPP_PHONE_NUMBER_ID:-}
+      - WHATSAPP_BUSINESS_ACCOUNT_ID=${WHATSAPP_BUSINESS_ACCOUNT_ID:-}
+      - WHATSAPP_VERIFY_TOKEN=${WHATSAPP_VERIFY_TOKEN:-}
+      - WHATSAPP_APP_SECRET=${WHATSAPP_APP_SECRET:-}
+      - WHATSAPP_API_VERSION=${WHATSAPP_API_VERSION:-v23.0}
+      - OPENWEBUI_BASE_URL=http://open-webui:8080
+      - OPENWEBUI_API_KEY=${WHATSAPP_OPENWEBUI_API_KEY:-}
+      - WHATSAPP_AGENT_MODEL=${WHATSAPP_AGENT_MODEL:-bizgpt-whatsapp}
+      - WHATSAPP_SERVICE_API_KEY=${WHATSAPP_SERVICE_API_KEY:-}
+      - DATABASE_URL=postgresql+asyncpg://${WHATSAPP_DB_USER:-whatsapp}:${WHATSAPP_DB_PASSWORD:-whatsapp}@whatsapp-db:5432/${WHATSAPP_DB_NAME:-whatsapp}
+    depends_on:
+      whatsapp-db:
+        condition: service_healthy
+
+  whatsapp-db:
+    image: postgres:16-alpine
+    container_name: bizgpt-whatsapp-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${WHATSAPP_DB_USER:-whatsapp}
+      - POSTGRES_PASSWORD=${WHATSAPP_DB_PASSWORD:-whatsapp}
+      - POSTGRES_DB=${WHATSAPP_DB_NAME:-whatsapp}
+    volumes:
+      - whatsapp-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${WHATSAPP_DB_USER:-whatsapp}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
 volumes:
+  whatsapp-db-data:
   bizgpt-api-data:
   bizgpt-webui-data:
   bizgpt-forms-data:

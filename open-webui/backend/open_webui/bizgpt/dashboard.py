@@ -27,10 +27,13 @@ from open_webui.internal.db import get_async_db_context
 from open_webui.utils.access_control import has_connection_access
 from open_webui.utils.auth import get_verified_user
 from open_webui.utils.mcp.client import MCPClient
+from open_webui.bizgpt import whatsapp as bizgpt_whatsapp
 from sqlalchemy import select
 
 log = logging.getLogger(__name__)
 router = APIRouter()
+# Integrations → WhatsApp (admin), served as /api/v1/bizgpt/whatsapp.
+router.include_router(bizgpt_whatsapp.router)
 
 BIZGPT_API_URL = os.getenv('BIZGPT_API_URL', 'http://bizgpt-api:8003').rstrip('/')
 FORMS_API_URL = os.getenv('FORMS_API_URL', 'http://bizgpt-forms:8000').rstrip('/')
@@ -245,7 +248,7 @@ async def get_dashboard(days: int = Query(7, ge=1, le=90), user=Depends(get_veri
     is_admin = user.role == 'admin'
     gmail_connection = await _safe(_gmail_connection(user), None)
 
-    workflows, forms, personal, messages, nango_up, dify_up, gmail_up, inbox = await asyncio.gather(
+    workflows, forms, personal, messages, nango_up, dify_up, gmail_up, inbox, whatsapp = await asyncio.gather(
         _safe(_workflows(), {'ok': False, 'workflows': [], 'runs': []}),
         _safe(_forms(), {'ok': False, 'types': [], 'forms': []}),
         _safe(_personal_integrations(user), None),
@@ -255,6 +258,7 @@ async def get_dashboard(days: int = Query(7, ge=1, le=90), user=Depends(get_veri
         _probe(f'{DIFY_BASE_URL}/v1/info', (200, 401)) if DIFY_BASE_URL else asyncio.sleep(0, False),
         _probe(gmail_connection['url'].rstrip('/').removesuffix('/mcp') + '/health') if gmail_connection else asyncio.sleep(0, False),
         _safe(_inbox(gmail_connection), None) if gmail_connection else asyncio.sleep(0, None),
+        bizgpt_whatsapp.summary(),
     )
 
     # Scope forms to the user unless admin.
@@ -332,6 +336,19 @@ async def get_dashboard(days: int = Query(7, ge=1, le=90), user=Depends(get_veri
         personal_item('gmail', 'Gmail'),
         personal_item('outlook', 'Outlook'),
     ]
+    if bizgpt_whatsapp.WHATSAPP_API_KEY:
+        wa_active = bool(whatsapp and whatsapp.get('is_active'))
+        integrations.append(
+            {
+                'id': 'whatsapp',
+                'name': 'WhatsApp',
+                'kind': 'whatsapp',
+                'status': ('connected' if wa_active else 'not_connected') if whatsapp else 'down',
+                'detail': (whatsapp.get('display_phone_number') or 'Business WhatsApp') if whatsapp else 'WhatsApp service offline',
+                'account': (whatsapp or {}).get('display_phone_number'),
+                'href': '/integrations' if is_admin else None,
+            }
+        )
 
     # ---- recent activity ----
     recent: list[dict] = []

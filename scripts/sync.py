@@ -106,6 +106,10 @@ VALVES = {
         'FORMS_PUBLIC_URL': 'FORMS_PUBLIC_URL',
         'FORMS_API_KEY': 'FORMS_API_KEY',
     },
+    'bizgpt_whatsapp': {
+        'WHATSAPP_API_URL': 'WHATSAPP_API_URL',
+        'WHATSAPP_API_KEY': 'WHATSAPP_SERVICE_API_KEY',
+    },
 }
 
 

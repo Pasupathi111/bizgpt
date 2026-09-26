@@ -8,7 +8,8 @@ bizgpt/
 ├── docker-compose.yml        Biz GPT (official image, version pinned in .env)
 ├── .env.example              copy to .env and fill in
 ├── owui/functions/           code loaded into Biz GPT (dify_pipe.py = Dify connector)
-├── owui/tools/               tools for the LLM (dynamic forms, WhatsApp… later)
+├── owui/tools/               tools for the LLM (dynamic forms, integrations, WhatsApp)
+├── services/whatsapp/        WhatsApp Cloud API channel (see services/whatsapp/README.md)
 ├── scripts/sync.py           pushes owui/* into Biz GPT and sets valves from .env
 ├── demo/dify/                importable Dify demo app + sample knowledge doc
 └── dev/mock_dify.py          fake Dify API for testing without the real server
