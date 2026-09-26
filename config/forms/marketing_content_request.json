@@ -1,0 +1,96 @@
+{
+  "id": "marketing_content_request",
+  "title": "Marketing content request",
+  "description": "Request a blog, social post, banner, or email campaign from Marketing.",
+  "keywords": [
+    "marketing",
+    "content",
+    "blog",
+    "social",
+    "linkedin",
+    "post",
+    "banner",
+    "campaign",
+    "newsletter"
+  ],
+  "schema": {
+    "type": "object",
+    "required": [
+      "content_type",
+      "topic",
+      "channel",
+      "deadline"
+    ],
+    "properties": {
+      "content_type": {
+        "type": "string",
+        "title": "Content type",
+        "enum": [
+          "Blog",
+          "Social Post",
+          "Banner / Creative",
+          "Email Campaign",
+          "Press Release",
+          "Video"
+        ],
+        "default": "Social Post"
+      },
+      "topic": {
+        "type": "string",
+        "title": "Topic",
+        "minLength": 3,
+        "maxLength": 200
+      },
+      "audience": {
+        "type": "string",
+        "title": "Target audience",
+        "maxLength": 200
+      },
+      "channel": {
+        "type": "string",
+        "title": "Channel",
+        "enum": [
+          "LinkedIn",
+          "Instagram",
+          "X / Twitter",
+          "Website",
+          "Email",
+          "YouTube"
+        ],
+        "default": "LinkedIn"
+      },
+      "deadline": {
+        "type": "string",
+        "format": "date",
+        "title": "Deadline"
+      },
+      "brief": {
+        "type": "string",
+        "title": "Brief / key messages",
+        "maxLength": 1500
+      }
+    }
+  },
+  "ui_schema": {
+    "ui:order": [
+      "content_type",
+      "topic",
+      "audience",
+      "channel",
+      "deadline",
+      "brief"
+    ],
+    "brief": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 3
+      }
+    }
+  },
+  "action": {
+    "type": "record",
+    "reference_prefix": "MKT"
+  },
+  "submit_label": "Submit",
+  "success_message": "{content_type} request for {channel} on \"{topic}\" due {deadline}. Reference {reference}."
+}

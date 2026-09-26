@@ -1,0 +1,88 @@
+{
+  "id": "asset_request",
+  "title": "Asset / equipment request",
+  "description": "Request a new or replacement laptop, phone, monitor, or other equipment.",
+  "keywords": [
+    "laptop",
+    "asset",
+    "equipment",
+    "monitor",
+    "headset",
+    "phone",
+    "access card",
+    "replacement",
+    "hardware"
+  ],
+  "schema": {
+    "type": "object",
+    "required": [
+      "asset_type",
+      "request_type",
+      "reason"
+    ],
+    "properties": {
+      "asset_type": {
+        "type": "string",
+        "title": "Asset",
+        "enum": [
+          "Laptop",
+          "Monitor",
+          "Mobile Phone",
+          "Headset",
+          "Keyboard / Mouse",
+          "Access Card",
+          "Other"
+        ],
+        "default": "Laptop"
+      },
+      "request_type": {
+        "type": "string",
+        "title": "Request type",
+        "enum": [
+          "New",
+          "Replacement",
+          "Upgrade",
+          "Return"
+        ],
+        "default": "New"
+      },
+      "asset_tag": {
+        "type": "string",
+        "title": "Current asset tag (if replacing)",
+        "maxLength": 50
+      },
+      "needed_by": {
+        "type": "string",
+        "format": "date",
+        "title": "Needed by"
+      },
+      "reason": {
+        "type": "string",
+        "title": "Reason",
+        "minLength": 3,
+        "maxLength": 500
+      }
+    }
+  },
+  "ui_schema": {
+    "ui:order": [
+      "asset_type",
+      "request_type",
+      "asset_tag",
+      "needed_by",
+      "reason"
+    ],
+    "reason": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 2
+      }
+    }
+  },
+  "action": {
+    "type": "record",
+    "reference_prefix": "AST"
+  },
+  "submit_label": "Submit",
+  "success_message": "{request_type} {asset_type} request submitted. Reference {reference}; IT will contact you."
+}

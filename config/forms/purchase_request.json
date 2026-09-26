@@ -1,0 +1,92 @@
+{
+  "id": "purchase_request",
+  "title": "Purchase request",
+  "description": "Request approval to buy goods or services.",
+  "keywords": [
+    "purchase",
+    "buy",
+    "order",
+    "procure",
+    "procurement",
+    "vendor"
+  ],
+  "schema": {
+    "type": "object",
+    "required": [
+      "item",
+      "quantity",
+      "estimated_cost",
+      "needed_by",
+      "justification"
+    ],
+    "properties": {
+      "item": {
+        "type": "string",
+        "title": "Item / service",
+        "minLength": 2,
+        "maxLength": 200
+      },
+      "quantity": {
+        "type": "integer",
+        "title": "Quantity",
+        "minimum": 1,
+        "default": 1
+      },
+      "estimated_cost": {
+        "type": "number",
+        "title": "Estimated total cost (INR)",
+        "exclusiveMinimum": 0
+      },
+      "vendor": {
+        "type": "string",
+        "title": "Preferred vendor",
+        "maxLength": 150
+      },
+      "needed_by": {
+        "type": "string",
+        "format": "date",
+        "title": "Needed by"
+      },
+      "urgency": {
+        "type": "string",
+        "title": "Urgency",
+        "enum": [
+          "Low",
+          "Normal",
+          "High",
+          "Critical"
+        ],
+        "default": "Normal"
+      },
+      "justification": {
+        "type": "string",
+        "title": "Business justification",
+        "minLength": 5,
+        "maxLength": 800
+      }
+    }
+  },
+  "ui_schema": {
+    "ui:order": [
+      "item",
+      "quantity",
+      "estimated_cost",
+      "vendor",
+      "needed_by",
+      "urgency",
+      "justification"
+    ],
+    "justification": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 2
+      }
+    }
+  },
+  "action": {
+    "type": "record",
+    "reference_prefix": "PR"
+  },
+  "submit_label": "Submit",
+  "success_message": "Purchase request for {quantity} × {item} (≈ INR {estimated_cost}) submitted. Reference {reference}."
+}

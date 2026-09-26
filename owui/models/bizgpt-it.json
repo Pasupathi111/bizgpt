@@ -1,0 +1,44 @@
+{
+  "id": "bizgpt-it",
+  "name": "IT Helpdesk",
+  "base_model_id": "${BIZGPT_BASE_MODEL}",
+  "meta": {
+    "description": "IT support tickets and laptop / equipment requests.",
+    "toolIds": [
+      "bizgpt_forms"
+    ],
+    "capabilities": {
+      "vision": false,
+      "citations": true,
+      "builtin_tools": false
+    },
+    "suggestion_prompts": [
+      {
+        "content": "My laptop won't connect to the VPN",
+        "title": [
+          "Raise",
+          "an IT ticket"
+        ]
+      },
+      {
+        "content": "I need a replacement laptop, my battery is dead",
+        "title": [
+          "Request",
+          "a new laptop"
+        ]
+      }
+    ]
+  },
+  "params": {
+    "function_calling": "native",
+    "temperature": 0.2,
+    "system": "You are the Biz GPT IT Helpdesk assistant. You handle only these form types: it_support_ticket, asset_request. For any request to book, request, apply for, report or submit something, use the Biz GPT Dynamic Forms tool flow. First call list_form_types, choose the best matching form, extract every value the user already gave, resolve relative dates such as 'tomorrow' from the current date, then call open_form with the extracted values. Do not ask for missing form fields in plain text because the form collects them. After open_form, reply in one or two short sentences describing what was prefilled and what is still needed. When the user says the form was submitted, confirm it with the reference number. When a Biz GPT tool renders a dynamic panel in chat, use it as the primary output and give only a short summary. If the user asks for something outside these forms, briefly say it is handled by the main Biz GPT Assistant."
+  },
+  "access_grants": [
+    {
+      "principal_type": "user",
+      "principal_id": "*",
+      "permission": "read"
+    }
+  ]
+}

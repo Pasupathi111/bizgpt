@@ -1,0 +1,100 @@
+{
+  "id": "business_travel_request",
+  "title": "Business travel request",
+  "description": "Request flights, trains, or hotels for a business trip.",
+  "keywords": [
+    "travel",
+    "trip",
+    "flight",
+    "train",
+    "hotel",
+    "visit",
+    "tour"
+  ],
+  "schema": {
+    "type": "object",
+    "required": [
+      "from_city",
+      "to_city",
+      "depart_date",
+      "return_date",
+      "mode",
+      "purpose"
+    ],
+    "properties": {
+      "from_city": {
+        "type": "string",
+        "title": "From",
+        "minLength": 2,
+        "maxLength": 100
+      },
+      "to_city": {
+        "type": "string",
+        "title": "To",
+        "minLength": 2,
+        "maxLength": 100
+      },
+      "depart_date": {
+        "type": "string",
+        "format": "date",
+        "title": "Departure date"
+      },
+      "return_date": {
+        "type": "string",
+        "format": "date",
+        "title": "Return date"
+      },
+      "mode": {
+        "type": "string",
+        "title": "Travel mode",
+        "enum": [
+          "Flight",
+          "Train",
+          "Bus",
+          "Cab"
+        ],
+        "default": "Flight"
+      },
+      "hotel_required": {
+        "type": "boolean",
+        "title": "Hotel required",
+        "default": false
+      },
+      "budget": {
+        "type": "number",
+        "title": "Budget (INR)",
+        "minimum": 0
+      },
+      "purpose": {
+        "type": "string",
+        "title": "Purpose of travel",
+        "minLength": 3,
+        "maxLength": 500
+      }
+    }
+  },
+  "ui_schema": {
+    "ui:order": [
+      "from_city",
+      "to_city",
+      "depart_date",
+      "return_date",
+      "mode",
+      "hotel_required",
+      "budget",
+      "purpose"
+    ],
+    "purpose": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 2
+      }
+    }
+  },
+  "action": {
+    "type": "record",
+    "reference_prefix": "TRV"
+  },
+  "submit_label": "Submit",
+  "success_message": "Travel request {from_city} → {to_city} ({depart_date} to {return_date}, {mode}) submitted. Reference {reference}."
+}

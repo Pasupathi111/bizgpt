@@ -8,12 +8,16 @@ services:
         BUILD_HASH: bizgpt-subpath
     image: bizgpt-open-webui:local
     container_name: bizgpt-webui
+    networks:
+      - default
+      - dify
     restart: unless-stopped
     ports:
       - "127.0.0.1:${OPEN_WEBUI_PORT:-3000}:8080"
     env_file: .env
     environment:
       - ENABLE_API_KEYS=true
+      - TOOL_SERVER_CONNECTIONS=${TOOL_SERVER_CONNECTIONS:-[]}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -74,6 +78,9 @@ services:
     build: ./services/forms
     image: bizgpt-forms:local
     container_name: bizgpt-forms
+    networks:
+      - default
+      - dify
     restart: unless-stopped
     ports:
       - "127.0.0.1:${FORMS_PORT:-8090}:8000"
@@ -121,6 +128,9 @@ services:
     build: ./services/api
     image: bizgpt-api:local
     container_name: bizgpt-api
+    networks:
+      - default
+      - dify
     restart: unless-stopped
     ports:
       - "127.0.0.1:${BIZGPT_API_PORT:-8093}:8003"
@@ -163,3 +173,9 @@ volumes:
   bizgpt-forms-data:
   bizgpt-automation-data:
   nango-db-data:
+
+networks:
+  # Shared with the self-hosted Dify stack and the gmail_mcp container.
+  dify:
+    external: true
+    name: dify_default

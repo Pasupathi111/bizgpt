@@ -93,6 +93,11 @@ VALVES = {
         'FORMS_PUBLIC_URL': 'FORMS_PUBLIC_URL',
         'FORMS_API_KEY': 'FORMS_API_KEY',
     },
+    'bizgpt_form_builder': {
+        'FORMS_API_URL': 'FORMS_API_URL',
+        'FORMS_PUBLIC_URL': 'FORMS_PUBLIC_URL',
+        'FORMS_API_KEY': 'FORMS_API_KEY',
+    },
     'bizgpt_integrations': {
         'INTEGRATIONS_API_URL': 'INTEGRATIONS_API_URL',
         'INTEGRATIONS_PUBLIC_URL': 'INTEGRATIONS_PUBLIC_URL',

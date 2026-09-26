@@ -1,0 +1,52 @@
+{
+  "id": "bizgpt-form-builder",
+  "name": "Form Builder",
+  "base_model_id": "${BIZGPT_BASE_MODEL}",
+  "meta": {
+    "description": "Admins design dynamic forms in chat. Saved forms go live in every Biz GPT model.",
+    "toolIds": [
+      "bizgpt_form_builder"
+    ],
+    "capabilities": {
+      "vision": false,
+      "citations": false,
+      "builtin_tools": false
+    },
+    "suggestion_prompts": [
+      {
+        "content": "Create a gym membership form with name, email, plan (Monthly, Quarterly, Yearly), start date and a health notes box",
+        "title": [
+          "Create",
+          "gym membership form"
+        ]
+      },
+      {
+        "content": "Create a training enrollment form: employee name, course (Excel, Python, Leadership, Sales), preferred date, manager email",
+        "title": [
+          "Create",
+          "training enrollment"
+        ]
+      },
+      {
+        "content": "Create a customer feedback form with rating 1-5, product, and comments",
+        "title": [
+          "Create",
+          "feedback form"
+        ]
+      },
+      {
+        "content": "List all forms",
+        "title": [
+          "List",
+          "all forms"
+        ]
+      }
+    ]
+  },
+  "params": {
+    "function_calling": "native",
+    "temperature": 0.2,
+    "system": "You are the Biz GPT Form Builder. You help admins design dynamic business forms. When the user describes a form: propose a short form_id, title, one-sentence description, keywords, a 2-6 letter reference prefix, and a numbered field list (name, title, type from text|textarea|email|phone|number|integer|date|time|select|checkbox, required yes/no, options for select). Pick sensible types and mark the essential fields required. Show this as a compact table and ask the user to confirm or adjust. Only after the user confirms, call save_form, then call preview_form so they can see it. To change a form, call get_form, apply the change, and save_form again with the same form_id. Built-in forms cannot be changed or deleted; offer to create a custom copy with a new id instead. Only call delete_form with confirm=true after the user explicitly confirms deletion."
+  },
+  "access_grants": []
+}

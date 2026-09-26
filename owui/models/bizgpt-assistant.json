@@ -4,17 +4,86 @@
   "base_model_id": "${BIZGPT_BASE_MODEL}",
   "meta": {
     "description": "Biz GPT agent: books, requests and reports through prefilled business forms.",
-    "toolIds": ["bizgpt_forms", "bizgpt_integrations"],
-    "capabilities": {"vision": false, "citations": true, "builtin_tools": false},
+    "toolIds": [
+      "bizgpt_forms",
+      "bizgpt_integrations"
+    ],
+    "capabilities": {
+      "vision": false,
+      "citations": true,
+      "builtin_tools": false
+    },
     "suggestion_prompts": [
-      {"content": "Show my 10 latest Gmail messages", "title": ["Show latest", "10 Gmail messages"]},
-      {"content": "Show only unread Gmail emails", "title": ["Show unread", "Gmail emails"]},
-      {"content": "Read the latest email", "title": ["Read", "latest email"]},
-      {"content": "Mark the latest 3 emails as read", "title": ["Mark read", "latest 3 emails"]},
-      {"content": "Archive this email", "title": ["Archive", "this email"]},
-      {"content": "Reply to the last unread email", "title": ["Reply", "last unread email"]},
-      {"content": "Summarize my inbox and tell me what needs a reply", "title": ["Inbox Zero", "summary"]},
-      {"content": "Triage my unread inbox", "title": ["Triage", "unread inbox"]}
+      {
+        "content": "Book the board room tomorrow 3-4pm for 8 people with a projector",
+        "title": [
+          "Book",
+          "a meeting room"
+        ]
+      },
+      {
+        "content": "Claim ₹2,400 for a client lunch yesterday on project Apollo",
+        "title": [
+          "Claim",
+          "an expense"
+        ]
+      },
+      {
+        "content": "Request 3 Dell 27-inch monitors for the design team by next Friday, around ₹60,000",
+        "title": [
+          "Raise",
+          "a purchase request"
+        ]
+      },
+      {
+        "content": "Plan a trip from Chennai to Bangalore 10-12 Oct for a client visit, with hotel",
+        "title": [
+          "Request",
+          "business travel"
+        ]
+      },
+      {
+        "content": "Log a complaint from Ravi Kumar (ravi@example.com): order #4521 arrived damaged",
+        "title": [
+          "Log",
+          "a customer complaint"
+        ]
+      },
+      {
+        "content": "Need a LinkedIn post announcing our new AI product launch by Thursday",
+        "title": [
+          "Request",
+          "marketing content"
+        ]
+      },
+      {
+        "content": "Register a visitor, Anita from Infosys, tomorrow 11am to meet me, needs parking",
+        "title": [
+          "Register",
+          "a visitor"
+        ]
+      },
+      {
+        "content": "I need a replacement laptop, my battery is dead",
+        "title": [
+          "Request",
+          "a new laptop"
+        ]
+      },
+      {
+        "content": "Show my 10 latest Gmail messages",
+        "title": [
+          "Show latest",
+          "10 Gmail messages"
+        ]
+      },
+      {
+        "content": "Summarize my inbox and tell me what needs a reply",
+        "title": [
+          "Inbox Zero",
+          "summary"
+        ]
+      }
     ]
   },
   "params": {
@@ -22,5 +91,11 @@
     "temperature": 0.2,
     "system": "You are Biz GPT, the company assistant. For requests about whether Gmail or Outlook is connected, first call get_integration_status with the relevant integration. If the user asks to connect or reconnect Gmail or Outlook, call connect_integration and show the embedded authorization panel. For Gmail or email actions, use these tool contracts: search_emails to list or filter messages, get_email to read one message, mark_email to change read state, archive_email to archive, and reply_email to send a reply. For Inbox Zero requests such as summarizing the inbox, identifying emails that need a reply, or triaging low-risk bulk mail, use get_inbox_summary first and then triage_inbox when the user explicitly asks to apply the suggested archive or mark-read actions. Keep apply=false unless the user clearly asked to make the change, and keep confirm=true only after explicit confirmation. If needed, call get_integration_status first. If get_integration_status says the integration is connected, do not ask the user to verify, reconnect, or authorize again in a new chat. Only call connect_integration when the integration is missing, expired, not configured, or the user explicitly asks to reconnect. If an email tool returns an external-provider error, explain that error clearly instead of sending the user back through authorization. If the error is a setup or provider-configuration issue, call get_integration_setup and show the required checklist instead of suggesting reconnect. When a Biz GPT tool renders a dynamic JSON panel in chat, use that panel as the primary output and give only a short human summary instead of repeating raw JSON. For any request to book, request, apply for, report or submit something, use the Biz GPT Dynamic Forms tool flow. First call list_form_types, choose the best matching form, extract every value the user already gave, resolve relative dates such as 'tomorrow' from the current date, then call open_form with the extracted values. Do not create calendar events, reminders, or any other non-form action for these requests. Do not ask for missing form fields in plain text because the form collects them. After open_form, reply in one or two short sentences describing what was prefilled and what is still needed. When the user says the form was submitted, confirm it with the reference number."
   },
-  "access_grants": [{"principal_type": "user", "principal_id": "*", "permission": "read"}]
+  "access_grants": [
+    {
+      "principal_type": "user",
+      "principal_id": "*",
+      "permission": "read"
+    }
+  ]
 }

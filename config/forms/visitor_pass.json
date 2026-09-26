@@ -1,0 +1,96 @@
+{
+  "id": "visitor_pass",
+  "title": "Visitor pass",
+  "description": "Pre-register a visitor and issue a front-desk pass.",
+  "keywords": [
+    "visitor",
+    "guest",
+    "pass",
+    "front desk",
+    "visit",
+    "reception"
+  ],
+  "schema": {
+    "type": "object",
+    "required": [
+      "visitor_name",
+      "visit_date",
+      "visit_time",
+      "host_name",
+      "purpose"
+    ],
+    "properties": {
+      "visitor_name": {
+        "type": "string",
+        "title": "Visitor name",
+        "minLength": 2,
+        "maxLength": 120
+      },
+      "company": {
+        "type": "string",
+        "title": "Visitor company",
+        "maxLength": 120
+      },
+      "phone": {
+        "type": "string",
+        "title": "Visitor phone",
+        "pattern": "^[+0-9 ()-]{7,20}$"
+      },
+      "visit_date": {
+        "type": "string",
+        "format": "date",
+        "title": "Visit date"
+      },
+      "visit_time": {
+        "type": "string",
+        "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+        "description": "24h HH:MM",
+        "title": "Arrival time"
+      },
+      "host_name": {
+        "type": "string",
+        "title": "Host (who they are meeting)",
+        "minLength": 2,
+        "maxLength": 120
+      },
+      "purpose": {
+        "type": "string",
+        "title": "Purpose",
+        "enum": [
+          "Meeting",
+          "Interview",
+          "Delivery",
+          "Vendor Visit",
+          "Other"
+        ],
+        "default": "Meeting"
+      },
+      "parking": {
+        "type": "boolean",
+        "title": "Parking needed",
+        "default": false
+      }
+    }
+  },
+  "ui_schema": {
+    "ui:order": [
+      "visitor_name",
+      "company",
+      "phone",
+      "visit_date",
+      "visit_time",
+      "host_name",
+      "purpose",
+      "parking"
+    ],
+    "visit_time": {
+      "ui:widget": "time"
+    }
+  },
+  "action": {
+    "type": "record",
+    "reference_prefix": "VIS"
+  },
+  "submit_label": "Submit",
+  "success_message": "Visitor pass for {visitor_name} on {visit_date} at {visit_time} (host: {host_name}). Reference {reference}."
+}

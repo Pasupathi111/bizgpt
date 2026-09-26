@@ -1,0 +1,97 @@
+{
+  "id": "expense_reimbursement",
+  "title": "Expense reimbursement",
+  "description": "Claim reimbursement for a business expense.",
+  "keywords": [
+    "expense",
+    "reimburse",
+    "claim",
+    "receipt",
+    "bill",
+    "spent"
+  ],
+  "schema": {
+    "type": "object",
+    "required": [
+      "expense_date",
+      "category",
+      "amount",
+      "currency",
+      "description"
+    ],
+    "properties": {
+      "expense_date": {
+        "type": "string",
+        "format": "date",
+        "title": "Expense date"
+      },
+      "category": {
+        "type": "string",
+        "title": "Category",
+        "enum": [
+          "Travel",
+          "Meals",
+          "Client Entertainment",
+          "Software",
+          "Office Supplies",
+          "Other"
+        ],
+        "default": "Travel"
+      },
+      "amount": {
+        "type": "number",
+        "title": "Amount",
+        "exclusiveMinimum": 0
+      },
+      "currency": {
+        "type": "string",
+        "title": "Currency",
+        "enum": [
+          "INR",
+          "USD",
+          "EUR",
+          "GBP",
+          "AED",
+          "SGD"
+        ],
+        "default": "INR"
+      },
+      "project": {
+        "type": "string",
+        "title": "Project / cost centre",
+        "maxLength": 100
+      },
+      "description": {
+        "type": "string",
+        "title": "Description",
+        "minLength": 3,
+        "maxLength": 500
+      }
+    }
+  },
+  "ui_schema": {
+    "ui:order": [
+      "expense_date",
+      "category",
+      "amount",
+      "currency",
+      "project",
+      "description"
+    ],
+    "description": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 2
+      }
+    },
+    "project": {
+      "ui:placeholder": "e.g. Apollo"
+    }
+  },
+  "action": {
+    "type": "record",
+    "reference_prefix": "EXP"
+  },
+  "submit_label": "Submit",
+  "success_message": "Expense claim of {currency} {amount} ({category}) submitted. Reference {reference}; Finance will review it."
+}

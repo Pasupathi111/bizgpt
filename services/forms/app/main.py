@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .actions import ActionError, run_action
-from .registry import Registry
+from .registry import FormTypeError, Registry
 from .store import Store
 from .validation import apply_prefill, full_errors, missing_required, with_defaults
 
@@ -32,7 +32,10 @@ WEB_DIST = Path(os.getenv('FORMS_WEB_DIST') or Path(__file__).resolve().parent.p
 CORS_ORIGINS = [origin.strip() for origin in os.getenv('FORMS_CORS_ORIGINS', 'http://localhost:3000,null').split(',') if origin.strip()]
 
 # Default: bizgpt/config/forms when running from a source checkout.
-registry = Registry(os.getenv('FORMS_CONFIG_DIR') or str(Path(__file__).resolve().parents[3] / 'config' / 'forms'))
+registry = Registry(
+    os.getenv('FORMS_CONFIG_DIR') or str(Path(__file__).resolve().parents[3] / 'config' / 'forms'),
+    os.getenv('FORMS_CUSTOM_DIR', '/data/form-types'),
+)
 store = Store(os.getenv('FORMS_DB_PATH', '/data/forms.db'))
 
 app = FastAPI(title='Biz GPT Forms', version='1.0.0')
@@ -230,9 +233,44 @@ def health():
 @app.get('/api/form-types', dependencies=[Depends(require_api_key)])
 def list_form_types():
     return [
-        {'id': t.id, 'title': t.title, 'description': t.description, 'keywords': t.keywords, 'fields': t.fields()}
+        {
+            'id': t.id,
+            'title': t.title,
+            'description': t.description,
+            'keywords': t.keywords,
+            'source': registry.sources.get(t.id, 'builtin'),
+            'fields': t.fields(),
+        }
         for t in registry.types.values()
     ]
+
+
+@app.get('/api/form-types/{form_type_id}', dependencies=[Depends(require_api_key)])
+def get_form_type(form_type_id: str):
+    form_type = registry.get(form_type_id)
+    if not form_type:
+        raise HTTPException(404, f'unknown form_type {form_type_id!r}')
+    return {**form_type.model_dump(by_alias=True), 'source': registry.sources.get(form_type_id, 'builtin')}
+
+
+@app.put('/api/form-types/{form_type_id}', dependencies=[Depends(require_api_key)])
+def save_form_type(form_type_id: str, definition: dict):
+    try:
+        form_type = registry.save_custom({**definition, 'id': form_type_id})
+    except FormTypeError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:  # pydantic / jsonschema validation
+        raise HTTPException(422, f'invalid form definition: {e}')
+    return {**form_type.model_dump(by_alias=True), 'source': 'custom'}
+
+
+@app.delete('/api/form-types/{form_type_id}', dependencies=[Depends(require_api_key)])
+def delete_form_type(form_type_id: str):
+    try:
+        registry.delete_custom(form_type_id)
+    except FormTypeError as e:
+        raise HTTPException(400, str(e))
+    return {'deleted': form_type_id}
 
 
 @app.post('/api/form-types/reload', dependencies=[Depends(require_api_key)])

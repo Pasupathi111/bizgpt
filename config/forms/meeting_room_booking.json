@@ -1,0 +1,104 @@
+{
+  "id": "meeting_room_booking",
+  "title": "Meeting room booking",
+  "description": "Book a meeting room for a date and time slot.",
+  "keywords": [
+    "meeting room",
+    "conference room",
+    "board room",
+    "book room",
+    "room booking"
+  ],
+  "schema": {
+    "type": "object",
+    "required": [
+      "date",
+      "start_time",
+      "end_time",
+      "room",
+      "attendees"
+    ],
+    "properties": {
+      "date": {
+        "type": "string",
+        "format": "date",
+        "title": "Date"
+      },
+      "start_time": {
+        "type": "string",
+        "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+        "description": "24h HH:MM",
+        "title": "Start time"
+      },
+      "end_time": {
+        "type": "string",
+        "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+        "description": "24h HH:MM",
+        "title": "End time"
+      },
+      "room": {
+        "type": "string",
+        "title": "Room",
+        "enum": [
+          "Board Room",
+          "Focus Room",
+          "Training Room",
+          "Huddle Space"
+        ],
+        "default": "Focus Room"
+      },
+      "attendees": {
+        "type": "integer",
+        "title": "Attendees",
+        "minimum": 1,
+        "maximum": 40,
+        "default": 4
+      },
+      "projector": {
+        "type": "boolean",
+        "title": "Projector / screen",
+        "default": false
+      },
+      "video_call": {
+        "type": "boolean",
+        "title": "Video call setup",
+        "default": false
+      },
+      "agenda": {
+        "type": "string",
+        "title": "Meeting title / agenda",
+        "maxLength": 300
+      }
+    }
+  },
+  "ui_schema": {
+    "ui:order": [
+      "date",
+      "start_time",
+      "end_time",
+      "room",
+      "attendees",
+      "projector",
+      "video_call",
+      "agenda"
+    ],
+    "start_time": {
+      "ui:widget": "time"
+    },
+    "end_time": {
+      "ui:widget": "time"
+    },
+    "agenda": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 2
+      }
+    }
+  },
+  "action": {
+    "type": "record",
+    "reference_prefix": "MR"
+  },
+  "submit_label": "Submit",
+  "success_message": "{room} booked on {date}, {start_time}–{end_time} for {attendees} people. Reference {reference}."
+}

@@ -1,0 +1,93 @@
+{
+  "id": "customer_complaint",
+  "title": "Customer complaint",
+  "description": "Log a customer complaint for the support team.",
+  "keywords": [
+    "complaint",
+    "customer",
+    "issue",
+    "refund",
+    "damaged",
+    "escalation",
+    "unhappy"
+  ],
+  "schema": {
+    "type": "object",
+    "required": [
+      "customer_name",
+      "customer_email",
+      "category",
+      "priority",
+      "details"
+    ],
+    "properties": {
+      "customer_name": {
+        "type": "string",
+        "title": "Customer name",
+        "minLength": 2,
+        "maxLength": 120
+      },
+      "customer_email": {
+        "type": "string",
+        "format": "email",
+        "title": "Customer email"
+      },
+      "order_number": {
+        "type": "string",
+        "title": "Order / invoice no.",
+        "maxLength": 60
+      },
+      "category": {
+        "type": "string",
+        "title": "Category",
+        "enum": [
+          "Billing",
+          "Delivery",
+          "Product Quality",
+          "Service",
+          "Other"
+        ],
+        "default": "Service"
+      },
+      "priority": {
+        "type": "string",
+        "title": "Priority",
+        "enum": [
+          "Low",
+          "Medium",
+          "High",
+          "Urgent"
+        ],
+        "default": "Medium"
+      },
+      "details": {
+        "type": "string",
+        "title": "Complaint details",
+        "minLength": 5,
+        "maxLength": 1500
+      }
+    }
+  },
+  "ui_schema": {
+    "ui:order": [
+      "customer_name",
+      "customer_email",
+      "order_number",
+      "category",
+      "priority",
+      "details"
+    ],
+    "details": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 3
+      }
+    }
+  },
+  "action": {
+    "type": "record",
+    "reference_prefix": "CC"
+  },
+  "submit_label": "Submit",
+  "success_message": "Complaint from {customer_name} logged as {priority} ({category}). Reference {reference}."
+}
