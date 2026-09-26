@@ -4,18 +4,19 @@
 
 	export let name = 'Biz GPT';
 
-	const features = [
-		{ title: 'AI Assistant', text: 'Get instant answers and complete tasks', icon: 'chat' },
-		{ title: 'Workflow Automation', text: 'Build and run AI-powered workflows', icon: 'bolt' },
-		{ title: 'Connect Your Tools', text: 'Integrate Gmail, Outlook, Dify and more', icon: 'doc' },
-		{ title: 'Drive Better Results', text: 'Save time, increase productivity', icon: 'chart' }
-	];
+        const features = [
+                { title: 'See What Matters', text: 'Bring your business information together in one connected workspace.', icon: 'chat' },
+                { title: 'Work Across Your Tools', text: 'Connect Gmail, Outlook, Biz Inbox, Forms, Dify and other business applications.', icon: 'doc' },
+                { title: 'Turn Information Into Insight', text: 'Capture context, extract meaningful information, and surface the right insights with AI.', icon: 'building' },
+                { title: 'Move From Insight to Action', text: 'Automate workflows with AI, custom models, and human approval where needed.', icon: 'chart' }
+        ];
 
-	const highlights = [
-		{ value: 'AI', label: 'Models on demand', icon: 'users' },
-		{ value: 'Forms', label: 'Filled from chat', icon: 'building' },
-		{ value: 'Inbox', label: 'Zero, with AI', icon: 'star' }
-	];
+        const highlights = [
+                { value: 'Connected Knowledge', label: 'Know what your business has', icon: 'users' },
+                { value: 'Business Intelligence', label: 'Turn information into insight', icon: 'building' },
+                { value: 'Workflow Automation', label: 'Put AI into action', icon: 'bolt' },
+                { value: 'Human Oversight', label: 'Keep people in control', icon: 'star' }
+        ];
 
 	const icons: Record<string, string> = {
 		chat: 'M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z',
@@ -53,8 +54,8 @@
 				/>
 				<span class="text-2xl font-bold tracking-tight">{name}</span>
 			</div>
-			<div class="hidden text-xs font-medium tracking-[0.35em] text-white/70 xl:block">
-				AI &nbsp;|&nbsp; AUTOMATION &nbsp;|&nbsp; PRODUCTIVITY
+                                <div class="hidden text-xs font-medium tracking-[0.35em] text-white/70 xl:block">
+                                        THE AI OPERATING LAYER &nbsp;|&nbsp; KNOWLEDGE &nbsp;|&nbsp; WORKFLOWS &nbsp;|&nbsp; AUTOMATION
 			</div>
 		</header>
 
@@ -66,14 +67,14 @@
 					<svg viewBox="0 0 24 24" fill="currentColor" class="size-4 text-orange-300" aria-hidden="true">
 						<path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6L12 2Zm6 12 .9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9L18 14Z" />
 					</svg>
-					Your AI-Powered Work Assistant
+                                        The AI Operating Layer
 				</div>
 
 				<h1 class="mt-7 text-5xl font-extrabold leading-[1.08] tracking-tight xl:text-6xl">
-					<span class="whitespace-nowrap">Work Smarter</span><br />with <span class="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">{name}</span>
+                                        Turn Business Knowledge Into Action<br />with <span class="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">{name}</span>
 				</h1>
 				<p class="mt-6 max-w-md text-lg leading-relaxed text-white/75">
-					Unify your data, automate your workflows, and get things done with AI — all in one place.
+                                        Connect your knowledge, conversations, workflows, and business tools in one intelligent workspace - designed to help teams find information, automate work, and act with confidence.
 				</p>
 
 				<ul class="mt-10 space-y-6">
@@ -98,7 +99,7 @@
 			<!-- floating product cards -->
 			<div class="pointer-events-none absolute right-0 top-0 hidden h-full w-64 min-[1800px]:block">
 				<div class="bz-float absolute right-0 top-20 w-60 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-md">
-					{#each ['Analyze data', 'Generate report', 'Send email', 'Create tasks'] as task}
+                                        {#each ['Connected Knowledge', 'Business Intelligence', 'Workflow Automation', 'Human Oversight'] as task}
 						<div class="flex items-center gap-3 py-1.5 text-sm">
 							<span class="flex size-5 items-center justify-center rounded-md bg-emerald-500">
 								<svg viewBox="0 0 20 20" fill="currentColor" class="size-3.5" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0L3.3 9.7a1 1 0 1 1 1.4-1.4l3.8 3.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clip-rule="evenodd" /></svg>
@@ -112,7 +113,7 @@
 					<span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-500 shadow-lg shadow-indigo-500/40">
 						<svg viewBox="0 0 24 24" fill="currentColor" class="size-4" aria-hidden="true"><path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6L12 2Z" /></svg>
 					</span>
-					Summarize today's emails and create follow-up tasks
+                                        Connect Gmail, Outlook, Biz Inbox, Forms, Dify and other business applications.
 				</div>
 
 				<div class="bz-float absolute bottom-24 right-2 w-64 rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur-md">

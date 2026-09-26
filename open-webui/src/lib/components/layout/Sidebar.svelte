@@ -100,6 +100,10 @@
 
 	const BREAKPOINT = 768;
 	const DEFAULT_PINNED_ITEMS = ['notes', 'workspace'];
+        const BIZ_SIDEBAR_BACKGROUND = [
+                'radial-gradient(120% 80% at 100% 0%, rgba(251, 146, 60, 0.18), transparent 55%)',
+                'linear-gradient(160deg, #0b1330 0%, #0f1a3d 45%, #111436 100%)'
+        ].join(', ');
 
 	let scrollTop = 0;
 
@@ -962,10 +966,11 @@
 
 	{#if !$mobile && !$showSidebar}
 		<div
-			class="w-[calc(42px*var(--app-text-scale,1))] shrink-0 py-[calc(0.25rem*var(--app-text-scale,1))] px-[calc(0.25rem*var(--app-text-scale,1))] flex flex-col justify-between text-gray-700 dark:text-gray-300 hover:bg-gray-50/30 dark:hover:bg-gray-800/30 h-full z-10 transition-all border-e-[0.5px] border-gray-50 dark:border-gray-850/30"
+                        class="w-[calc(42px*var(--app-text-scale,1))] shrink-0 py-[calc(0.25rem*var(--app-text-scale,1))] px-[calc(0.25rem*var(--app-text-scale,1))] flex flex-col justify-between text-white/80 hover:bg-white/[0.04] h-full z-10 transition-all border-e-[0.5px] border-white/10"
 			id="sidebar"
 			role="navigation"
 			aria-label={$i18n.t('Chat history')}
+                        style={`background: ${BIZ_SIDEBAR_BACKGROUND};`}
 		>
 			<button
 				class="flex flex-col flex-1 {isWindows ? 'cursor-pointer' : 'cursor-[e-resize]'}"
@@ -985,7 +990,7 @@
 							aria-label={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}
 						>
 							<div
-								class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition group-hover:bg-gray-100 dark:group-hover:bg-gray-900"
+                                                            class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition group-hover:bg-white/[0.08]"
 							>
 								<!-- LICENSE covers this Biz GPT sidebar logo.
 							Do not alter, remove, obscure, or replace it except as LICENSE permits:
@@ -1019,8 +1024,8 @@
 							>
 								<div
 									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition {$page.url.pathname.startsWith('/dashboard')
-										? 'bg-gray-100 dark:bg-gray-900'
-										: 'group-hover:bg-gray-100 dark:group-hover:bg-gray-900'}"
+                                                                                ? 'bg-white/[0.1] text-white'
+                                                                                : 'group-hover:bg-white/[0.08]'}"
 								>
 									<ChartBar className="size-4" strokeWidth="1.5" />
 								</div>
@@ -1044,7 +1049,7 @@
 								aria-label={$i18n.t('New Chat')}
 							>
 								<div
-									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition group-hover:bg-gray-100 dark:group-hover:bg-gray-900"
+                                                                class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition group-hover:bg-white/[0.08]"
 								>
 									<EditPencilIcon className="size-4" strokeWidth="1.5" />
 								</div>
@@ -1068,8 +1073,8 @@
 							>
 								<div
 									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition {$page.url.pathname.startsWith('/lead-generation')
-										? 'bg-gray-100 dark:bg-gray-900'
-										: 'group-hover:bg-gray-100 dark:group-hover:bg-gray-900'}"
+                                                                                ? 'bg-white/[0.1] text-white'
+                                                                                : 'group-hover:bg-white/[0.08]'}"
 								>
 									<Cube className="size-4" strokeWidth="1.5" />
 								</div>
@@ -1093,8 +1098,8 @@
 							>
 								<div
 									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition {$page.url.pathname.startsWith('/inbox')
-										? 'bg-gray-100 dark:bg-gray-900'
-										: 'group-hover:bg-gray-100 dark:group-hover:bg-gray-900'}"
+                                                                                ? 'bg-white/[0.1] text-white'
+                                                                                : 'group-hover:bg-white/[0.08]'}"
 								>
 									<InboxIcon className="size-4" strokeWidth="1.5" />
 								</div>
@@ -1123,9 +1128,9 @@
 											class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition {itemId ===
 											activeMenuItemId
 												? ($settings?.highContrastMode ?? false)
-													? 'bg-black/[0.035] dark:bg-white/[0.06]'
-													: 'bg-black/[0.035] dark:bg-white/[0.045]'
-												: 'group-hover:bg-gray-100 dark:group-hover:bg-gray-900'}"
+                                                                                                        ? 'bg-white/[0.1] text-white'
+                                                                                                        : 'bg-white/[0.06]'
+                                                                                                : 'group-hover:bg-white/[0.08]'}"
 										>
 											{#if itemId === 'notes'}
 												<NotesIcon className="size-4" strokeWidth="1.5" />
@@ -1159,7 +1164,7 @@
 								aria-label={$i18n.t('Search')}
 							>
 								<div
-									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition group-hover:bg-gray-100 dark:group-hover:bg-gray-900"
+                                                                class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition group-hover:bg-white/[0.08]"
 								>
 									<SearchIcon className="size-4" strokeWidth="1.5" />
 								</div>
@@ -1221,29 +1226,29 @@
 			aria-label={$i18n.t('Chat history')}
 			aria-hidden={!$showSidebar}
 			inert={!$showSidebar}
-			class="h-screen max-h-[100dvh] min-h-screen select-none {$mobile
+                        class="h-screen max-h-[100dvh] min-h-screen select-none {$mobile
 				? visible
-					? 'bg-gray-50 dark:bg-gray-950 z-50'
+                                        ? 'z-50'
 					: 'bg-transparent z-0 pointer-events-none'
-				: `bg-gray-50 dark:bg-gray-950 z-50 ${$showSidebar ? '' : 'pointer-events-none'}`} {$isApp
+                                : `z-50 ${$showSidebar ? '' : 'pointer-events-none'}`} {$isApp
 				? `ml-[4.5rem] md:ml-0 `
 				: $mobile
 					? ''
-					: ''} shrink-0 text-gray-700 dark:text-gray-300 text-[0.8125rem] leading-5 fixed top-0 left-0 overflow-x-hidden
+                                        : ''} shrink-0 text-gray-100 text-[0.8125rem] leading-5 fixed top-0 left-0 overflow-x-hidden
         "
 			style={$mobile
-				? panelStyle
-				: `width: ${$showSidebar ? 'var(--sidebar-width)' : '0'}; transition: width 250ms cubic-bezier(0.22, 1, 0.36, 1);`}
+                                ? `background: ${BIZ_SIDEBAR_BACKGROUND}; ${panelStyle}`
+                                : `background: ${BIZ_SIDEBAR_BACKGROUND}; width: ${$showSidebar ? 'var(--sidebar-width)' : '0'}; transition: width 250ms cubic-bezier(0.22, 1, 0.36, 1);`}
 			data-state={$showSidebar}
 		>
 			<div
-				class=" my-auto flex flex-col justify-between h-screen max-h-[100dvh] w-[var(--sidebar-width)] overflow-x-hidden scrollbar-hidden z-50 border-e border-gray-50 dark:border-gray-850/30"
+                                class=" my-auto flex flex-col justify-between h-screen max-h-[100dvh] w-[var(--sidebar-width)] overflow-x-hidden scrollbar-hidden z-50 border-e border-white/10"
 			>
 				<div
-					class="sidebar px-1 pt-1.5 pb-1 flex justify-between space-x-1 text-gray-600 dark:text-gray-400 sticky top-0 z-10 -mb-2"
+                                        class="sidebar px-1 pt-1.5 pb-1 flex justify-between space-x-1 text-white/70 sticky top-0 z-10 -mb-2"
 				>
 					<a
-						class="flex items-center rounded-xl size-8.5 h-full justify-center hover:bg-gray-100 dark:hover:bg-gray-900 transition no-drag-region"
+                                                class="flex items-center rounded-xl size-8.5 h-full justify-center hover:bg-white/[0.08] transition no-drag-region"
                                                 href={withBasePath('/')}
 						draggable="false"
 						on:click={newChatHandler}
@@ -1265,7 +1270,7 @@
 					https://docs.openwebui.com/license. -->
 						<div
 							id="sidebar-webui-name"
-							class=" self-center text-lg font-bold tracking-tight text-[#0f1a3d] dark:text-white"
+                                                        class=" self-center text-lg font-bold tracking-tight text-white"
 						>
 							{$WEBUI_NAME}
 						</div>
@@ -1275,7 +1280,7 @@
 						placement="bottom"
 					>
 						<button
-							class="flex size-[1.875rem] justify-center items-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 transition {isWindows
+                                                        class="flex size-[1.875rem] justify-center items-center rounded-lg hover:bg-white/[0.08] transition {isWindows
 								? 'cursor-pointer'
 								: 'cursor-[w-resize]'}"
 							on:click={() => {
@@ -1292,7 +1297,7 @@
 					<div
 						class="{scrollTop > 0
 							? 'visible'
-							: 'invisible'} sidebar-bg-gradient-to-b bg-linear-to-b from-gray-50 dark:from-gray-950 to-transparent from-50% pointer-events-none absolute inset-0 -z-10 -mb-6"
+                                                        : 'invisible'} sidebar-bg-gradient-to-b bg-linear-to-b from-[#0f1a3d]/95 to-transparent from-50% pointer-events-none absolute inset-0 -z-10 -mb-6"
 					></div>
 				</div>
 
@@ -1720,9 +1725,9 @@
 				</div>
 
 				<div class="px-1 pt-1 pb-1.5 sticky bottom-0 z-10 -mt-2 sidebar">
-					<div
-						class=" sidebar-bg-gradient-to-t bg-linear-to-t from-gray-50 dark:from-gray-950 to-transparent from-50% pointer-events-none absolute inset-0 -z-10 -mt-6"
-					></div>
+                                        <div
+                                                class=" sidebar-bg-gradient-to-t bg-linear-to-t from-[#111436]/95 to-transparent from-50% pointer-events-none absolute inset-0 -z-10 -mt-6"
+                                        ></div>
 					<div class="flex flex-col">
 						{#if $user !== undefined && $user !== null}
 							<AssistantShortcut onClick={itemClickHandler} />
@@ -1735,7 +1740,7 @@
 							>
 								<button
 									type="button"
-									class=" flex items-center rounded-xl py-1.5 px-1.5 w-full hover:bg-gray-100 dark:hover:bg-gray-900 transition"
+                                                                        class=" flex items-center rounded-xl py-1.5 px-1.5 w-full hover:bg-white/[0.08] transition"
 									aria-label={$i18n.t('User menu')}
 								>
 									<div class=" self-center mr-3 relative flex-shrink-0">
@@ -1750,9 +1755,9 @@
 											<div class="absolute -bottom-0.5 -right-0.5">
 												<span class="relative flex size-2.5">
 													<span
-														class="relative inline-flex size-2.5 rounded-full {true
-															? 'bg-green-500'
-															: 'bg-gray-300 dark:bg-gray-700'} border-2 border-white dark:border-gray-900"
+                                                                                                                class="relative inline-flex size-2.5 rounded-full {true
+                                                                                                                        ? 'bg-green-500'
+                                                                                                                        : 'bg-gray-300 dark:bg-gray-700'} border-2 border-[#0f1a3d]"
 													></span>
 												</span>
 											</div>
@@ -1769,7 +1774,7 @@
 
 		{#if !$mobile && visible}
 			<div
-				class="relative flex items-center justify-center group border-r border-gray-50 dark:border-gray-850/30 hover:border-gray-200 dark:hover:border-gray-800 transition z-20 bg-transparent p-0 appearance-none"
+                                class="relative flex items-center justify-center group border-r border-white/10 hover:border-white/20 transition z-20 bg-transparent p-0 appearance-none"
 				id="sidebar-resizer"
 				on:pointerdown={resizeStartHandler}
 				role="separator"

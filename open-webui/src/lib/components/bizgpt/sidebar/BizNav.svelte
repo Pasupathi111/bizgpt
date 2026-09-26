@@ -58,8 +58,8 @@
 			href={item.href}
 			draggable="false"
 			class="flex items-center gap-3 rounded-xl px-3 py-2 text-[0.875rem] transition {on
-				? 'bg-blue-50 font-semibold text-[#0f1a3d] dark:bg-white/[0.06] dark:text-white'
-				: 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-900'}"
+                                ? 'bg-white/[0.1] font-semibold text-white'
+                                : 'text-white/80 hover:bg-white/[0.08]'}"
 			on:click={(e) => {
 				item.onClick?.(e);
 				itemClickHandler();
@@ -72,7 +72,7 @@
 		<button
 			id="sidebar-{item.id}-button"
 			type="button"
-			class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-[0.875rem] text-gray-700 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-900"
+                        class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-[0.875rem] text-white/80 transition hover:bg-white/[0.08]"
 			on:click={() => item.onClick?.()}
 		>
 			{@render itemIcon(item)}
@@ -97,13 +97,13 @@
 
 	{@render navItem({ id: 'dashboard', label: 'Dashboard', href: withBasePath('/dashboard'), icon: 'home', tone: 'text-blue-600 dark:text-blue-400', match: '/dashboard' })}
 
-	<div class="mt-4 px-3 pb-1 text-[0.7rem] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Workspace</div>
+        <div class="mt-4 px-3 pb-1 text-[0.7rem] font-semibold uppercase tracking-wider text-white/45">Workspace</div>
 	{#each workspace as item (item.id)}
 		{@render navItem(item)}
 	{/each}
 
-	<div class="mx-3 my-3 h-px bg-gray-200/70 dark:bg-gray-800"></div>
-	<div class="px-3 pb-1 text-[0.7rem] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Productivity</div>
+        <div class="mx-3 my-3 h-px bg-white/10"></div>
+        <div class="px-3 pb-1 text-[0.7rem] font-semibold uppercase tracking-wider text-white/45">Productivity</div>
 	{#each productivity as item (item.id)}
 		{@render navItem(item)}
 	{/each}
