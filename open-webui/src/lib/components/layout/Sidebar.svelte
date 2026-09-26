@@ -1311,7 +1311,6 @@
 						<BizNav
 							{newChatHandler}
 							{itemClickHandler}
-							isAdmin={$user?.role === 'admin'}
 							showNotes={isMenuItemVisible('notes')}
 							showWorkspace={isMenuItemVisible('workspace')}
 						/>

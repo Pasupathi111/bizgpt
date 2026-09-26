@@ -8,23 +8,14 @@
 
 	export let newChatHandler: (e?: Event) => void = () => {};
 	export let itemClickHandler: () => void = () => {};
-	export let isAdmin = false;
 	export let showNotes = true;
 	export let showWorkspace = true;
-
-	const chat = (model: string, q = '') =>
-		withBasePath(`/?models=${encodeURIComponent(model)}${q ? `&q=${encodeURIComponent(q)}` : ''}`);
 
 	type Item = { id: string; label: string; href?: string; icon: string; tone: string; match?: string; onClick?: () => void };
 
 	$: workspace = [
 		{ id: 'dify', label: 'Dify Workflows', href: withBasePath('/lead-generation'), icon: 'workflow', tone: 'text-violet-500', match: '/lead-generation' },
-		{ id: 'forms', label: 'Dynamic Forms', href: chat(isAdmin ? 'bizgpt-form-builder' : 'bizgpt-assistant'), icon: 'form', tone: 'text-emerald-500' },
-		...(isAdmin
-			? [{ id: 'integrations', label: 'Integrations', href: withBasePath('/admin/settings/tools'), icon: 'link', tone: 'text-orange-500', match: '/admin/settings/tools' }]
-			: []),
-		{ id: 'inbox', label: 'Inbox Zero', href: withBasePath('/inbox'), icon: 'inbox', tone: 'text-rose-500', match: '/inbox' },
-		{ id: 'nango', label: 'Nango', href: chat('bizgpt-assistant', 'Show my integration status'), icon: 'cloud', tone: 'text-sky-500' }
+		{ id: 'inbox', label: 'Inbox Zero', href: withBasePath('/inbox'), icon: 'inbox', tone: 'text-rose-500', match: '/inbox' }
 	] as Item[];
 
 	$: productivity = [
