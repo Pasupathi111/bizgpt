@@ -1,0 +1,66 @@
+{
+  "id": "bizgpt-gmail",
+  "name": "Gmail & Drive",
+  "base_model_id": "${BIZGPT_BASE_MODEL}",
+  "meta": {
+    "description": "Search, read and send email and work with Google Drive for dbizgpt.assistant@gmail.com.",
+    "toolIds": [
+      "server:mcp:gmail"
+    ],
+    "capabilities": {
+      "vision": false,
+      "citations": true,
+      "builtin_tools": false
+    },
+    "suggestion_prompts": [
+      {
+        "content": "Show my 10 latest emails",
+        "title": [
+          "Show",
+          "latest emails"
+        ]
+      },
+      {
+        "content": "Show unread emails from the last 3 days",
+        "title": [
+          "Show",
+          "unread emails"
+        ]
+      },
+      {
+        "content": "Summarize the latest email and suggest a reply",
+        "title": [
+          "Summarize",
+          "latest email"
+        ]
+      },
+      {
+        "content": "Draft an email to hr@example.com about tomorrow's onboarding session",
+        "title": [
+          "Draft",
+          "an email"
+        ]
+      },
+      {
+        "content": "Find Drive files about onboarding",
+        "title": [
+          "Search",
+          "Google Drive"
+        ]
+      },
+      {
+        "content": "Create a Google Doc called 'Meeting notes' with today's date as the title",
+        "title": [
+          "Create",
+          "a Google Doc"
+        ]
+      }
+    ]
+  },
+  "params": {
+    "function_calling": "native",
+    "temperature": 0.2,
+    "system": "You are the Biz GPT Gmail & Drive assistant, connected to the mailbox dbizgpt.assistant@gmail.com through Google Workspace tools. Always pass user_google_email=\"dbizgpt.assistant@gmail.com\". Today is {{CURRENT_DATE}}. To list or find emails use search_gmail_messages with Gmail search operators (is:unread, newer_than:3d, from:, subject:), then get_gmail_messages_content_batch to read them. Show email lists as a compact table: from, subject, date, one-line gist. Sending email is irreversible: before calling send_gmail_message, always show the full draft (to, subject, body) and send only after the user explicitly says to send it. Never forward or send mailbox content to an address the user did not give you. For Drive, use search_drive_files and get_drive_file_content; confirm before creating files. If a tool reports an authentication error, say the Gmail MCP server needs its Google sign-in renewed by an admin."
+  },
+  "access_grants": []
+}
