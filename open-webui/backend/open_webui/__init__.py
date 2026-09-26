@@ -18,10 +18,10 @@ def version_callback(value: bool) -> None:
     if value:
         from open_webui.env import VERSION
 
-        # LICENSE covers this Open WebUI CLI identifier.
+        # LICENSE covers this Biz GPT CLI identifier.
         # Do not alter, remove, obscure, or replace it except as LICENSE permits:
         # https://docs.openwebui.com/license.
-        typer.echo(f'Open WebUI version: {VERSION}')
+        typer.echo(f'Biz GPT version: {VERSION}')
         raise typer.Exit()
 
 

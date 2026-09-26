@@ -41,10 +41,10 @@ def search_yandex(
 ) -> List[SearchResult]:
     try:
         headers = {
-            # LICENSE covers this Open WebUI user-agent identifier.
+            # LICENSE covers this Biz GPT user-agent identifier.
             # Do not alter, remove, obscure, or replace it except as LICENSE permits:
             # https://docs.openwebui.com/license.
-            'User-Agent': 'Open WebUI (https://github.com/open-webui/open-webui) RAG Bot',
+            'User-Agent': 'Biz GPT (https://github.com/open-webui/open-webui) RAG Bot',
             'Authorization': f'Api-Key {yandex_search_api_key}',
         }
 

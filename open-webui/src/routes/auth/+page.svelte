@@ -17,7 +17,7 @@
 		updateUserTimezone
 	} from '$lib/apis/auths';
 
-	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+        import { WEBUI_API_BASE_URL, WEBUI_BASE_URL, withBasePath } from '$lib/constants';
 	import { WEBUI_NAME, config, user, socket } from '$lib/stores';
 
 	import { generateInitialsImage, canvasPixelTest, getUserTimezone } from '$lib/utils';
@@ -61,11 +61,11 @@
 				updateUserTimezone(sessionUser.token, timezone);
 			}
 
-			if (!redirectPath) {
-				redirectPath = $page.url.searchParams.get('redirect') || '/';
-			}
+                        if (!redirectPath) {
+                                redirectPath = $page.url.searchParams.get('redirect') || '/';
+                        }
 
-			goto(redirectPath);
+                        goto(withBasePath(redirectPath));
 			localStorage.removeItem('redirectPath');
 		}
 	};
@@ -157,8 +157,8 @@
 		const redirectPath = $page.url.searchParams.get('redirect');
 		const logout = $page.url.searchParams.get('state') === 'logout';
 
-		if ($user && !logout) {
-			goto(redirectPath || '/');
+                if ($user && !logout) {
+                        goto(withBasePath(redirectPath || '/'));
 		} else {
 			if (redirectPath) {
 				localStorage.setItem('redirectPath', redirectPath);
@@ -205,7 +205,7 @@
 </script>
 
 <svelte:head>
-	<!-- LICENSE covers this Open WebUI browser-title identifier.
+	<!-- LICENSE covers this Biz GPT browser-title identifier.
 	Do not alter, remove, obscure, or replace it except as LICENSE permits:
 	https://docs.openwebui.com/license. -->
 	<title>
@@ -251,7 +251,7 @@
 						<div id="auth-login-card" class=" sm:max-w-md my-auto pb-10 w-full dark:text-gray-100">
 							{#if $config?.metadata?.auth_logo_position === 'center'}
 								<div class="flex justify-center mb-6">
-									<!-- LICENSE covers this Open WebUI sign-in logo.
+									<!-- LICENSE covers this Biz GPT sign-in logo.
 									Do not alter, remove, obscure, or replace it except as LICENSE permits:
 									https://docs.openwebui.com/license. -->
 									<img
@@ -622,7 +622,7 @@
 			<div class="fixed m-10 z-50">
 				<div class="flex space-x-2">
 					<div class=" self-center">
-						<!-- LICENSE covers this Open WebUI sign-in logo.
+						<!-- LICENSE covers this Biz GPT sign-in logo.
 						Do not alter, remove, obscure, or replace it except as LICENSE permits:
 						https://docs.openwebui.com/license. -->
 						<img

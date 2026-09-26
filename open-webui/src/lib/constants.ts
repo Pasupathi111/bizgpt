@@ -1,14 +1,44 @@
 // import { version } from '../../package.json';
 
-// LICENSE covers this Open WebUI branding surface, including name, logo,
+// LICENSE covers this Biz GPT branding surface, including name, logo,
 // visual, textual, symbolic identifiers, metadata, and surrounding UI.
 // Do not alter, remove, obscure, or replace it except as LICENSE permits:
 // https://docs.openwebui.com/license.
-export const APP_NAME = 'Open WebUI';
+export const APP_NAME = 'Biz GPT';
 
 export const WEBUI_HOSTNAME = '';
 export const WEBUI_BASE_URL = '';
 export const WEBUI_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1`;
+
+const ABSOLUTE_URL_PATTERN = /^[a-z][a-z\d+\-.]*:|^\/\//i;
+
+export const withBasePath = (path = '') => {
+        if (!path) {
+                return WEBUI_BASE_URL || '/';
+        }
+
+        if (ABSOLUTE_URL_PATTERN.test(path) || !WEBUI_BASE_URL) {
+                return path;
+        }
+
+        if (path === WEBUI_BASE_URL || path.startsWith(`${WEBUI_BASE_URL}/`)) {
+                return path;
+        }
+
+        if (path === '/') {
+                return `${WEBUI_BASE_URL}/`;
+        }
+
+        if (path.startsWith('/')) {
+                return `${WEBUI_BASE_URL}${path}`;
+        }
+
+        if (path.startsWith('?') || path.startsWith('#')) {
+                return `${WEBUI_BASE_URL}/${path}`;
+        }
+
+        return `${WEBUI_BASE_URL}/${path}`;
+};
 
 export const OLLAMA_API_BASE_URL = `${WEBUI_BASE_URL}/ollama`;
 export const OPENAI_API_BASE_URL = `${WEBUI_BASE_URL}/openai`;

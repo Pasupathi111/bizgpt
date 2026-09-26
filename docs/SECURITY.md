@@ -4,7 +4,7 @@
 
 | Component | Findings | Required controls |
 |---|---|---|
-| Open WebUI v0.11.4 | Many advisories historically. The Sept 2026 fixes (OAuth subject wildcard sign-in, **session cookies sent to bearer tool servers**, OIDC stall) are in ≥ 0.11.1. | Pin the version and upgrade promptly on high fixes. Use SSO. Disable signup. `ENABLE_API_KEYS` for admins only. Keep `forward_cookies` off on tool servers. Set `IFRAME_CSP` for embeds. |
+| Biz GPT v0.11.4 | Many advisories historically. The Sept 2026 fixes (OAuth subject wildcard sign-in, **session cookies sent to bearer tool servers**, OIDC stall) are in ≥ 0.11.1. | Pin the version and upgrade promptly on high fixes. Use SSO. Disable signup. `ENABLE_API_KEYS` for admins only. Keep `forward_cookies` off on tool servers. Set `IFRAME_CSP` for embeds. |
 | Nango (ELv2) | 1 critical plus several high SSRF / forged-webhook issues, patched by commit | Run ≥ v0.71.10. Expose only `/oauth/callback` and Connect UI publicly. Keep the dashboard and API internal. Set `NANGO_ENCRYPTION_KEY`. Use an egress denylist for private ranges. Use the secret key only in the gateway. |
 | Dify (yours) | IDOR on AppMCPServer (< 1.16.0), cross-tenant leaks (< 1.14.2), SSRF (< 1.13.0) | **Confirm version ≥ 1.16.0.** Use per-app API keys stored in env or a secret store, never in prompts. |
 | ms-365-mcp-server | Code-injection advisory fixed in 0.137.0 | Run ≥ 0.155.0 in `--http` stateless mode with `--preset mail`, `--allowed-scopes` (least privilege) and the audit log on. |
@@ -19,14 +19,14 @@
 3. **Least privilege OAuth scopes** per integration in Nango. Read-only presets where possible.
 4. **Secrets:** only in `.env` (gitignored) or a secret manager. `.env.example` has placeholders. A pre-commit secret scan (gitleaks).
 5. **Forms:** signed short-lived form tokens, CSRF protection, server-side schema validation, and an allowlist of form actions.
-6. **Dashboard/BFF:** validates the user's Open WebUI token through `GET /api/v1/auths/`. Admin-only views check `role == admin`.
+6. **Dashboard/BFF:** validates the user's Biz GPT token through `GET /api/v1/auths/`. Admin-only views check `role == admin`.
 7. **Logging:** no tokens or email bodies in logs. The PII redaction pattern follows ms-365-mcp's.
 
 ## Licence summary
 
 | Component | Licence | Obligation / risk |
 |---|---|---|
-| Open WebUI | BSD-3 + branding clause | Keep "Open WebUI" branding unless ≤ 50 users or an enterprise licence |
+| Biz GPT | BSD-3 + branding clause | Keep "Biz GPT" branding unless ≤ 50 users or an enterprise licence |
 | Dify | Modified Apache-2.0 | No multi-tenant use; keep the Dify logo in the Dify UI |
 | Nango | Elastic 2.0 | Don't offer Nango as a hosted service; the free tier is Auth + Proxy |
 | Inbox Zero | AGPL-3.0 + extra terms | Commercial or 5+ user use needs a licence (not used) |

@@ -1,7 +1,7 @@
 """
 Biz GPT Integrations service.
 
-Stable contracts over Nango so Open WebUI and future MCP/gateway layers can ask:
+Stable contracts over Nango so Biz GPT and future MCP/gateway layers can ask:
 - get_integration_status
 - connect_integration
 - disconnect_integration

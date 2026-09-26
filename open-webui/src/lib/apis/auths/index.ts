@@ -1,4 +1,4 @@
-import { WEBUI_API_BASE_URL } from '$lib/constants';
+import { WEBUI_API_BASE_URL, withBasePath } from '$lib/constants';
 
 export const getAdminDetails = async (token: string) => {
 	let error = null;
@@ -408,14 +408,15 @@ export const userSignOut = async () => {
 };
 
 export const getLogoutRedirectUrl = (redirectUrl?: string | null) => {
-	const logoutUrl = new URL('/auth?state=logout', window.location.origin);
-	const postLogoutUrl = new URL('/auth', window.location.origin);
+        const authPath = withBasePath('/login');
+        const logoutUrl = new URL(`${authPath}?state=logout`, window.location.origin);
+        const postLogoutUrl = new URL(authPath, window.location.origin);
 	if (!redirectUrl) {
 		return logoutUrl.href;
 	}
 
 	const url = new URL(redirectUrl, window.location.origin);
-	if (url.origin === window.location.origin && url.pathname === '/auth') {
+        if (url.origin === window.location.origin && url.pathname === authPath) {
 		url.searchParams.set('state', 'logout');
 		return url.href;
 	}
@@ -425,7 +426,7 @@ export const getLogoutRedirectUrl = (redirectUrl?: string | null) => {
 		const configuredPostLogoutUrl = new URL(postLogoutRedirectUri, window.location.origin);
 		if (
 			configuredPostLogoutUrl.origin === window.location.origin &&
-			configuredPostLogoutUrl.pathname === '/auth'
+                        configuredPostLogoutUrl.pathname === authPath
 		) {
 			url.searchParams.set('state', 'logout');
 		}

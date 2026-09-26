@@ -42,7 +42,7 @@ Common rules:
 | `get_form` | `form_id` | Status: `draft`, `submitted`, `executed` or `failed`, plus values and result |
 | `submit_form` | `form_id, values{}, confirm` | Server-side JSON Schema validation, then runs the form's action |
 
-Open WebUI Tool `bizgpt_forms.show_form(form_id)` shows the form in the chat as an HTML embed. It is the only piece that must be an Open WebUI Tool, because MCP results can't return embeds.
+Biz GPT Tool `bizgpt_forms.show_form(form_id)` shows the form in the chat as an HTML embed. It is the only piece that must be an Biz GPT Tool, because MCP results can't return embeds.
 
 ## WhatsApp: `WhatsAppProvider` (BizGPT whatsapp-gateway → Meta Cloud API)
 

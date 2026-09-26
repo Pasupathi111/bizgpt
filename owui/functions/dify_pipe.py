@@ -2,7 +2,7 @@
 title: Dify Apps
 author: BizGPT
 version: 1.0.0
-description: Exposes self-hosted Dify apps (chatflow, agent, chat, workflow, completion) as models in Open WebUI, streaming answers, live node progress and knowledge citations.
+description: Exposes self-hosted Dify apps (chatflow, agent, chat, workflow, completion) as models in Biz GPT, streaming answers, live node progress and knowledge citations.
 """
 
 import json
@@ -12,7 +12,7 @@ from typing import AsyncGenerator, Optional
 import aiohttp
 from pydantic import BaseModel, Field
 
-# Open WebUI chat_id -> Dify conversation_id (per app). In-memory: a restart
+# Biz GPT chat_id -> Dify conversation_id (per app). In-memory: a restart
 # simply starts a fresh Dify conversation for existing chats.
 _CONVERSATIONS: dict[str, str] = {}
 

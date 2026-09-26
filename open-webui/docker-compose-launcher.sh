@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Interactive docker compose launcher for Open WebUI.
+# Interactive docker compose launcher for Biz GPT.
 # Supports GPU auto-detection, configurable ports, data mounts, and Playwright.
 # ---------------------------------------------------------------------------
 

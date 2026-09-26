@@ -17,7 +17,7 @@ class Tools:
     class Valves(BaseModel):
         FORMS_API_URL: str = Field(
             default='http://bizgpt-forms:8000',
-            description='Forms service URL as seen from the Open WebUI server',
+            description='Forms service URL as seen from the Biz GPT server',
         )
         FORMS_PUBLIC_URL: str = Field(
             default='http://localhost:8090',
@@ -87,7 +87,7 @@ class Tools:
 
         if self.valves.SIDE_PANEL_LINK and __event_emitter__:
             # A source with embed_url shows as a chip under the reply; clicking it opens
-            # the same live form in Open WebUI's right-side panel.
+            # the same live form in Biz GPT's right-side panel.
             await __event_emitter__(
                 {
                     'type': 'source',

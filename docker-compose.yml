@@ -1,12 +1,16 @@
-# BizGPT stack. Open WebUI runs from the official image; our code lives in ./owui
+# BizGPT stack. Biz GPT runs from the official image; our code lives in ./owui
 # and is pushed in with scripts/sync.py. Upgrading = change OPEN_WEBUI_VERSION in .env.
 services:
   open-webui:
-    image: ghcr.io/open-webui/open-webui:${OPEN_WEBUI_VERSION:?set OPEN_WEBUI_VERSION in .env}
+    build:
+      context: ./open-webui
+      args:
+        BUILD_HASH: bizgpt-subpath
+    image: bizgpt-open-webui:local
     container_name: bizgpt-webui
     restart: unless-stopped
     ports:
-      - "${OPEN_WEBUI_PORT:-3000}:8080"
+      - "127.0.0.1:${OPEN_WEBUI_PORT:-3000}:8080"
     env_file: .env
     environment:
       - ENABLE_API_KEYS=true
@@ -41,8 +45,8 @@ services:
     restart: unless-stopped
     platform: linux/amd64
     ports:
-      - "${NANGO_SERVER_PORT:-3003}:3003"
-      - "${NANGO_CONNECT_UI_PORT:-3009}:3009"
+      - "127.0.0.1:${NANGO_SERVER_PORT:-3003}:3003"
+      - "127.0.0.1:${NANGO_CONNECT_UI_PORT:-3009}:3009"
     environment:
       - NANGO_ENCRYPTION_KEY=${NANGO_ENCRYPTION_KEY:?set NANGO_ENCRYPTION_KEY in .env}
       - NANGO_ADMIN_KEY=${NANGO_ADMIN_KEY:?set NANGO_ADMIN_KEY in .env}
@@ -51,6 +55,7 @@ services:
       - NANGO_DB_HOST=nango-db
       - NANGO_DB_NAME=${NANGO_DB_NAME:-nango}
       - RECORDS_DATABASE_URL=postgresql://${NANGO_DB_USER:-nango}:${NANGO_DB_PASSWORD:-nango}@nango-db:5432/${NANGO_DB_NAME:-nango}
+      - PORT=3003
       - SERVER_PORT=3003
       - NANGO_SERVER_URL=${NANGO_SERVER_URL:-http://localhost:3003}
       - NANGO_PUBLIC_SERVER_URL=${NANGO_PUBLIC_SERVER_URL:-http://localhost:3003}
@@ -61,8 +66,6 @@ services:
       - NANGO_DASHBOARD_USERNAME=${NANGO_DASHBOARD_USERNAME:-admin}
       - NANGO_DASHBOARD_PASSWORD=${NANGO_DASHBOARD_PASSWORD:?set NANGO_DASHBOARD_PASSWORD in .env}
       - LOG_LEVEL=info
-    volumes:
-      - ../reference/nango/packages/providers/providers.yaml:/app/nango/packages/providers/providers.yaml:ro
     depends_on:
       - nango-db
       - nango-redis
@@ -73,7 +76,7 @@ services:
     container_name: bizgpt-forms
     restart: unless-stopped
     ports:
-      - "${FORMS_PORT:-8090}:8000"
+      - "127.0.0.1:${FORMS_PORT:-8090}:8000"
     environment:
       - FORMS_API_KEY=${FORMS_API_KEY:?set FORMS_API_KEY in .env}
       - FORMS_PUBLIC_URL=${FORMS_PUBLIC_URL:-http://localhost:8090}
@@ -97,7 +100,7 @@ services:
     container_name: bizgpt-integrations
     restart: unless-stopped
     ports:
-      - "8092:8002"
+      - "127.0.0.1:${INTEGRATIONS_PORT:-8092}:8002"
     environment:
       - INTEGRATIONS_API_KEY=${INTEGRATIONS_API_KEY:?set INTEGRATIONS_API_KEY in .env}
       - INTEGRATIONS_PUBLIC_URL=${INTEGRATIONS_PUBLIC_URL:-http://localhost:8092}
@@ -120,7 +123,7 @@ services:
     container_name: bizgpt-api
     restart: unless-stopped
     ports:
-      - "${BIZGPT_API_PORT:-8093}:8003"
+      - "127.0.0.1:${BIZGPT_API_PORT:-8093}:8003"
     environment:
       - WORKFLOWS_CONFIG_PATH=/config/workflows.yaml
       - WORKFLOW_STUDIO_DIR=/config/workflow-studio
@@ -150,7 +153,7 @@ services:
     container_name: bizgpt-automation
     restart: unless-stopped
     ports:
-      - "8091:8001"
+      - "127.0.0.1:${AUTOMATION_PORT:-8091}:8001"
     volumes:
       - bizgpt-automation-data:/data
 

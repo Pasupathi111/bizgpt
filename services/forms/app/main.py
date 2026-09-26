@@ -1,7 +1,7 @@
 """
 Biz GPT Dynamic Forms service.
 
-Internal API (bearer FORMS_API_KEY) is used by the Open WebUI tool and the
+Internal API (bearer FORMS_API_KEY) is used by the Biz GPT tool and the
 Biz GPT gateway. Public API is used by the form page the user sees; the
 unguessable form id is the capability for that one form.
 """
@@ -48,7 +48,7 @@ app.add_middleware(
 @app.middleware('http')
 async def security_headers(request: Request, call_next):
     response = await call_next(request)
-    # The form page is embedded by Open WebUI; only allow the configured origins to frame it.
+    # The form page is embedded by Biz GPT; only allow the configured origins to frame it.
     response.headers['Content-Security-Policy'] = f'frame-ancestors {FRAME_ANCESTORS}'
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['Referrer-Policy'] = 'no-referrer'

@@ -507,7 +507,7 @@
 					</AdminSettingField>
 				{/if}
 
-				<!-- LICENSE covers this Open WebUI wordmark.
+				<!-- LICENSE covers this Biz GPT wordmark.
 					Do not alter, remove, obscure, or replace it except as LICENSE permits:
 					https://docs.openwebui.com/license. -->
 				<AdminSettingRow
@@ -732,7 +732,7 @@
 							/>
 						</AdminSettingField>
 
-						<!-- LICENSE covers this Open WebUI wordmark.
+						<!-- LICENSE covers this Biz GPT wordmark.
 						Do not alter, remove, obscure, or replace it except as LICENSE permits:
 						https://docs.openwebui.com/license. -->
 						<AdminSettingRow
@@ -783,7 +783,7 @@
 							</AdminSettingField>
 						{/if}
 
-						<!-- LICENSE covers this Open WebUI wordmark.
+						<!-- LICENSE covers this Biz GPT wordmark.
 						Do not alter, remove, obscure, or replace it except as LICENSE permits:
 						https://docs.openwebui.com/license. -->
 						<AdminSettingRow

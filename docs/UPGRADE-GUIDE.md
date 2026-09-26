@@ -1,6 +1,6 @@
-# Upgrade Guide: Open WebUI
+# Upgrade Guide: Biz GPT
 
-Goal: **upgrade Open WebUI → run the compatibility check → run sync.py → BizGPT still works**, with no code rewrites.
+Goal: **upgrade Biz GPT → run the compatibility check → run sync.py → BizGPT still works**, with no code rewrites.
 
 ## Why it's safe
 
@@ -32,11 +32,11 @@ Goal: **upgrade Open WebUI → run the compatibility check → run sync.py → B
 ## Rollback
 
 1. `OPEN_WEBUI_VERSION=<previous>` in `.env`.
-2. Restore the DB from `backups/<ts>/` (Open WebUI migrations are forward-only, so a DB restore is **required** if the new version migrated the schema).
+2. Restore the DB from `backups/<ts>/` (Biz GPT migrations are forward-only, so a DB restore is **required** if the new version migrated the schema).
 3. `docker compose up -d && python3 scripts/sync.py`.
 4. `./scripts/compatibility-check.sh`.
 
-## Release checklist (each new Open WebUI version)
+## Release checklist (each new Biz GPT version)
 
 - Read the release notes for changes to the **Functions/Tools API, MCP client, tool-server config schema, env var renames, and `request:user_input` / embeds**.
 - Check GitHub security advisories fixed in this release. Prefer upgrading promptly when high or critical fixes land.

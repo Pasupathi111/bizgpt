@@ -335,10 +335,10 @@ https://github.com/open-webui/open-webui
         print(banner)
     except UnicodeEncodeError:
         # Stdout can't encode the box-drawing banner (Windows cp1252, redirected/headless stdout); fall back to ASCII.
-        # LICENSE covers this Open WebUI CLI identifier.
+        # LICENSE covers this Biz GPT CLI identifier.
         # Do not alter, remove, obscure, or replace it except as LICENSE permits:
         # https://docs.openwebui.com/license.
-        print(f'Open WebUI v{VERSION} - building the best AI user interface.\nhttps://github.com/open-webui/open-webui')
+        print(f'Biz GPT v{VERSION} - building the best AI user interface.\nhttps://github.com/open-webui/open-webui')
 
 
 @asynccontextmanager
@@ -500,11 +500,11 @@ async def lifespan(app: FastAPI):
 # response_model routes keep FastAPI's Pydantic fast path either way.
 apply_orjson_http_json()
 
-# LICENSE covers this Open WebUI API metadata identifier.
+# LICENSE covers this Biz GPT API metadata identifier.
 # Do not alter, remove, obscure, or replace it except as LICENSE permits:
 # https://docs.openwebui.com/license.
 app = FastAPI(
-    title='Open WebUI',
+    title='Biz GPT',
     docs_url='/docs' if ENV == 'dev' else None,
     openapi_url='/openapi.json' if ENV == 'dev' else None,
     redoc_url=None,
@@ -520,7 +520,7 @@ async def recurrence_timeout_handler(request: Request, exc: RecurrenceEvaluation
 # Used by readiness checks to gate traffic until startup work is done.
 app.state.startup_complete = False
 
-# For Open WebUI OIDC/OAuth2
+# For Biz GPT OIDC/OAuth2
 oauth_manager = OAuthManager(app)
 app.state.oauth_manager = oauth_manager
 
@@ -531,7 +531,7 @@ app.state.oauth_client_manager = oauth_client_manager
 app.state.instance_id = None
 app.state.redis = None
 
-# LICENSE covers this Open WebUI branding surface, including name, logo,
+# LICENSE covers this Biz GPT branding surface, including name, logo,
 # visual, textual, symbolic identifiers, metadata, and surrounding UI.
 # Do not alter, remove, obscure, or replace it except as LICENSE permits:
 # https://docs.openwebui.com/license.
@@ -2033,7 +2033,7 @@ async def generate_messages(
     pipeline, then converts the response back to Anthropic Messages format.
 
     Supports both streaming and non-streaming requests.
-    All models configured in Open WebUI are accessible via this endpoint.
+    All models configured in Biz GPT are accessible via this endpoint.
 
     Authentication: Supports both standard Authorization header and
     Anthropic's x-api-key header (via middleware translation).
@@ -2640,7 +2640,7 @@ async def get_app_changelog():
 @app.get('/api/usage')
 async def get_current_usage(user=Depends(get_verified_user)):
     """
-    Get current usage statistics for Open WebUI.
+    Get current usage statistics for Biz GPT.
     This is an experimental endpoint and subject to change.
     """
     try:
@@ -2888,7 +2888,7 @@ async def oauth_backchannel_logout(
 async def get_manifest_json():
     external_pwa_manifest_url = getattr(app.state, 'EXTERNAL_PWA_MANIFEST_URL', None)
     if external_pwa_manifest_url:
-        # LICENSE covers this install-time Open WebUI branding surface, including
+        # LICENSE covers this install-time Biz GPT branding surface, including
         # names, logos, manifests, metadata, and surrounding UI.
         # Do not alter, remove, obscure, or replace it except as LICENSE permits:
         # https://docs.openwebui.com/license.
@@ -2900,7 +2900,7 @@ async def get_manifest_json():
             r.raise_for_status()
             return await r.json()
     else:
-        # LICENSE covers this generated Open WebUI install branding surface,
+        # LICENSE covers this generated Biz GPT install branding surface,
         # including names, logos, manifests, metadata, and surrounding UI.
         # Do not alter, remove, obscure, or replace it except as LICENSE permits:
         # https://docs.openwebui.com/license.
@@ -2912,7 +2912,7 @@ async def get_manifest_json():
             'display': 'standalone',
             'background_color': '#343541',
             'icons': [
-                # LICENSE covers this Open WebUI install icon.
+                # LICENSE covers this Biz GPT install icon.
                 # Do not alter, remove, obscure, or replace it except as LICENSE permits:
                 # https://docs.openwebui.com/license.
                 {
@@ -2939,7 +2939,7 @@ async def get_manifest_json():
 @app.get('/opensearch.xml')
 async def get_opensearch_xml():
     webui_url = await Config.get('webui.url')
-    # LICENSE covers this Open WebUI search identifier.
+    # LICENSE covers this Biz GPT search identifier.
     # Do not alter, remove, obscure, or replace it except as LICENSE permits:
     # https://docs.openwebui.com/license.
     xml_content = rf"""

@@ -4,8 +4,8 @@
 
 | # | Blocker | Needed from DBiz | Blocks |
 |---|---|---|---|
-| B1 | **Branding licence.** A full "BizGPT" rebrand needs an Open WebUI enterprise licence (> 50 users) | Buy the licence, **or** accept "BizGPT (Open WebUI)" co-branding | Phase 1 branding |
-| B2 | **Gmail MCP location unknown.** The only Gmail MCP found is the claude.ai connector, which Open WebUI can't use | Repo or URL, transport, and auth model of your Gmail MCP; or approval to use `google_workspace_mcp` | Phase 2 Gmail |
+| B1 | **Branding licence.** A full "BizGPT" rebrand needs an Biz GPT enterprise licence (> 50 users) | Buy the licence, **or** accept "BizGPT (Biz GPT)" co-branding | Phase 1 branding |
+| B2 | **Gmail MCP location unknown.** The only Gmail MCP found is the claude.ai connector, which Biz GPT can't use | Repo or URL, transport, and auth model of your Gmail MCP; or approval to use `google_workspace_mcp` | Phase 2 Gmail |
 | B3 | **Inbox Zero licence.** AGPL plus a commercial / 5+ user restriction | Approve **option D** (native), or buy an Inbox Zero licence (then A + C) | Phase 6 |
 | B4 | **Nango tier.** The free self-hosted tier is Auth + Proxy only ("hobby/evaluation"), and ELv2 forbids offering it as a hosted service | Accept the free tier (our gateway does the tools), or budget for BYOC; legal check if BizGPT is SaaS for clients | Phase 2 |
 | B5 | **Dify details** | Dify URL, **version (must be ≥ 1.16.0)**, list of workflow apps with API keys | Phase 3 |
@@ -17,7 +17,7 @@
 
 | Phase | Deliverables | Depends on | Effort (dev-days) |
 |---|---|---|---|
-| **1. Foundation** | `git init` for bizgpt; compose (Open WebUI pinned, Postgres, Redis, Caddy); `.env.example` (`OPEN_WEBUI_VERSION`); branding config; **sync.py v2** (functions, tools, models, tool servers, banners, prompts; idempotent; `--dry-run`, `--target`); **upgrade.sh**; **compatibility-check.sh**; DEPLOYMENT.md; CI smoke tests with `mock_dify` | B1, B8 | 6–8 |
+| **1. Foundation** | `git init` for bizgpt; compose (Biz GPT pinned, Postgres, Redis, Caddy); `.env.example` (`OPEN_WEBUI_VERSION`); branding config; **sync.py v2** (functions, tools, models, tool servers, banners, prompts; idempotent; `--dry-run`, `--target`); **upgrade.sh**; **compatibility-check.sh**; DEPLOYMENT.md; CI smoke tests with `mock_dify` | B1, B8 | 6–8 |
 | **2a. Nango** | Nango deploy, integrations config (google-mail, microsoft), Connect-link flow, `get_integration_status` / `connect_integration` | B4 | 3 |
 | **2b. MCP gateway skeleton** | `services/mcp-gateway` (FastMCP, streamable HTTP, bearer auth, user resolution, provider interfaces, contract tests) | 2a | 4 |
 | **2c. Gmail** | Plug the existing Gmail MCP (or workspace-mcp) behind `EmailProvider`; all email contracts | B2, 2b | 3 |
@@ -36,7 +36,7 @@
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Open WebUI changes the Functions/Tools or MCP config schema in a release | Medium | Medium | upgrade.sh test env, compatibility checks, pinned version |
+| Biz GPT changes the Functions/Tools or MCP config schema in a release | Medium | Medium | upgrade.sh test env, compatibility checks, pinned version |
 | Form embed can't message the running chat | Medium | Low | Fallback: the agent polls `get_form`; the user types "done"; `request:user_input` for short forms |
 | Existing Gmail MCP can't accept per-user bearer tokens | Medium | Medium | Swap in `google_workspace_mcp` behind the same contract |
 | Nango free tier limits or licence change | Low–medium | Medium | Gateway abstracts `TokenProvider`; can swap to BYOC or direct OAuth |

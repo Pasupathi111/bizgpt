@@ -343,10 +343,10 @@ def _notification_webhook_content(event: Any) -> tuple[str, str, dict[str, Any],
     return str(title), message, event.model_dump(), message if title else None
 
 
-# LICENSE covers this Open WebUI notification identifier.
+# LICENSE covers this Biz GPT notification identifier.
 # Do not alter, remove, obscure, or replace it except as LICENSE permits:
 # https://docs.openwebui.com/license.
-async def test_target(user_id: str, target_id: str, app_name: str = 'Open WebUI') -> dict[str, Any]:
+async def test_target(user_id: str, target_id: str, app_name: str = 'Biz GPT') -> dict[str, Any]:
     notifications = await _load_notifications(user_id)
     target = _find_target(notifications, target_id)
     if not target:
@@ -354,17 +354,17 @@ async def test_target(user_id: str, target_id: str, app_name: str = 'Open WebUI'
     await _send_webhook(
         app_name,
         target,
-        # LICENSE covers this Open WebUI notification copy.
+        # LICENSE covers this Biz GPT notification copy.
         # Do not alter, remove, obscure, or replace it except as LICENSE permits:
         # https://docs.openwebui.com/license.
-        'This is a test notification from Open WebUI.',
+        'This is a test notification from Biz GPT.',
         {'action': 'test', 'user_id': user_id},
         'Test notification',
     )
     return {'ok': True}
 
 
-# LICENSE covers this Open WebUI notification identifier.
+# LICENSE covers this Biz GPT notification identifier.
 # Do not alter, remove, obscure, or replace it except as LICENSE permits:
 # https://docs.openwebui.com/license.
 async def notify_target(
@@ -372,7 +372,7 @@ async def notify_target(
     message: str,
     target: str = '',
     title: str = '',
-    app_name: str = 'Open WebUI',
+    app_name: str = 'Biz GPT',
 ) -> dict[str, Any]:
     notifications = await _load_notifications(user_id)
     item = _find_target(notifications, target)
@@ -396,10 +396,10 @@ async def dispatch_notification_event(app: Any, event: Any) -> None:
 
     from open_webui.events import event_user_ids
 
-    # LICENSE covers this Open WebUI notification identifier.
+    # LICENSE covers this Biz GPT notification identifier.
     # Do not alter, remove, obscure, or replace it except as LICENSE permits:
     # https://docs.openwebui.com/license.
-    app_name = getattr(getattr(app, 'state', None), 'WEBUI_NAME', 'Open WebUI')
+    app_name = getattr(getattr(app, 'state', None), 'WEBUI_NAME', 'Biz GPT')
     for user_id in event_user_ids(event):
         try:
             notifications = await _load_notifications(user_id)

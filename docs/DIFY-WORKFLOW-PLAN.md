@@ -2,7 +2,7 @@
 
 ## 1. Goal
 
-Use the existing self-hosted Dify instance as BizGPT's workflow engine without embedding Dify into Open WebUI and without coupling the agent to Dify-specific app details.
+Use the existing self-hosted Dify instance as BizGPT's workflow engine without embedding Dify into Biz GPT and without coupling the agent to Dify-specific app details.
 
 BizGPT should expose a stable workflow layer:
 
@@ -19,7 +19,7 @@ The agent calls those contracts. BizGPT then routes the request to the correct D
 The current repo already has the main pieces we need:
 
 - `owui/functions/dify_pipe.py`
-  - exposes Dify apps as Open WebUI models
+  - exposes Dify apps as Biz GPT models
   - good for "Dify app as model" demos
 - `services/forms/app/actions.py`
   - already supports `action.type == "dify_workflow"`
@@ -37,7 +37,7 @@ So this phase is mostly about standardizing and hardening the Dify path, not inv
 
 ```text
 User
-  -> Open WebUI BizGPT Assistant
+  -> Biz GPT BizGPT Assistant
   -> BizGPT stable workflow contracts
   -> bizgpt-mcp / workflow provider
   -> Dify Service API
@@ -525,7 +525,7 @@ Use `dev/mock_dify.py` for:
 
 ### End-to-end
 
-Verify in Open WebUI:
+Verify in Biz GPT:
 
 1. direct workflow tool execution
 2. workflow converted into a form
@@ -551,7 +551,7 @@ Proceed with Dify as the workflow backend behind BizGPT stable contracts, with D
 
 That gives us:
 
-- upgrade-safe Open WebUI integration
+- upgrade-safe Biz GPT integration
 - reuse of your existing self-hosted Dify
 - clean separation between business workflows and agent behavior
 - a direct path from chat -> form -> workflow -> result

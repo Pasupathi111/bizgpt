@@ -1,6 +1,6 @@
 # Security Policy
 
-Our goal is to protect Open WebUI's users and their data, and to handle security reports with a clear, consistent, and publicly documented process.
+Our goal is to protect Biz GPT's users and their data, and to handle security reports with a clear, consistent, and publicly documented process.
 We want to operate a transparent security process, in which accepted vulnerabilities are published openly as advisories so anyone can see what was found, how it was resolved and most importantly, which version contains a patch for it.
 Our stance: a visible advisory history is evidence of active scrutiny and a disclosure process that works, not a measure of how fragile the software is.
 
@@ -48,7 +48,7 @@ What we _can't_ offer is a bounty or a guaranteed turnaround. What you get is a 
 
 ## Alignment with the CVE Program
 
-The **CVE Program rules** (and CNA operational rules) are the **baseline** for all CVE handling here, and this policy operates within them. Under those rules, the determination of whether a report constitutes a security vulnerability in Open WebUI is the vendor's to make; this policy documents the criteria by which we exercise that determination. Where the rules are silent, they still apply; where this policy specifies how we apply them to Open WebUI, it does so as the vendor's published disposition criteria, not as a replacement for or exception to the program rules.
+The **CVE Program rules** (and CNA operational rules) are the **baseline** for all CVE handling here, and this policy operates within them. Under those rules, the determination of whether a report constitutes a security vulnerability in Biz GPT is the vendor's to make; this policy documents the criteria by which we exercise that determination. Where the rules are silent, they still apply; where this policy specifies how we apply them to Biz GPT, it does so as the vendor's published disposition criteria, not as a replacement for or exception to the program rules.
 
 ## Reporting Channel
 
@@ -85,7 +85,7 @@ However, effective immediately, we will **not** accept low-effort vulnerability 
 
 2. **No Vague Reports**: Submissions such as "I found a vulnerability" without any details will be treated as spam and will not be accepted.
 
-3. **In-Depth Understanding**: Reports must reflect a clear understanding of the codebase, how Open WebUI is used and provide specific details about the vulnerability, including the affected components and potential impacts.
+3. **In-Depth Understanding**: Reports must reflect a clear understanding of the codebase, how Biz GPT is used and provide specific details about the vulnerability, including the affected components and potential impacts.
 
 4. **Proof of Concept (PoC) is Mandatory**: Each submission must include a well-documented proof of concept (PoC) that demonstrates the vulnerability. If confidentiality is a concern, reporters are encouraged to create a private fork of the repository and share access with the maintainers. Reports lacking valid evidence may be disregarded.
 
@@ -111,7 +111,7 @@ Your remediation guidance can include, for example:
 - The **recommended fix approach** (validation/sanitization rules, auth checks, safe defaults, etc.)
 - Any **security tradeoffs** or potential regressions to watch for
 
-6. **Default Configuration Testing**: Vulnerability reports must be tested and reproducible using Open WebUI's out-of-the-box default configuration. Claims of vulnerabilities that only manifest with explicitly weakened security settings may be discarded, unless they are covered by the following exception:
+6. **Default Configuration Testing**: Vulnerability reports must be tested and reproducible using Biz GPT's out-of-the-box default configuration. Claims of vulnerabilities that only manifest with explicitly weakened security settings may be discarded, unless they are covered by the following exception:
 
 > [!NOTE]  
 > **Note**: If you believe you have found a security issue that
@@ -120,7 +120,7 @@ Your remediation guidance can include, for example:
 > 2. represents a genuine bypass of intended security controls, **or**
 > 3. works only with non-default configurations, **but the configuration in question is likely to be used by production deployments**, **then we absolutely want to hear about it.** This policy is intended to filter configuration issues and deployment problems, not to discourage legitimate security research.
 
-7. **Threat Model Understanding Required**: Reports must demonstrate understanding of Open WebUI's self-hosted, single-tenant, authenticated, extensible, role-based access control architecture. Comparing Open WebUI to services with fundamentally different security models without acknowledging the architectural differences may result in report rejection.
+7. **Threat Model Understanding Required**: Reports must demonstrate understanding of Biz GPT's self-hosted, single-tenant, authenticated, extensible, role-based access control architecture. Comparing Biz GPT to services with fundamentally different security models without acknowledging the architectural differences may result in report rejection.
 
 8. **CVSS Scoring Accuracy:** You do not have to include a CVSS score in your report. If you leave the CVSS section empty, we will fill it out for you prior to publishing. If you include a CVSS score with your report, it must accurately reflect the vulnerability according to CVSS methodology. In case of inaccurate CVSS, we will adjust the CVSS score of your report. If you cite other CVEs to support your report, ensure they are **genuinely comparable** in vulnerability type, threat model, and attack vector.
 
@@ -130,12 +130,12 @@ Your remediation guidance can include, for example:
 > Similar to rule "Default Configuration Testing": If you believe you have found a vulnerability that affects admins and is NOT caused by admin negligence or intentionally malicious actions,
 > **then we absolutely want to hear about it.** This policy is intended to filter social engineering attacks on admins, malicious plugins being deployed by admins and similar malicious actions, not to discourage legitimate security research.
 
-10. **Tools & Functions Code Execution Is Intended Behavior:** Open WebUI's Tools and Functions feature is **designed** to execute user-provided Python code on the server. This is core, intentional functionality — not a vulnerability (see also 'Threat Model Understanding'). Function creation is **restricted to administrators only**. Tool creation is controlled by the `workspace.tools` permission, which is **disabled by default** for non-admin users and should only be granted to fully trusted users who are equivalent to system administrators in terms of trust. <ins>**Granting a user the ability to create Tools is equivalent to giving them shell access to the server**</ins>. If an administrator grants this permission to untrusted users, this constitutes intentional misconfiguration and is additionally covered by 'Admin Actions Are Out of Scope'. Deployments that do not need `workspace.tools` or Functions plugin execution can set `ENABLE_PLUGINS=false`. More generally, **reports describing ANY attack chain that involves Tools or Functions — including but not limited to code execution, file access, network requests, or environment variable access — will be closed as not a vulnerability / intended behavior.** This applies to both direct code execution and frontmatter-based package installation (`pip install`).
+10. **Tools & Functions Code Execution Is Intended Behavior:** Biz GPT's Tools and Functions feature is **designed** to execute user-provided Python code on the server. This is core, intentional functionality — not a vulnerability (see also 'Threat Model Understanding'). Function creation is **restricted to administrators only**. Tool creation is controlled by the `workspace.tools` permission, which is **disabled by default** for non-admin users and should only be granted to fully trusted users who are equivalent to system administrators in terms of trust. <ins>**Granting a user the ability to create Tools is equivalent to giving them shell access to the server**</ins>. If an administrator grants this permission to untrusted users, this constitutes intentional misconfiguration and is additionally covered by 'Admin Actions Are Out of Scope'. Deployments that do not need `workspace.tools` or Functions plugin execution can set `ENABLE_PLUGINS=false`. More generally, **reports describing ANY attack chain that involves Tools or Functions — including but not limited to code execution, file access, network requests, or environment variable access — will be closed as not a vulnerability / intended behavior.** This applies to both direct code execution and frontmatter-based package installation (`pip install`).
 
 > [!IMPORTANT]
 > **For administrators:** Treat the `workspace.tools` permission as **root-equivalent access**. Only grant it to users you would trust with direct access to your server. If you enable this permission for untrusted users, you are accepting the risk of arbitrary code execution on your host. For more details, see our [Plugin Security documentation](https://docs.openwebui.com/features/extensibility/plugin/).
 
-11. **Legacy Code Paths Are Out of Scope:** Open WebUI maintains some code paths that are explicitly marked as legacy in the official documentation, which is authoritative as to what is legacy. Legacy paths remain available — sometimes still the default — purely for backwards-compatibility reasons, not because they are the supported or maintained surface. The supported replacement is the migration target, and security and functional work happens on the replacement, not the legacy path. Reports describing a security boundary issue on a legacy code path that does not also reproduce on the supported replacement are usually out of scope under this rule.
+11. **Legacy Code Paths Are Out of Scope:** Biz GPT maintains some code paths that are explicitly marked as legacy in the official documentation, which is authoritative as to what is legacy. Legacy paths remain available — sometimes still the default — purely for backwards-compatibility reasons, not because they are the supported or maintained surface. The supported replacement is the migration target, and security and functional work happens on the replacement, not the legacy path. Reports describing a security boundary issue on a legacy code path that does not also reproduce on the supported replacement are usually out of scope under this rule.
 
 > [!NOTE]
 > If you find a security issue that:
@@ -159,7 +159,7 @@ If you want to report something that does not fulfill our rules and guidelines l
 
 ## Expected Timeframe
 
-We aim to triage new reports, ship fixes, and publish advisories promptly. However, due to the very high volume of incoming vulnerability reports, issues, discussions, pull requests, and general project maintenance — lately compounded by a high number of (AI-generated) reports — not every report can be handled immediately. Open WebUI is led and maintained by a small core team, and security reports are handled alongside all other project responsibilities.
+We aim to triage new reports, ship fixes, and publish advisories promptly. However, due to the very high volume of incoming vulnerability reports, issues, discussions, pull requests, and general project maintenance — lately compounded by a high number of (AI-generated) reports — not every report can be handled immediately. Biz GPT is led and maintained by a small core team, and security reports are handled alongside all other project responsibilities.
 
 **Please expect several weeks** for your report to be triaged, investigated, fixed, and published. While we aim to respond to every report as quickly as possible, it is normal to experience periods of silence lasting up to several weeks. **This does not mean your report has been ignored** — it means it has not yet been picked up. Feel free to post a follow-up comment on your advisory for visibility if you feel your report may have been lost; we'll get to you as we work through the reports. The entire process can realistically take multiple weeks from initial submission to final publication. We appreciate your patience and understanding.
 
@@ -187,7 +187,7 @@ Vulnerability reports submitted through GitHub Security Advisories are **private
 
 This prohibition applies to **all channels**, including but not limited to comments on pull requests, issues, or discussions (on GitHub or elsewhere), social media (Discord, Reddit or any other platform), blogs, forums, or any other website or service.
 
-This confidential, responsible disclosure process exists to give us time to fix bugs, publish fixes and alert users once a fix is ready. The entire premise of responsible disclosure is to **protect users from vulnerabilities**. Therefore, premature disclosure undermines the security of all Open WebUI users and **violates the trust** inherent in the responsible disclosure process. **Reporters who prematurely publicly disclose vulnerability details before official publication <ins>WILL BE PERMANENTLY BANNED from future reporting.</ins>**
+This confidential, responsible disclosure process exists to give us time to fix bugs, publish fixes and alert users once a fix is ready. The entire premise of responsible disclosure is to **protect users from vulnerabilities**. Therefore, premature disclosure undermines the security of all Biz GPT users and **violates the trust** inherent in the responsible disclosure process. **Reporters who prematurely publicly disclose vulnerability details before official publication <ins>WILL BE PERMANENTLY BANNED from future reporting.</ins>**
 
 ## For Non-Vulnerability Related Questions or Security Concerns:
 

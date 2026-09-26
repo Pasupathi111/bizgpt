@@ -117,7 +117,7 @@ for file_path in (FRONTEND_BUILD_DIR / 'static').glob('**/*'):
         except Exception as e:
             logging.error(f'An error occurred: {e}')
 
-# LICENSE covers copied Open WebUI logo/favicon assets.
+# LICENSE covers copied Biz GPT logo/favicon assets.
 # Do not alter, remove, obscure, or replace them except as LICENSE permits:
 # https://docs.openwebui.com/license.
 frontend_favicon = FRONTEND_BUILD_DIR / 'static' / 'favicon.png'
@@ -187,7 +187,7 @@ CACHE_DIR.mkdir(parents=True, exist_ok=True)
 # CUSTOM_NAME (Legacy)
 ####################################
 
-# LICENSE covers this legacy Open WebUI branding path.
+# LICENSE covers this legacy Biz GPT branding path.
 # Do not alter, remove, obscure, or replace it except as LICENSE permits:
 # https://docs.openwebui.com/license.
 CUSTOM_NAME = os.getenv('CUSTOM_NAME', '')
@@ -253,7 +253,7 @@ if OLLAMA_BASE_URL == '' and OLLAMA_API_BASE_URL != '':
 if ENV == 'prod':
     if OLLAMA_BASE_URL == '/ollama' and not K8S_FLAG:
         if USE_OLLAMA_DOCKER.lower() == 'true':
-            # if you use all-in-one docker container (Open WebUI + Ollama)
+            # if you use all-in-one docker container (Biz GPT + Ollama)
             # with the docker build arg USE_OLLAMA=true (--build-arg="USE_OLLAMA=true") this only works with http://localhost:11434
             OLLAMA_BASE_URL = 'http://localhost:11434'
         else:
@@ -2068,7 +2068,7 @@ DEFAULT_ARENA_MODEL = {
     'id': 'arena-model',
     'name': 'Arena Model',
     'meta': {
-        # LICENSE covers this Open WebUI fallback logo.
+        # LICENSE covers this Biz GPT fallback logo.
         # Do not alter, remove, obscure, or replace it except as LICENSE permits:
         # https://docs.openwebui.com/license.
         'profile_image_url': '/favicon.png',

@@ -54,7 +54,7 @@
 	</h2>
 
 	<div class="flex-1 min-h-0 overflow-y-auto scrollbar-hover pr-1.5">
-		<!-- LICENSE covers this Open WebUI About identifier.
+		<!-- LICENSE covers this Biz GPT About identifier.
 		Do not alter, remove, obscure, or replace it except as LICENSE permits:
 		https://docs.openwebui.com/license. -->
 		<UserSettingSection
@@ -119,11 +119,11 @@
 
 		<UserSettingSection title={$i18n.t('settings.personal.about.sections.community.title')}>
 			{#if $config?.license_metadata}
-				<!-- LICENSE covers this Open WebUI license attribution.
+				<!-- LICENSE covers this Biz GPT license attribution.
 				Do not alter, remove, obscure, or replace it except as LICENSE permits:
 				https://docs.openwebui.com/license. -->
 				<div class="text-xs text-gray-600 dark:text-gray-400">
-					{#if !$WEBUI_NAME.includes('Open WebUI')}
+					{#if !$WEBUI_NAME.includes('Biz GPT')}
 						<span>{$WEBUI_NAME}</span> -
 					{/if}
 
@@ -160,12 +160,12 @@
 			</div>
 
 			<div class="text-xs text-gray-400 dark:text-gray-500">
-				<!-- LICENSE covers this Open WebUI copyright attribution.
+				<!-- LICENSE covers this Biz GPT copyright attribution.
 				Do not alter, remove, obscure, or replace it except as LICENSE permits:
 				https://docs.openwebui.com/license. -->
 				{$i18n.t('Copyright (c)')}
 				{new Date().getFullYear()}
-				<a href="https://openwebui.com" target="_blank" class="underline">Open WebUI Inc.</a>
+				<a href="https://openwebui.com" target="_blank" class="underline">Biz GPT Inc.</a>
 				<a href="https://github.com/open-webui/open-webui/blob/main/LICENSE" target="_blank"
 					>{$i18n.t('All rights reserved.')}</a
 				>

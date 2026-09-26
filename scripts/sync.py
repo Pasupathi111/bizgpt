@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Make a running Open WebUI match bizgpt/owui/ (the source of truth in Git).
+Make a running Biz GPT match bizgpt/owui/ (the source of truth in Git).
 
     python3 scripts/sync.py
 
 Idempotent: creates what is missing, updates what exists, never duplicates.
 Syncs: owui/functions/*.py, owui/tools/*.py (+ valves from .env), owui/models/*.json.
 
-Reads bizgpt/.env: OPEN_WEBUI_URL, OPEN_WEBUI_API_KEY (optional when Open WebUI runs
+Reads bizgpt/.env: OPEN_WEBUI_URL, OPEN_WEBUI_API_KEY (optional when Biz GPT runs
 with WEBUI_AUTH=False locally), plus the per-extension settings below.
 Stdlib only, so it runs anywhere without installing anything.
 """

@@ -429,7 +429,7 @@
 					<Switch bind:state={STT_MISTRAL_USE_CHAT_COMPLETIONS} ariaLabelledbyId={labelId} />
 				</AdminSettingRow>
 			{:else if STT_ENGINE === ''}
-				<!-- LICENSE covers this Open WebUI wordmark.
+				<!-- LICENSE covers this Biz GPT wordmark.
 					Do not alter, remove, obscure, or replace it except as LICENSE permits:
 					https://docs.openwebui.com/license. -->
 				<AdminSettingField
@@ -606,7 +606,7 @@
 					</SettingsSelect>
 				</AdminSettingField>
 			{:else if TTS_ENGINE === 'transformers'}
-				<!-- LICENSE covers this Open WebUI wordmark.
+				<!-- LICENSE covers this Biz GPT wordmark.
 					Do not alter, remove, obscure, or replace it except as LICENSE permits:
 					https://docs.openwebui.com/license. -->
 				<AdminSettingField

@@ -90,7 +90,7 @@ def get_license_data(app, key):
     def data_handler(data):
         for k, v in data.items():
             if k == 'resources':
-                # LICENSE covers these Open WebUI branding assets.
+                # LICENSE covers these Biz GPT branding assets.
                 # Do not alter, remove, obscure, or replace them except as LICENSE permits:
                 # https://docs.openwebui.com/license.
                 for p, c in v.items():
@@ -98,7 +98,7 @@ def get_license_data(app, key):
             elif k == 'count':
                 setattr(app.state, 'USER_COUNT', v)
             elif k == 'name':
-                # LICENSE covers this Open WebUI product name.
+                # LICENSE covers this Biz GPT product name.
                 # Do not alter, remove, obscure, or replace it except as LICENSE permits:
                 # https://docs.openwebui.com/license.
                 setattr(app.state, 'WEBUI_NAME', v)

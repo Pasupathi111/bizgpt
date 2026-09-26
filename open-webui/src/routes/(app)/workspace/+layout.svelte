@@ -18,6 +18,7 @@
 	import { getPromptItems } from '$lib/apis/prompts';
 	import { getSkillItems } from '$lib/apis/skills';
 	import { getToolList } from '$lib/apis/tools';
+        import { withBasePath } from '$lib/constants';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Sidebar from '$lib/components/icons/Sidebar.svelte';
 	import SplitCreateButton from '$lib/components/common/SplitCreateButton.svelte';
@@ -80,24 +81,24 @@
 	onMount(async () => {
 		if ($user?.role !== 'admin') {
 			if ($page.url.pathname.includes('/models') && !$user?.permissions?.workspace?.models) {
-				goto('/', { replaceState: true });
+                                goto(withBasePath('/'), { replaceState: true });
 			} else if (
 				$page.url.pathname.includes('/knowledge') &&
 				!$user?.permissions?.workspace?.knowledge
 			) {
-				goto('/', { replaceState: true });
+                                goto(withBasePath('/'), { replaceState: true });
 			} else if (
 				$page.url.pathname.includes('/prompts') &&
 				!$user?.permissions?.workspace?.prompts
 			) {
-				goto('/', { replaceState: true });
+                                goto(withBasePath('/'), { replaceState: true });
 			} else if (
 				$page.url.pathname.includes('/tools') &&
 				(!$config?.features?.enable_plugins || !$user?.permissions?.workspace?.tools)
 			) {
-				goto('/', { replaceState: true });
+                                goto(withBasePath('/'), { replaceState: true });
 			} else if ($page.url.pathname.includes('/skills') && !$user?.permissions?.workspace?.skills) {
-				goto('/', { replaceState: true });
+                                goto(withBasePath('/'), { replaceState: true });
 			}
 		}
 
@@ -106,7 +107,7 @@
 </script>
 
 <svelte:head>
-	<!-- LICENSE covers this Open WebUI browser-title identifier.
+	<!-- LICENSE covers this Biz GPT browser-title identifier.
 	Do not alter, remove, obscure, or replace it except as LICENSE permits:
 	https://docs.openwebui.com/license. -->
 	<title>
@@ -156,7 +157,7 @@
 								'models'
 									? 'text-gray-900 dark:text-gray-100'
 									: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition select-none"
-								href="/workspace/models"
+                                                                href={withBasePath('/workspace/models')}
 							>
 								<span>{$i18n.t('Models')}</span>
 								<span class="text-sm opacity-60">
@@ -173,7 +174,7 @@
 								'knowledge'
 									? 'text-gray-900 dark:text-gray-100'
 									: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition select-none"
-								href="/workspace/knowledge"
+                                                                href={withBasePath('/workspace/knowledge')}
 							>
 								<span>{$i18n.t('Knowledge')}</span>
 								<span class="text-sm opacity-60">
@@ -190,7 +191,7 @@
 								'prompts'
 									? 'text-gray-900 dark:text-gray-100'
 									: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition select-none"
-								href="/workspace/prompts"
+                                                                href={withBasePath('/workspace/prompts')}
 							>
 								<span>{$i18n.t('Prompts')}</span>
 								<span class="text-sm opacity-60">
@@ -207,7 +208,7 @@
 								'skills'
 									? 'text-gray-900 dark:text-gray-100'
 									: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition select-none"
-								href="/workspace/skills"
+                                                                href={withBasePath('/workspace/skills')}
 							>
 								<span>{$i18n.t('Skills')}</span>
 								<span class="text-sm opacity-60">
@@ -224,7 +225,7 @@
 								'tools'
 									? 'text-gray-900 dark:text-gray-100'
 									: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition select-none"
-								href="/workspace/tools"
+                                                                href={withBasePath('/workspace/tools')}
 							>
 								<span>{$i18n.t('Tools')}</span>
 								<span class="text-sm opacity-60">

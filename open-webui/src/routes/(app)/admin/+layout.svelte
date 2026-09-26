@@ -4,6 +4,7 @@
 
 	import { WEBUI_NAME, config, mobile, showSettings, showSidebar, user } from '$lib/stores';
 	import { page } from '$app/stores';
+        import { withBasePath } from '$lib/constants';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 
 	import Sidebar from '$lib/components/icons/Sidebar.svelte';
@@ -14,19 +15,19 @@
 
 	onMount(async () => {
 		if ($user?.role !== 'admin') {
-			await goto('/', { replaceState: true });
+                        await goto(withBasePath('/'), { replaceState: true });
 		} else if (
 			!$config?.features?.enable_plugins &&
 			$page.url.pathname.includes('/admin/functions')
 		) {
-			await goto('/admin', { replaceState: true });
+                        await goto(withBasePath('/admin'), { replaceState: true });
 		}
 		loaded = true;
 	});
 </script>
 
 <svelte:head>
-	<!-- LICENSE covers this Open WebUI browser-title identifier.
+	<!-- LICENSE covers this Biz GPT browser-title identifier.
 	Do not alter, remove, obscure, or replace it except as LICENSE permits:
 	https://docs.openwebui.com/license. -->
 	<title>
@@ -73,7 +74,7 @@
 							class="min-w-fit px-1 text-sm {$page.url.pathname.includes('/admin/users')
 								? ''
 								: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition select-none"
-							href="/admin">{$i18n.t('Users')}</a
+                                                        href={withBasePath('/admin')}>{$i18n.t('Users')}</a
 						>
 
 						<a
@@ -81,7 +82,7 @@
 							class="min-w-fit px-1 text-sm {$page.url.pathname.includes('/admin/evaluations')
 								? ''
 								: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition select-none"
-							href="/admin/evaluations">{$i18n.t('Evaluations')}</a
+                                                        href={withBasePath('/admin/evaluations')}>{$i18n.t('Evaluations')}</a
 						>
 
 						{#if $config?.features?.enable_plugins}
@@ -90,7 +91,7 @@
 								class="min-w-fit px-1 text-sm {$page.url.pathname.includes('/admin/functions')
 									? ''
 									: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition select-none"
-								href="/admin/functions">{$i18n.t('Functions')}</a
+                                                                href={withBasePath('/admin/functions')}>{$i18n.t('Functions')}</a
 							>
 						{/if}
 
@@ -99,7 +100,7 @@
 							class="min-w-fit px-1 text-sm {$page.url.pathname.includes('/admin/settings')
 								? ''
 								: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition select-none"
-							href="/admin/settings"
+                                                        href={withBasePath('/admin/settings')}
 							on:click={(event) => {
 								event.preventDefault();
 								showSettings.set('admin:general');

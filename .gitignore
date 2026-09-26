@@ -16,3 +16,6 @@ dist/
 backups/
 *.log
 .DS_Store
+
+# Claude Code local state / worktrees
+.claude/

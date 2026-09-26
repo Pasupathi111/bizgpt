@@ -1,20 +1,20 @@
-# BizGPT – add-on layer for Open WebUI
+# BizGPT – add-on layer for Biz GPT
 
-Everything BizGPT-specific lives here. **`../open-webui/` is never edited.** Open WebUI runs from the
+Everything BizGPT-specific lives here. **`../open-webui/` is never edited.** Biz GPT runs from the
 official Docker image, and our code is pushed into it through its API.
 
 ```
 bizgpt/
-├── docker-compose.yml        Open WebUI (official image, version pinned in .env)
+├── docker-compose.yml        Biz GPT (official image, version pinned in .env)
 ├── .env.example              copy to .env and fill in
-├── owui/functions/           code loaded into Open WebUI (dify_pipe.py = Dify connector)
+├── owui/functions/           code loaded into Biz GPT (dify_pipe.py = Dify connector)
 ├── owui/tools/               tools for the LLM (dynamic forms, WhatsApp… later)
-├── scripts/sync.py           pushes owui/* into Open WebUI and sets valves from .env
+├── scripts/sync.py           pushes owui/* into Biz GPT and sets valves from .env
 ├── demo/dify/                importable Dify demo app + sample knowledge doc
 └── dev/mock_dify.py          fake Dify API for testing without the real server
 ```
 
-## Upgrading Open WebUI
+## Upgrading Biz GPT
 
 1. In `.env`, change `OWUI_VERSION=v0.11.4` to the new tag.
 2. `docker compose pull && docker compose up -d`

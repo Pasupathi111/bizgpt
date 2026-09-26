@@ -16,7 +16,7 @@ class Tools:
     class Valves(BaseModel):
         INTEGRATIONS_API_URL: str = Field(
             default='http://bizgpt-integrations:8002',
-            description='Integrations service URL as seen from the Open WebUI server',
+            description='Integrations service URL as seen from the Biz GPT server',
         )
         INTEGRATIONS_PUBLIC_URL: str = Field(
             default='http://localhost:8092',
@@ -25,7 +25,7 @@ class Tools:
         INTEGRATIONS_API_KEY: str = Field(default='', description='Bearer key for the integrations service internal API')
         FORMS_API_URL: str = Field(
             default='http://bizgpt-forms:8000',
-            description='Forms service URL as seen from the Open WebUI server',
+            description='Forms service URL as seen from the Biz GPT server',
         )
         FORMS_PUBLIC_URL: str = Field(
             default='http://localhost:8090',

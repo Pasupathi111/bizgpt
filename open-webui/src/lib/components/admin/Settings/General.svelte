@@ -191,7 +191,7 @@
 								{$i18n.t('settings.admin.general.help.label')}
 							</div>
 							<div class="mt-0.5 text-gray-400 dark:text-gray-600">
-								<!-- LICENSE covers this Open WebUI wordmark.
+								<!-- LICENSE covers this Biz GPT wordmark.
 								Do not alter, remove, obscure, or replace it except as LICENSE permits:
 								https://docs.openwebui.com/license. -->
 								{$i18n.t('settings.admin.general.help.description')}
@@ -227,7 +227,7 @@
 				</div>
 
 				<div class="text-xs">
-					<!-- LICENSE covers this Open WebUI license attribution.
+					<!-- LICENSE covers this Biz GPT license attribution.
 					Do not alter, remove, obscure, or replace it except as LICENSE permits:
 					https://docs.openwebui.com/license. -->
 					<div class="text-gray-600 dark:text-gray-400">
@@ -277,7 +277,7 @@
 					description={$i18n.t('settings.admin.general.communitySharing.description')}
 					let:labelId
 				>
-					<!-- LICENSE covers this Open WebUI Community wordmark.
+					<!-- LICENSE covers this Biz GPT Community wordmark.
 					Do not alter, remove, obscure, or replace it except as LICENSE permits:
 					https://docs.openwebui.com/license. -->
 					<Switch bind:state={adminConfig.ENABLE_COMMUNITY_SHARING} ariaLabelledbyId={labelId} />

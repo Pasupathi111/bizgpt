@@ -8,7 +8,7 @@ Scope:
 - `optimajet/formengine`
 - `ginkgobioworks/react-json-schema-form-builder`
 
-Goal: choose the reuse-first base for BizGPT Dynamic Forms without forking any of these projects and without coupling BizGPT to Open WebUI internals.
+Goal: choose the reuse-first base for BizGPT Dynamic Forms without forking any of these projects and without coupling BizGPT to Biz GPT internals.
 
 ## 1. Decision
 
@@ -18,7 +18,7 @@ Why:
 - BizGPT's source of truth is **AI-generated JSON Schema + prefilled values + validation**.
 - RJSF is the strongest direct match for that requirement.
 - `@rjsf/shadcn` gives us the UI direction we want without inventing a renderer.
-- It fits the existing BizGPT architecture: external forms service, FastAPI backend, React/TypeScript frontend, Open WebUI tool/embed integration.
+- It fits the existing BizGPT architecture: external forms service, FastAPI backend, React/TypeScript frontend, Biz GPT tool/embed integration.
 
 **Do not use Form.io or FormEngine as the primary BizGPT renderer.**
 
@@ -70,7 +70,7 @@ That means the best renderer is the one that:
 | Production maturity | **High** | High | Medium | RJSF has the broadest renderer maturity |
 | Bundle size | Moderate | Heavy | Moderate | Form.io is the heaviest footprint |
 | FastAPI backend integration | **Straightforward** | Possible, but platform-oriented | Straightforward | RJSF keeps backend simple |
-| Open WebUI / MCP integration | **Straightforward** | Possible, but overkill | Possible | RJSF works cleanly as an external service |
+| Biz GPT / MCP integration | **Straightforward** | Possible, but overkill | Possible | RJSF works cleanly as an external service |
 | Long-term maintainability | **High** | Medium | Medium | RJSF has the least architectural drag |
 
 ## 4. Detailed comparison
@@ -86,7 +86,7 @@ Repository: <https://github.com/rjsf-team/react-jsonschema-form>
 - `@rjsf/validator-ajv8` gives us predictable client-side JSON Schema validation.
 - Supports prefilled values directly through `formData`.
 - Supports custom widgets, custom fields, custom templates, and dynamic `uiSchema`.
-- Works cleanly inside an external React app that can be embedded into Open WebUI chat or side panel.
+- Works cleanly inside an external React app that can be embedded into Biz GPT chat or side panel.
 
 **Weaknesses**
 - Built-in file upload support is limited to `data-url` style handling, which is not enough for enterprise-grade binary upload flows.
@@ -97,7 +97,7 @@ Repository: <https://github.com/rjsf-team/react-jsonschema-form>
 - **Best fit.**
 - Lets AI generate JSON Schema directly with no translation layer.
 - Keeps BizGPT-specific logic in our own service: intent extraction, missing-field detection, prefill, confirmation, submit, action execution.
-- Keeps Open WebUI upgrade-safe because the form engine stays outside `open-webui/`.
+- Keeps Biz GPT upgrade-safe because the form engine stays outside `open-webui/`.
 
 ### 4.2 `formio/react`
 
@@ -271,11 +271,11 @@ For BizGPT, bundle size matters, but **schema-contract fit and maintainability m
 - **Form.io:** possible, but nudges us toward using more of the Form.io platform.
 - **FormEngine:** possible, but would require a mapping layer between BizGPT JSON Schema and FormEngine JSON.
 
-### Open WebUI / MCP integration
+### Biz GPT / MCP integration
 
-All three can live outside Open WebUI, but RJSF keeps the integration thinnest:
+All three can live outside Biz GPT, but RJSF keeps the integration thinnest:
 - BizGPT service creates form instance,
-- Open WebUI tool returns embedded URL,
+- Biz GPT tool returns embedded URL,
 - user completes form,
 - BizGPT service validates and executes action,
 - agent reads status back through stable contracts.
@@ -308,7 +308,7 @@ the easier the system is to reason about, test, and evolve.
 Keep the form engine as an independent BizGPT service/component:
 
 ```text
-Open WebUI
+Biz GPT
   ↓ supported extension points only
 BizGPT tool / MCP / OpenAPI layer
   ↓
@@ -325,7 +325,7 @@ BizGPT integrations / Dify / Gmail / Outlook / WhatsApp
 ### Explicit non-decisions
 
 - **Do not fork RJSF.**
-- **Do not copy Form.io into Open WebUI.**
+- **Do not copy Form.io into Biz GPT.**
 - **Do not replace JSON Schema with Form.io schema or FormEngine JSON.**
 - **Do not put BizGPT business logic inside `open-webui/`.**
 
@@ -350,7 +350,7 @@ Because the reuse decision is complete, implementation should continue with:
 
 1. keep `bizgpt/services/forms/` as the independent forms service,
 2. keep RJSF as the renderer,
-3. expose forms to Open WebUI through the existing BizGPT tool/embed path,
+3. expose forms to Biz GPT through the existing BizGPT tool/embed path,
 4. add BizGPT-specific features incrementally:
    - better schema generation contracts,
    - conditional forms,
@@ -365,6 +365,6 @@ The current workspace already aligns with this decision:
 
 - `bizgpt/services/forms/web/` already uses `@rjsf/shadcn`
 - `bizgpt/services/forms/app/` already provides a FastAPI service
-- `bizgpt/owui/tools/bizgpt_forms.py` already exposes the form flow to Open WebUI
+- `bizgpt/owui/tools/bizgpt_forms.py` already exposes the form flow to Biz GPT
 
 So the right next step is **not** to swap engines. It is to finish and validate the BizGPT-specific layer around the existing RJSF-based implementation.

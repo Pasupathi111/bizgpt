@@ -8,7 +8,7 @@ Data collected 2026-09-25 from the GitHub REST API (stars, issues, activity, adv
 
 | Repository | Licence | ★ | Open issues | Last push | Latest release | Advisories (all time) | Verdict |
 |---|---|---|---|---|---|---|---|
-| [open-webui/open-webui](https://github.com/open-webui/open-webui) | Open WebUI License (BSD-3 + branding clause) | 153,076 | 311 | 2026-09-24 | v0.11.4 (2026-09-21) | 100+ fetched (1 critical, 40 high); recent ones fixed in 0.11.1 | **Upstream platform. Pin the version.** |
+| [open-webui/open-webui](https://github.com/open-webui/open-webui) | Biz GPT License (BSD-3 + branding clause) | 153,076 | 311 | 2026-09-24 | v0.11.4 (2026-09-21) | 100+ fetched (1 critical, 40 high); recent ones fixed in 0.11.1 | **Upstream platform. Pin the version.** |
 | [Softeria/ms-365-mcp-server](https://github.com/Softeria/ms-365-mcp-server) | MIT | 994 | 6 | 2026-09-22 | v0.155.0 (2026-09-22) | 1 high (fixed in 0.137.0) | **Adopt** for Outlook |
 | [tkhattar14/whatsapp-business-mcp](https://github.com/tkhattar14/whatsapp-business-mcp) | MIT | 3 | 1 | 2026-03-28 (single commit) | none | 0 (never reviewed) | **Do not deploy.** Use as a reference only; build a small gateway. |
 | [langgenius/dify](https://github.com/langgenius/dify) | Modified Apache-2.0 | 157,119 | 1,104 | 2026-09-24 | 1.17.1 (2026-09-10) | 21 (8 high) | **Integrate via its Service API** (already self-hosted) |
@@ -19,7 +19,7 @@ Data collected 2026-09-25 from the GitHub REST API (stars, issues, activity, adv
 | [FredShred7/whatsapp-mcp-server](https://github.com/FredShred7/whatsapp-mcp-server) (alternative) | MIT | 23 | 0 | 2026-06-07 | none | 0 | Small; not reviewed in depth; same concern as tkhattar14 |
 | [YanxingLiu/dify-mcp-server](https://github.com/YanxingLiu/dify-mcp-server) (alternative) | none | 280 | n/a | 2025-04-20 | n/a | n/a | **Reject:** no licence, stale, and Dify now has native MCP |
 
-## 2. Open WebUI (platform)
+## 2. Biz GPT (platform)
 
 - **Architecture:** FastAPI backend and SvelteKit frontend in one image. Extension points are listed in the audit, §7.
 - **Docker:** official `ghcr.io/open-webui/open-webui:<tag>`.
@@ -36,7 +36,7 @@ Data collected 2026-09-25 from the GitHub REST API (stars, issues, activity, adv
 - **Docker:** yes (`Dockerfile`, `Dockerfile.ghcr`). **MCP:** stdio and **Streamable HTTP** (`--http`).
 - **Auth:** OAuth 2.1 with dynamic client registration, **per-request bearer token (stateless)**, On-Behalf-Of (`--obo`), or BYOT `MS365_MCP_OAUTH_TOKEN`.
 - **Multi-user:** yes. HTTP mode is stateless per user.
-- **Open WebUI compatibility:** the README has an explicit Open WebUI section (MCP Streamable HTTP plus OAuth 2.1).
+- **Biz GPT compatibility:** the README has an explicit Biz GPT section (MCP Streamable HTTP plus OAuth 2.1).
 - **Security:** one high advisory (code injection via `MS365_MCP_AUTH_CACHE_COMMAND`), patched in 0.137.0; the current version is 0.155.0. It has a structured audit log and PII redaction by default.
 - **Production suitability:** good. **Effort:** low (an Azure app registration plus config).
 - **Without forking:** yes.
@@ -46,7 +46,7 @@ Data collected 2026-09-25 from the GitHub REST API (stars, issues, activity, adv
 
 - **Architecture:** Python. `main.py` is a FastMCP server with **stdio only**. `main_http.py` is a **plain FastAPI REST API, not MCP**. There are 8 handlers (messaging, templates, media, analytics, flows, webhooks, business profile, account) in about 4.9k lines of code. It calls only `graph.facebook.com`, the official Cloud API, which is good.
 - **Problems found in review:**
-  1. **No MCP over HTTP.** Open WebUI can't use stdio servers directly. It pins `mcp==1.6.0`, which predates Streamable HTTP.
+  1. **No MCP over HTTP.** Biz GPT can't use stdio servers directly. It pins `mcp==1.6.0`, which predates Streamable HTTP.
   2. **Auth is optional:** if `MCP_API_KEY` is unset, all `/api/*` routes are open. The key comparison uses `!=`, which is not constant-time.
   3. **No inbound messages.** There is a webhook signature helper (`hmac.compare_digest`, which is correct), but **no webhook receive route and no message store**, so `get_whatsapp_messages` is impossible.
   4. **Outdated pinned dependencies** (`fastapi 0.109.2`, `aiohttp 3.9.3`, `uvicorn 0.27.1`), with known CVEs in that aiohttp line.
@@ -91,7 +91,7 @@ Data collected 2026-09-25 from the GitHub REST API (stars, issues, activity, adv
 
   The doc describes free self-hosting as "intended for hobby projects and evaluation".
 - **Consequence for BizGPT:** Nango does exactly what we asked it to do (OAuth, tokens, refresh, connections, per-user mapping) through **Auth + Proxy**, which is free. It **cannot** be our MCP/tool layer unless we pay. Our MCP gateway calls providers through the Nango **proxy**, or fetches the token from Nango and forwards it to upstream MCPs.
-- **Multi-user:** connection per `(integration, connection_id)`; we use `connection_id = <Open WebUI user id>`. Nango's Connect UI handles the OAuth consent screens.
+- **Multi-user:** connection per `(integration, connection_id)`; we use `connection_id = <Biz GPT user id>`. Nango's Connect UI handles the OAuth consent screens.
 - **Docker:** single image, bundled Postgres and Redis. Production needs external Postgres and Redis, `NANGO_ENCRYPTION_KEY` and an HTTPS server URL.
 - **Security:** 1 critical (SSRF via connectionConfig template injection, "through v0.70.4", no fixed version listed) and 7 high (SSRF, proxy `base-url-override`, forged webhooks), mostly patched by commit. **Actions:** run ≥ v0.71.10; keep Nango **off the public internet** except `/oauth/callback` and Connect UI; set the proxy denylist; block egress to internal ranges.
 - **Without forking:** yes.

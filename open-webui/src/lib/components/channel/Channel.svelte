@@ -310,7 +310,7 @@
 </script>
 
 <svelte:head>
-	<!-- LICENSE covers this Open WebUI browser-title identifier.
+	<!-- LICENSE covers this Biz GPT browser-title identifier.
 	Do not alter, remove, obscure, or replace it except as LICENSE permits:
 	https://docs.openwebui.com/license. -->
 	{#if channel?.type === 'dm'}
@@ -326,10 +326,10 @@
 					} else {
 						return e.name;
 					}
-				}, '')} / Open WebUI</title
+				}, '')} / Biz GPT</title
 		>
 	{:else}
-		<title>#{channel?.name ?? 'Channel'} / Open WebUI</title>
+		<title>#{channel?.name ?? 'Channel'} / Biz GPT</title>
 	{/if}
 </svelte:head>
 

@@ -165,11 +165,11 @@ async def get_headers_and_cookies(
         'Content-Type': 'application/json',
         **(
             {
-                # LICENSE covers this Open WebUI upstream metadata identifier.
+                # LICENSE covers this Biz GPT upstream metadata identifier.
                 # Do not alter, remove, obscure, or replace it except as LICENSE permits:
                 # https://docs.openwebui.com/license.
                 'HTTP-Referer': 'https://openwebui.com/',
-                'X-Title': 'Open WebUI',
+                'X-Title': 'Biz GPT',
             }
             if 'openrouter.ai' in url
             else {}
@@ -661,12 +661,12 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                 except Exception:
                     detail = f'External: {e}'
 
-            # LICENSE covers this Open WebUI error identifier.
+            # LICENSE covers this Biz GPT error identifier.
             # Do not alter, remove, obscure, or replace it except as LICENSE permits:
             # https://docs.openwebui.com/license.
             raise HTTPException(
                 status_code=r.status if r else 500,
-                detail=detail if detail else 'Open WebUI: Server Connection Error',
+                detail=detail if detail else 'Biz GPT: Server Connection Error',
             )
 
     except ValueError:
@@ -926,10 +926,10 @@ async def get_models(request: Request, url_idx: int | None = None, user=Depends(
             except aiohttp.ClientError as e:
                 # ClientError covers all aiohttp requests issues
                 log.exception(f'Client error: {str(e)}')
-                # LICENSE covers this Open WebUI error identifier.
+                # LICENSE covers this Biz GPT error identifier.
                 # Do not alter, remove, obscure, or replace it except as LICENSE permits:
                 # https://docs.openwebui.com/license.
-                raise HTTPException(status_code=500, detail='Open WebUI: Server Connection Error')
+                raise HTTPException(status_code=500, detail='Biz GPT: Server Connection Error')
             except Exception as e:
                 log.exception(f'Unexpected error: {e}')
                 error_detail = f'Unexpected error: {str(e)}'
@@ -1259,7 +1259,7 @@ RESPONSES_ALLOWED_FIELDS: dict[str, set[str]] = {
 def _normalize_stored_item(item: dict) -> dict:
     """Strip local-only fields from a stored output item before replaying it.
 
-    Open WebUI stores extra bookkeeping fields (``id``, ``status``,
+    Biz GPT stores extra bookkeeping fields (``id``, ``status``,
     ``started_at``, ``ended_at``, ``duration``, ``_tag_type``,
     ``attributes``, ``summary``, etc.) that the Responses API does
     not accept.  This helper returns a copy containing only the
@@ -1363,7 +1363,7 @@ def convert_to_responses_payload(payload: dict) -> dict:
                         detail = 'auto'
                     content_parts.append({'type': 'input_image', 'image_url': url, 'detail': detail})
                 elif part.get('type') == 'file':
-                    # OpenAI-compatible proxy path only. Open WebUI attachments are handled
+                    # OpenAI-compatible proxy path only. Biz GPT attachments are handled
                     # separately via metadata.files/RAG and must not be converted here.
                     file = part.get('file')
                     if isinstance(file, dict):
@@ -2104,12 +2104,12 @@ async def proxy(path: str, request: Request, user=Depends(get_verified_user)):
         raise
     except Exception as e:
         log.exception(e)
-        # LICENSE covers this Open WebUI error identifier.
+        # LICENSE covers this Biz GPT error identifier.
         # Do not alter, remove, obscure, or replace it except as LICENSE permits:
         # https://docs.openwebui.com/license.
         raise HTTPException(
             status_code=r.status if r else 500,
-            detail='Open WebUI: Server Connection Error',
+            detail='Biz GPT: Server Connection Error',
         )
     finally:
         if not streaming:

@@ -13,7 +13,7 @@
 	import { getUserSettings } from '$lib/apis/users';
 	import { setAppFontFamily, setTextScale } from '$lib/utils/text-scale';
 
-	import { WEBUI_VERSION, WEBUI_API_BASE_URL } from '$lib/constants';
+        import { WEBUI_VERSION, WEBUI_API_BASE_URL, withBasePath } from '$lib/constants';
 	import { compareVersion } from '$lib/utils';
 
 	import {
@@ -195,8 +195,8 @@
 	};
 
 	const gotoAuth = async () => {
-		const currentUrl = `${$page.url.pathname}${$page.url.search}`;
-		await goto(`/auth?redirect=${encodeURIComponent(currentUrl)}`);
+                const currentUrl = withBasePath(`${$page.url.pathname}${$page.url.search}`);
+                await goto(withBasePath(`/login?redirect=${encodeURIComponent(currentUrl)}`));
 	};
 
 	const navigateChat = async (direction: -1 | 1) => {
@@ -206,7 +206,7 @@
 		const nextChat = currentIndex === -1 ? $chats[0] : $chats[currentIndex + direction];
 
 		if (nextChat) {
-			await goto(`/c/${nextChat.id}`);
+                        await goto(withBasePath(`/c/${nextChat.id}`));
 		}
 	};
 
@@ -314,7 +314,7 @@
 					} else {
 						temporaryChatEnabled.set(!$temporaryChatEnabled);
 					}
-					await goto('/');
+                                        await goto(withBasePath('/'));
 					setTimeout(() => {
 						document.getElementById('new-chat-button')?.click();
 					}, 0);

@@ -49,7 +49,7 @@ const pathParts = location.pathname.split('/').filter(Boolean)
 const entityType = pathParts[0] === 'v' ? 'view' : 'form'
 const entityId = decodeURIComponent(pathParts.at(-1) ?? '')
 
-// Tell Open WebUI (our parent frame) how tall we are, and hand results back to the chat.
+// Tell Biz GPT (our parent frame) how tall we are, and hand results back to the chat.
 const toParent = (message: object) => window.parent !== window && window.parent.postMessage(message, '*')
 
 function useReportHeight() {
@@ -171,7 +171,7 @@ export default function App() {
           : current,
       )
       setStage('done')
-      // Continue the conversation: Open WebUI asks the user to confirm prompts from embeds.
+      // Continue the conversation: Biz GPT asks the user to confirm prompts from embeds.
       toParent({ type: 'input:prompt:submit', text: `✅ ${form.title} submitted. ${body.message}` })
       return
     }

@@ -2,12 +2,12 @@
 
 ## 1. Principles
 
-1. **Open WebUI is an upstream dependency.** Run the official image, pinned (`OPEN_WEBUI_VERSION`). Target: **0 core modifications**.
+1. **Biz GPT is an upstream dependency.** Run the official image, pinned (`OPEN_WEBUI_VERSION`). Target: **0 core modifications**.
 2. **Only supported extension points:** HTTP API, MCP, OpenAPI tool servers, Functions (Pipe/Filter/Action), Tools, env config. **No `from open_webui…` imports** in any BizGPT service.
 3. **Stable tool contracts.** The AI calls `search_emails` or `run_workflow`, never `gmail.users.messages.list`. Providers sit behind interfaces.
 4. **Reuse before build,** following the decision order in the master instruction and the evidence in GITHUB-REUSE-ANALYSIS.md.
 5. **Nango owns OAuth tokens.** No integration stores refresh tokens itself.
-6. **Git is the source of truth.** `sync.py` makes Open WebUI match the repo, idempotently.
+6. **Git is the source of truth.** `sync.py` makes Biz GPT match the repo, idempotently.
 
 ## 2. Target topology
 
@@ -24,7 +24,7 @@
           ┌────────────────┘         └──────────────────┐
           ▼                                             ▼
 ┌───────────────────────┐                   ┌───────────────────────┐
-│ Open WebUI (upstream) │                   │ BizGPT Dashboard      │
+│ Biz GPT (upstream) │                   │ BizGPT Dashboard      │
 │ ghcr image, pinned    │                   │ React/Vite/shadcn     │
 │                       │                   └──────────┬────────────┘
 │ • BizGPT Agent model  │                              │ HTTP (user's OWUI token)
@@ -60,8 +60,8 @@ Gmail MCP   ms-365 MCP  Dify      forms service   whatsapp-gateway ──► Met
 
 ## 3. Identity and multi-user flow
 
-1. The user signs in to Open WebUI (SSO recommended).
-2. Open WebUI calls `bizgpt-mcp` with:
+1. The user signs in to Biz GPT (SSO recommended).
+2. Biz GPT calls `bizgpt-mcp` with:
    - `Authorization: Bearer <BIZGPT_MCP_KEY>` (connection `auth_type: bearer`), and
    - `X-OpenWebUI-User-Id`, `X-OpenWebUI-User-Email`, `X-OpenWebUI-Chat-Id` (with `ENABLE_FORWARD_USER_INFO_HEADERS=true`).
 3. The gateway **trusts the user headers only when the bearer key matches** and the request comes from the internal Docker network. The gateway is never exposed publicly.
@@ -73,7 +73,7 @@ Gmail MCP   ms-365 MCP  Dify      forms service   whatsapp-gateway ──► Met
 
 | Capability | Decision | Type | Reuse |
 |---|---|---|---|
-| Chat UI, users, RBAC, analytics | Open WebUI | Upstream | 100% |
+| Chat UI, users, RBAC, analytics | Biz GPT | Upstream | 100% |
 | Branding | `WEBUI_NAME`, logo/favicon asset override, `WEBUI_BANNERS` | Configuration | **Licence-gated** (audit §6) |
 | Gmail | Existing Gmail MCP (**to be located**), else `google_workspace_mcp` | MCP (upstream) | 100% |
 | Outlook | `Softeria/ms-365-mcp-server --http --preset mail` | MCP (upstream) | 100% |
@@ -81,9 +81,9 @@ Gmail MCP   ms-365 MCP  Dify      forms service   whatsapp-gateway ──► Met
 | WhatsApp | **Build** `services/whatsapp-gateway` on the official Cloud API | External FastAPI service | Patterns from tkhattar14 (MIT) |
 | Dify | Workflow registry, then the Dify Service API behind `run_workflow`; keep `dify_pipe` for "app as model" | MCP contract + Function | Dify API 100% |
 | Dynamic Forms | **Build** `services/forms` (FastAPI, Pydantic, JSON Schema) with a React `@rjsf/shadcn` renderer; in chat via a Python Tool that returns an `HTMLResponse` embed | External service + Tool | rjsf |
-| Dashboard | **Build** `dashboard/` (React, Vite, Tailwind, shadcn, Lucide) with `bizgpt-api` as its backend-for-frontend (BFF) | External app | Open WebUI analytics API |
+| Dashboard | **Build** `dashboard/` (React, Vite, Tailwind, shadcn, Lucide) with `bizgpt-api` as its backend-for-frontend (BFF) | External app | Biz GPT analytics API |
 | Inbox Zero | **Decision D:** BizGPT-native triage (see §6) | MCP contract + service | Our email contracts |
-| Agent | Open WebUI **custom model** "BizGPT Agent": base model, system prompt, native function calling, `bizgpt-mcp` attached. Defined in Git (`owui/models/`) | Configuration (Models API) | 100% Open WebUI |
+| Agent | Biz GPT **custom model** "BizGPT Agent": base model, system prompt, native function calling, `bizgpt-mcp` attached. Defined in Git (`owui/models/`) | Configuration (Models API) | 100% Biz GPT |
 
 ## 5. Dynamic Forms flow
 
@@ -94,7 +94,7 @@ User: "Book a cab tomorrow at 10 AM"
   → create_form(type, prefill) → forms service validates the prefill against JSON Schema,
     returns {form_id, missing: [pickup, destination, vehicle], url}
   → Tool `bizgpt_forms.show_form(form_id)` returns HTMLResponse (iframe /forms/f/<id>)
-    - short forms: request:user_input dialog instead (native Open WebUI)
+    - short forms: request:user_input dialog instead (native Biz GPT)
   → User completes → rjsf client validation → POST /forms/<id>/submit
   → server validation (same schema) → confirmation screen → submit
   → execute action: Dify workflow | webhook | email | WhatsApp (per form definition)

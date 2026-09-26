@@ -60,7 +60,7 @@
 	import { createNewNote, getPinnedNoteList, toggleNotePinnedStatusById } from '$lib/apis/notes';
 	import { updateUserSettings } from '$lib/apis/users';
 	import { createNoteHandler } from '$lib/components/notes/utils';
-	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+        import { WEBUI_API_BASE_URL, WEBUI_BASE_URL, withBasePath } from '$lib/constants';
 
 	import UserMenu from './Sidebar/UserMenu.svelte';
 	import ChatItem from './Sidebar/ChatItem.svelte';
@@ -189,11 +189,23 @@
 
 	const getMenuItemMeta = (id) => {
 		const items = {
-			notes: { label: $i18n.t('Notes'), href: '/notes', iconType: 'note' },
-			workspace: { label: $i18n.t('Workspace'), href: '/workspace', iconType: 'workspace' },
-			automations: { label: $i18n.t('Automations'), href: '/automations', iconType: 'automations' },
-			calendar: { label: $i18n.t('Calendar'), href: '/calendar', iconType: 'calendar' },
-			playground: { label: $i18n.t('Playground'), href: '/playground', iconType: 'playground' }
+                        notes: { label: $i18n.t('Notes'), href: withBasePath('/notes'), iconType: 'note' },
+                        workspace: {
+                                label: $i18n.t('Workspace'),
+                                href: withBasePath('/workspace'),
+                                iconType: 'workspace'
+                        },
+                        automations: {
+                                label: $i18n.t('Automations'),
+                                href: withBasePath('/automations'),
+                                iconType: 'automations'
+                        },
+                        calendar: { label: $i18n.t('Calendar'), href: withBasePath('/calendar'), iconType: 'calendar' },
+                        playground: {
+                                label: $i18n.t('Playground'),
+                                href: withBasePath('/playground'),
+                                iconType: 'playground'
+                        }
 		};
 		return items[id];
 	};
@@ -869,7 +881,7 @@
 			await initChannels();
 			showCreateChannel = false;
 			showChannels = true;
-			goto(`/channels/${res.id}`);
+                        goto(withBasePath(`/channels/${res.id}`));
 		}
 	}}
 />
@@ -932,7 +944,7 @@
 		id="sidebar-new-chat-button"
 		class="hidden"
 		on:click={() => {
-			goto('/');
+                        goto(withBasePath('/'));
 			newChatHandler();
 		}}
 	/>
@@ -964,7 +976,7 @@
 							<div
 								class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition group-hover:bg-gray-100 dark:group-hover:bg-gray-900"
 							>
-								<!-- LICENSE covers this Open WebUI sidebar logo.
+								<!-- LICENSE covers this Biz GPT sidebar logo.
 							Do not alter, remove, obscure, or replace it except as LICENSE permits:
 							https://docs.openwebui.com/license. -->
 								<img
@@ -984,13 +996,13 @@
 						<Tooltip content={$i18n.t('New Chat')} placement="right">
 							<a
 								class=" cursor-pointer flex size-8 items-center justify-center transition group"
-								href="/"
+                                                                href={withBasePath('/')}
 								draggable="false"
 								on:click={async (e) => {
 									e.stopImmediatePropagation();
 									e.preventDefault();
 
-									goto('/');
+                                                                        goto(withBasePath('/'));
 									newChatHandler();
 								}}
 								aria-label={$i18n.t('New Chat')}
@@ -1146,11 +1158,11 @@
 				>
 					<a
 						class="flex items-center rounded-xl size-8.5 h-full justify-center hover:bg-gray-100 dark:hover:bg-gray-900 transition no-drag-region"
-						href="/"
+                                                href={withBasePath('/')}
 						draggable="false"
 						on:click={newChatHandler}
 					>
-						<!-- LICENSE covers this Open WebUI sidebar logo.
+						<!-- LICENSE covers this Biz GPT sidebar logo.
 					Do not alter, remove, obscure, or replace it except as LICENSE permits:
 					https://docs.openwebui.com/license. -->
 						<img
@@ -1161,8 +1173,8 @@
 						/>
 					</a>
 
-					<a href="/" class="flex flex-1 px-0.5" on:click={newChatHandler}>
-						<!-- LICENSE covers this Open WebUI sidebar name.
+                                        <a href={withBasePath('/')} class="flex flex-1 px-0.5" on:click={newChatHandler}>
+						<!-- LICENSE covers this Biz GPT sidebar name.
 					Do not alter, remove, obscure, or replace it except as LICENSE permits:
 					https://docs.openwebui.com/license. -->
 						<div
@@ -1213,7 +1225,7 @@
 							<a
 								id="sidebar-new-chat-button"
 								class="group grow flex items-center space-x-2 rounded-xl px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-900 transition outline-none"
-								href="/"
+                                                                href={withBasePath('/')}
 								draggable="false"
 								on:click={newChatHandler}
 								aria-label={$i18n.t('New Chat')}
@@ -1318,7 +1330,7 @@
 							onAdd={async () => {
 								const note = await createNoteHandler('New Note');
 								if (note) {
-									goto(`/notes/${note.id}`);
+                                                                        goto(withBasePath(`/notes/${note.id}`));
 								}
 							}}
 							onAddLabel={$i18n.t('New Note')}

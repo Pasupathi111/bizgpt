@@ -6,7 +6,7 @@
 |---|---|---|
 | What the client sees | Pick **Dify / Lead Qualifier** in the model picker and chat with it | A normal model (GPT or Claude) decides when to call the Dify workflow |
 | Live feedback | Each Dify node shows as a live status line; knowledge sources appear as citations | The tool call appears in the chat |
-| Setup | Add the app to `DIFY_APPS` in `.env`, then run `scripts/sync.py` | Dify: app → **Publish → MCP server** → copy the URL. Open WebUI: Admin → Settings → External Tools → **+** → type MCP (Streamable HTTP) → paste the URL |
+| Setup | Add the app to `DIFY_APPS` in `.env`, then run `scripts/sync.py` | Dify: app → **Publish → MCP server** → copy the URL. Biz GPT: Admin → Settings → External Tools → **+** → type MCP (Streamable HTTP) → paste the URL |
 | Needs | Any Dify version (uses the standard `/v1` API) | A Dify version with "publish as MCP server" (1.6+) |
 
 ## Prepare the Dify apps (once, on your Dify server)

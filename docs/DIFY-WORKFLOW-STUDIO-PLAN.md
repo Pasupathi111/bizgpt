@@ -14,7 +14,7 @@ But keep the architecture upgrade-safe:
 
 - Dify stays the workflow execution backend
 - BizGPT owns the business registry, access rules, run history, and dashboard UI
-- Open WebUI stays decoupled and talks only to stable BizGPT contracts
+- Biz GPT stays decoupled and talks only to stable BizGPT contracts
 
 ## What exists today
 
