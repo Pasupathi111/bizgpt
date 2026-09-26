@@ -69,7 +69,9 @@ https://test.gpt.dbizlab.com/inbox_zero/api/google/linking/callback
 ## Security
 
 - Ports (3010 web, 5434 Postgres, 6380 Redis, 8079 Redis HTTP) are bound to `127.0.0.1`; only nginx is public.
-- Inbox Zero keeps its `X-Frame-Options: DENY` / `frame-ancestors 'none'`; it is linked from Biz GPT, not iframed.
+- Framing: nginx rewrites Inbox Zero's `X-Frame-Options: DENY` / `frame-ancestors 'none'` to `SAMEORIGIN` / `'self'`,
+  so only Biz GPT (same origin) can embed it at `/inbox`; other sites stay blocked. Google sign-in itself
+  cannot run in a frame, so the Biz GPT page sends users to a full tab to sign in once.
 - Mailbox OAuth tokens stay in Inbox Zero's database, encrypted with `EMAIL_ENCRYPT_*`.
 - Inbox Zero cannot reuse the Gmail MCP credentials; it signs users in with its own Google OAuth flow.
 
