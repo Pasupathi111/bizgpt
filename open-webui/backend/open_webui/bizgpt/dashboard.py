@@ -192,7 +192,26 @@ async def _inbox(connection: dict) -> dict:
                 text = ''.join(part.get('text', '') for part in out or [])
                 return re.findall(r'Message ID: (\w+)', text)
 
-            unread_ids, recent_ids = await asyncio.gather(search('in:inbox is:unread', 100), search('in:inbox', 5))
+            unread_ids, recent_ids, all_ids, important_ids, starred_ids = await asyncio.gather(
+                search('in:inbox is:unread', 100),
+                search('in:inbox', 5),
+                search('in:inbox', 100),
+                search('in:inbox is:important', 100),
+                search('in:inbox is:starred', 100),
+            )
+            # Disjoint buckets for the summary ring: unread > important > starred > others.
+            unread_set = set(unread_ids)
+            important_set = set(important_ids) - unread_set
+            starred_set = set(starred_ids) - unread_set - important_set
+            total_set = set(all_ids) | unread_set | important_set | starred_set
+            breakdown = {
+                'total': len(total_set),
+                'unread': len(unread_set),
+                'important': len(important_set),
+                'starred': len(starred_set),
+                'others': len(total_set - unread_set - important_set - starred_set),
+                'capped': len(all_ids) >= 100,
+            }
             recent = []
             if recent_ids:
                 out = await client.call_tool(
@@ -207,6 +226,7 @@ async def _inbox(connection: dict) -> dict:
                 'mailbox': GMAIL_MAILBOX,
                 'unread': len(unread_ids),
                 'unread_capped': len(unread_ids) >= 100,
+                'breakdown': breakdown,
                 'recent': recent,
             }
         finally:

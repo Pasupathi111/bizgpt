@@ -87,6 +87,8 @@
 	import ChartBar from '../icons/ChartBar.svelte';
 	import Cube from '../icons/Cube.svelte';
 	import InboxIcon from '../bizgpt/icons/Inbox.svelte';
+	import BizNav from '../bizgpt/sidebar/BizNav.svelte';
+	import AssistantShortcut from '../bizgpt/sidebar/AssistantShortcut.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
 	import WorkspaceIcon from './Sidebar/icons/Workspace.svelte';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
@@ -1252,7 +1254,7 @@
 						<img
 							crossorigin="anonymous"
 							src="{WEBUI_BASE_URL}/static/favicon.png"
-							class="sidebar-new-chat-icon size-5 rounded-full"
+							class="sidebar-new-chat-icon size-7 rounded-lg"
 							alt=""
 						/>
 					</a>
@@ -1263,7 +1265,7 @@
 					https://docs.openwebui.com/license. -->
 						<div
 							id="sidebar-webui-name"
-							class=" self-center font-normal text-gray-700 dark:text-gray-200"
+							class=" self-center text-lg font-bold tracking-tight text-[#0f1a3d] dark:text-white"
 						>
 							{$WEBUI_NAME}
 						</div>
@@ -1304,157 +1306,15 @@
 						}
 					}}
 				>
+					<!-- Biz GPT: primary navigation (New Chat, Dashboard, Workspace, Productivity) -->
 					<div class="pb-1">
-						<!-- Biz GPT: dashboard link, always visible (independent of pinned items) -->
-						<div class="px-1 flex justify-center text-gray-700 dark:text-gray-300">
-							<a
-								id="sidebar-dashboard-button"
-								class="grow flex items-center space-x-2 rounded-xl px-2 py-1.5 transition {$page.url.pathname.startsWith('/dashboard')
-									? 'bg-black/[0.035] dark:bg-white/[0.045]'
-									: 'hover:bg-gray-100 dark:hover:bg-gray-900'}"
-								href={withBasePath('/dashboard')}
-								on:click={itemClickHandler}
-								draggable="false"
-								aria-label={$i18n.t('Dashboard')}
-							>
-								<div class="self-center flex size-4 shrink-0 items-center justify-center">
-									<ChartBar className="size-4" strokeWidth="1.5" />
-								</div>
-								<div class="flex self-center translate-y-[0.5px]">
-									<div class=" self-center text-[0.8125rem] leading-5">{$i18n.t('Dashboard')}</div>
-								</div>
-							</a>
-						</div>
-
-						<div class="px-1 flex justify-center text-gray-700 dark:text-gray-300">
-							<a
-								id="sidebar-new-chat-button"
-								class="group grow flex items-center space-x-2 rounded-xl px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-900 transition outline-none"
-                                                                href={withBasePath('/')}
-								draggable="false"
-								on:click={newChatHandler}
-								aria-label={$i18n.t('New Chat')}
-							>
-								<div class="self-center flex size-4 shrink-0 items-center justify-center">
-									<EditPencilIcon className=" size-4" strokeWidth="1.5" />
-								</div>
-
-								<div class="flex flex-1 self-center translate-y-[0.5px]">
-									<div class=" self-center text-[0.8125rem] leading-5">{$i18n.t('New Chat')}</div>
-								</div>
-
-								<HotkeyHint name="newChat" className=" hover-reveal " />
-							</a>
-						</div>
-
-						<!-- Biz GPT: Dify Workflow (lead-generation workflow builder) -->
-						<div class="px-1 flex justify-center text-gray-700 dark:text-gray-300">
-							<a
-								id="sidebar-lead-generation-button"
-								class="grow flex items-center space-x-2 rounded-xl px-2 py-1.5 transition {$page.url.pathname.startsWith('/lead-generation')
-									? 'bg-black/[0.035] dark:bg-white/[0.045]'
-									: 'hover:bg-gray-100 dark:hover:bg-gray-900'}"
-								href={withBasePath('/lead-generation')}
-								on:click={itemClickHandler}
-								draggable="false"
-								aria-label={$i18n.t('Dify Workflow')}
-							>
-								<div class="self-center flex size-4 shrink-0 items-center justify-center">
-									<Cube className="size-4" strokeWidth="1.5" />
-								</div>
-								<div class="flex self-center translate-y-[0.5px]">
-									<div class=" self-center text-[0.8125rem] leading-5">{$i18n.t('Dify Workflow')}</div>
-								</div>
-							</a>
-						</div>
-
-						<!-- Biz GPT: Inbox (self-hosted Inbox Zero, embedded) -->
-						<div class="px-1 flex justify-center text-gray-700 dark:text-gray-300">
-							<a
-								id="sidebar-inbox-button"
-								class="grow flex items-center space-x-2 rounded-xl px-2 py-1.5 transition {$page.url.pathname.startsWith('/inbox')
-									? 'bg-black/[0.035] dark:bg-white/[0.045]'
-									: 'hover:bg-gray-100 dark:hover:bg-gray-900'}"
-								href={withBasePath('/inbox')}
-								on:click={itemClickHandler}
-								draggable="false"
-								aria-label={$i18n.t('Inbox')}
-							>
-								<div class="self-center flex size-4 shrink-0 items-center justify-center">
-									<InboxIcon className="size-4" strokeWidth="1.5" />
-								</div>
-								<div class="flex self-center translate-y-[0.5px]">
-									<div class=" self-center text-[0.8125rem] leading-5">{$i18n.t('Inbox')}</div>
-								</div>
-							</a>
-						</div>
-
-						<div id="pinned-menu-items-list">
-							{#each pinnedItems as itemId (itemId)}
-								{@const meta = getMenuItemMeta(itemId)}
-								{#if meta && isMenuItemVisible(itemId)}
-									<div
-										class="px-1 flex justify-center text-gray-700 dark:text-gray-300"
-										data-id={itemId}
-									>
-										<a
-											id="sidebar-{itemId}-button"
-											class="grow flex items-center space-x-2 rounded-xl px-2 py-1.5 transition {itemId ===
-											activeMenuItemId
-												? ($settings?.highContrastMode ?? false)
-													? 'bg-black/[0.035] dark:bg-white/[0.06]'
-													: 'bg-black/[0.035] dark:bg-white/[0.045]'
-												: 'hover:bg-gray-100 dark:hover:bg-gray-900'}"
-											href={meta.href}
-											on:click={itemClickHandler}
-											draggable="false"
-											aria-label={$i18n.t(meta.label)}
-										>
-											<div class="self-center flex size-4 shrink-0 items-center justify-center">
-												{#if itemId === 'notes'}
-													<NotesIcon className="size-4" strokeWidth="1.5" />
-												{:else if itemId === 'workspace'}
-													<WorkspaceIcon className="size-4" strokeWidth="1.5" />
-												{:else if itemId === 'automations'}
-													<ClockIcon className="size-4" strokeWidth="1.5" />
-												{:else if itemId === 'calendar'}
-													<CalendarIcon className="size-4" strokeWidth="1.5" />
-												{:else if itemId === 'playground'}
-													<CodeIcon className="size-4" strokeWidth="1.5" />
-												{/if}
-											</div>
-
-											<div class="flex self-center translate-y-[0.5px]">
-												<div class=" self-center text-[0.8125rem] leading-5">
-													{$i18n.t(meta.label)}
-												</div>
-											</div>
-										</a>
-									</div>
-								{/if}
-							{/each}
-						</div>
-
-						<div class="px-1 flex justify-center text-gray-700 dark:text-gray-300">
-							<button
-								id="sidebar-search-button"
-								class="group grow flex items-center space-x-2 rounded-xl px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-900 transition outline-none"
-								on:click={() => {
-									showSearch.set(true);
-								}}
-								draggable="false"
-								aria-label={$i18n.t('Search')}
-							>
-								<div class="self-center flex size-4 shrink-0 items-center justify-center">
-									<SearchIcon strokeWidth="1.5" className="size-4" />
-								</div>
-
-								<div class="flex flex-1 self-center translate-y-[0.5px]">
-									<div class=" self-center text-[0.8125rem] leading-5">{$i18n.t('Search')}</div>
-								</div>
-								<HotkeyHint name="search" className=" hover-reveal " />
-							</button>
-						</div>
+						<BizNav
+							{newChatHandler}
+							{itemClickHandler}
+							isAdmin={$user?.role === 'admin'}
+							showNotes={isMenuItemVisible('notes')}
+							showWorkspace={isMenuItemVisible('workspace')}
+						/>
 					</div>
 
 					{#if $visiblePinnedModels.length > 0}
@@ -1865,6 +1725,9 @@
 						class=" sidebar-bg-gradient-to-t bg-linear-to-t from-gray-50 dark:from-gray-950 to-transparent from-50% pointer-events-none absolute inset-0 -z-10 -mt-6"
 					></div>
 					<div class="flex flex-col">
+						{#if $user !== undefined && $user !== null}
+							<AssistantShortcut onClick={itemClickHandler} />
+						{/if}
 						{#if $user !== undefined && $user !== null}
 							<UserMenu
 								role={$user?.role}

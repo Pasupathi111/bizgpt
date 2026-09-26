@@ -47,7 +47,14 @@ export type DashboardData = {
 	activity: { days: string[]; series: DashboardSeries };
 	recent_activity: DashboardActivity[];
 	integrations: DashboardIntegration[];
-	inbox: { available: boolean; mailbox: string; unread: number; recent: DashboardInboxMessage[] } | null;
+	inbox: {
+		available: boolean;
+		mailbox: string;
+		unread: number;
+		unread_capped: boolean;
+		breakdown?: { total: number; unread: number; important: number; starred: number; others: number; capped: boolean };
+		recent: DashboardInboxMessage[];
+	} | null;
 	workflows: { id: string; name: string; status: string; configured: boolean }[];
 	links: { dify_console: string | null; nango_dashboard: string | null };
 };

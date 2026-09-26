@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import dayjs from '$lib/dayjs';
-	import { user } from '$lib/stores';
+	import { showSearch, user } from '$lib/stores';
 	import { withBasePath } from '$lib/constants';
 	import { getDashboard, type DashboardData } from '$lib/apis/bizgpt';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import ActivityChart from './ActivityChart.svelte';
 	import Icon from './Icon.svelte';
+	import Robot from '../common/Robot.svelte';
 	import InboxSummary from './InboxSummary.svelte';
 	import IntegrationsStatus from './IntegrationsStatus.svelte';
 	import Panel from './Panel.svelte';
@@ -92,34 +93,66 @@
 </script>
 
 <div class="mx-auto flex w-full max-w-[90rem] flex-col gap-4 px-4 pb-8 pt-3 md:px-6">
-	<!-- header -->
-	<div class="flex flex-wrap items-start justify-between gap-3">
-		<div>
-			<div class="text-sm text-gray-500 dark:text-gray-400">Welcome back,</div>
-			<h1 class="text-2xl font-semibold text-gray-900 dark:text-white">
-				{greeting}{firstName ? `, ${firstName}` : ''}! 👋
-			</h1>
-			<p class="text-sm text-gray-500 dark:text-gray-400">
-				Here's what's happening across your Biz GPT {data?.scope === 'personal' ? 'account' : 'workspace'}.
-			</p>
-		</div>
-		<div class="flex items-center gap-3">
-			<div class="flex items-center gap-2 text-right text-sm text-gray-600 dark:text-gray-300">
+	<!-- top bar -->
+	<div class="flex items-center gap-3">
+		<button
+			type="button"
+			on:click={() => showSearch.set(true)}
+			class="flex h-11 w-full max-w-lg items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 text-left text-sm text-gray-400 transition hover:border-gray-200 dark:border-gray-850 dark:bg-gray-900 dark:hover:border-gray-800"
+		>
+			<Icon name="search" className="size-4" strokeWidth="2" />
+			Search workflows, forms, integrations, chats…
+		</button>
+		<div class="ml-auto flex items-center gap-2 sm:gap-4">
+			<a href={withBasePath('/inbox')} class="relative flex size-10 items-center justify-center rounded-xl text-gray-500 transition hover:bg-white hover:text-gray-800 dark:hover:bg-gray-900 dark:hover:text-gray-100" aria-label="Inbox notifications" title="Inbox">
+				<Icon name="bell" className="size-5" />
+				{#if (cards?.inbox.unread ?? 0) > 0}<span class="absolute right-2 top-2 size-2 rounded-full bg-orange-500 ring-2 ring-white dark:ring-gray-950"></span>{/if}
+			</a>
+			<div class="hidden items-center gap-2.5 text-sm text-gray-700 dark:text-gray-200 sm:flex">
 				<Icon name="calendar" className="size-5 text-gray-400" />
-				<div>
+				<div class="leading-tight">
 					<div class="font-medium">{now.format('dddd, D MMM YYYY')}</div>
 					<div class="text-xs text-gray-500">{now.format('h:mm A')}</div>
 				</div>
 			</div>
 			<button
 				type="button"
-				class="flex size-9 items-center justify-center rounded-xl border border-gray-100 bg-white text-gray-500 transition hover:text-gray-800 dark:border-gray-850 dark:bg-gray-900 dark:hover:text-gray-100"
+				class="flex size-10 items-center justify-center rounded-xl text-gray-500 transition hover:bg-white hover:text-gray-800 dark:hover:bg-gray-900 dark:hover:text-gray-100"
 				on:click={load}
 				aria-label="Refresh dashboard"
 				title="Refresh"
 			>
 				<Icon name="refresh" className="size-4 {loading ? 'animate-spin' : ''}" strokeWidth="2" />
 			</button>
+			{#if $user?.profile_image_url}
+				<img src={$user.profile_image_url} alt="" class="size-10 rounded-full object-cover ring-2 ring-white dark:ring-gray-900" />
+			{/if}
+		</div>
+	</div>
+
+	<!-- greeting + promo -->
+	<div class="grid grid-cols-1 items-center gap-4 lg:grid-cols-[1fr_minmax(0,40rem)]">
+		<div>
+			<div class="text-sm text-gray-500 dark:text-gray-400">Welcome back,</div>
+			<h1 class="text-3xl font-bold tracking-tight text-[#0f1a3d] dark:text-white">
+				{greeting}{firstName ? `, ${firstName}` : ''}! 👋
+			</h1>
+			<p class="mt-1 text-gray-500 dark:text-gray-400">
+				Here's what's happening across your Biz GPT {data?.scope === 'personal' ? 'account' : 'workspace'}.
+			</p>
+		</div>
+		<div class="relative flex items-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-50 via-violet-50 to-orange-50 px-6 py-5 dark:from-indigo-500/10 dark:via-violet-500/10 dark:to-orange-500/10">
+			<div class="relative z-10 min-w-0 flex-1">
+				<div class="text-lg font-semibold text-gray-900 dark:text-white">Turn ideas into automation</div>
+				<p class="mt-1 max-w-sm text-sm text-gray-600 dark:text-gray-300">
+					Use Biz GPT to build workflows, automate tasks, and connect your tools — all in one place.
+				</p>
+				<a href={chat('bizgpt-assistant')} class="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#0f1a3d] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#1b2a5c] dark:bg-white dark:text-gray-900">
+					<Icon name="sparkles" className="size-4" />
+					Start with AI
+				</a>
+			</div>
+			<Robot className="relative z-10 hidden h-24 w-20 shrink-0 sm:block" />
 		</div>
 	</div>
 

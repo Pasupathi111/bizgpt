@@ -8,19 +8,32 @@
 	export let reason: string | null = null;
 	export let openHref: string;
 
-	const R = 42;
+	const R = 40;
 	const C = 2 * Math.PI * R;
+	const GAP = 1.5; // arc gap between segments
 
 	$: recent = inbox?.recent ?? [];
-	$: unread = inbox?.unread ?? 0;
-	$: unreadRecent = recent.filter((m) => m.unread).length;
-	$: readRecent = recent.length - unreadRecent;
-	// Ring: share of unread among the latest messages (full ring when all unread).
-	$: unreadShare = recent.length ? unreadRecent / recent.length : 0;
-	$: sources = [
-		{ label: 'Unread', value: unread, color: '#f43f5e' },
-		{ label: 'Read (latest)', value: readRecent, color: '#10b981' }
+	$: b = inbox?.breakdown;
+	$: total = b?.total ?? recent.length;
+	$: segments = [
+		{ label: 'Unread', value: b?.unread ?? inbox?.unread ?? 0, color: '#3b82f6' },
+		{ label: 'Important', value: b?.important ?? 0, color: '#f97316' },
+		{ label: 'Starred', value: b?.starred ?? 0, color: '#10b981' },
+		{ label: 'Others', value: b?.others ?? 0, color: '#9ca3af' }
 	];
+	// stroke-dasharray arcs, laid end to end around the ring
+	$: arcs = (() => {
+		const sum = segments.reduce((a, s) => a + s.value, 0);
+		let offset = 0;
+		return segments
+			.filter((s) => s.value > 0)
+			.map((s) => {
+				const len = sum ? (s.value / sum) * C : 0;
+				const arc = { color: s.color, dash: `${Math.max(len - GAP, 0.5)} ${C}`, offset: -offset };
+				offset += len;
+				return arc;
+			});
+	})();
 </script>
 
 <Panel title="Inbox Summary" icon="mail" tone="rose" actionLabel={inbox ? 'Open inbox' : ''} actionHref={openHref}>
@@ -35,24 +48,22 @@
 		</div>
 	{:else}
 		<div class="flex items-center gap-5">
-			<div class="relative size-28 shrink-0">
-				<svg viewBox="0 0 100 100" class="size-28 -rotate-90">
-					<circle cx="50" cy="50" r={R} fill="none" stroke-width="10" class="stroke-emerald-500/80" />
-					{#if unreadShare > 0}
-						<circle cx="50" cy="50" r={R} fill="none" stroke-width="10" stroke="#f43f5e"
-							stroke-dasharray="{C * unreadShare} {C}" stroke-linecap={unreadShare < 1 ? 'round' : 'butt'} />
-					{/if}
+			<div class="relative size-32 shrink-0">
+				<svg viewBox="0 0 100 100" class="size-32 -rotate-90">
+					<circle cx="50" cy="50" r={R} fill="none" stroke-width="12" class="stroke-gray-100 dark:stroke-gray-800" />
+					{#each arcs as a}
+						<circle cx="50" cy="50" r={R} fill="none" stroke-width="12" stroke={a.color} stroke-dasharray={a.dash} stroke-dashoffset={a.offset} />
+					{/each}
 				</svg>
 				<div class="absolute inset-0 flex flex-col items-center justify-center">
 					<div class="text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
-						{unread}{inbox.unread_capped ? '+' : ''}
+						{total}{b?.capped ? '+' : ''}
 					</div>
-					<div class="text-[11px] text-gray-500">Unread</div>
+					<div class="text-[11px] text-gray-500">Total</div>
 				</div>
 			</div>
-			<ul class="flex min-w-0 flex-1 flex-col gap-2">
-				<li class="truncate text-xs text-gray-500 dark:text-gray-400">{inbox.mailbox}</li>
-				{#each sources as s}
+			<ul class="flex min-w-0 flex-1 flex-col gap-2.5">
+				{#each segments as s}
 					<li class="flex items-center justify-between gap-2 text-[0.8125rem]">
 						<span class="flex items-center gap-2 text-gray-700 dark:text-gray-200">
 							<span class="size-2.5 rounded-full" style="background:{s.color}"></span>{s.label}
@@ -60,6 +71,7 @@
 						<span class="tabular-nums font-medium text-gray-900 dark:text-gray-100">{s.value}</span>
 					</li>
 				{/each}
+				<li class="truncate pt-1 text-[11px] text-gray-400">{inbox.mailbox}</li>
 			</ul>
 		</div>
 
