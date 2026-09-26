@@ -155,7 +155,13 @@
 		folderRegistry[folder.id]?.setFolderItems?.();
 	};
 
-	$: pinnedItems = $settings?.pinnedMenuItems ?? DEFAULT_PINNED_ITEMS;
+	// Biz GPT: fixed order Workspace -> Notes; any other pinned items follow in the user's saved order.
+	const PINNED_ORDER = ['workspace', 'notes'];
+	const orderPinned = (items) => [
+		...PINNED_ORDER.filter((id) => items.includes(id)),
+		...items.filter((id) => !PINNED_ORDER.includes(id))
+	];
+	$: pinnedItems = orderPinned($settings?.pinnedMenuItems ?? DEFAULT_PINNED_ITEMS);
 
 	const isMenuItemVisible = (id) => {
 		switch (id) {
@@ -995,52 +1001,6 @@
 				</div>
 
 				<div class="-gap-0.5">
-					<div class="">
-						<Tooltip content={$i18n.t('New Chat')} placement="right">
-							<a
-								class=" cursor-pointer flex size-8 items-center justify-center transition group"
-                                                                href={withBasePath('/')}
-								draggable="false"
-								on:click={async (e) => {
-									e.stopImmediatePropagation();
-									e.preventDefault();
-
-                                                                        goto(withBasePath('/'));
-									newChatHandler();
-								}}
-								aria-label={$i18n.t('New Chat')}
-							>
-								<div
-									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition group-hover:bg-gray-100 dark:group-hover:bg-gray-900"
-								>
-									<EditPencilIcon className="size-4" strokeWidth="1.5" />
-								</div>
-							</a>
-						</Tooltip>
-					</div>
-
-					<div>
-						<Tooltip content={$i18n.t('Search')} placement="right">
-							<button
-								class=" cursor-pointer flex size-8 items-center justify-center transition group"
-								on:click={(e) => {
-									e.stopImmediatePropagation();
-									e.preventDefault();
-
-									showSearch.set(true);
-								}}
-								draggable="false"
-								aria-label={$i18n.t('Search')}
-							>
-								<div
-									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition group-hover:bg-gray-100 dark:group-hover:bg-gray-900"
-								>
-									<SearchIcon className="size-4" strokeWidth="1.5" />
-								</div>
-							</button>
-						</Tooltip>
-					</div>
-
 					<div>
 						<Tooltip content={$i18n.t('Dashboard')} placement="right">
 							<a
@@ -1061,6 +1021,30 @@
 										: 'group-hover:bg-gray-100 dark:group-hover:bg-gray-900'}"
 								>
 									<ChartBar className="size-4" strokeWidth="1.5" />
+								</div>
+							</a>
+						</Tooltip>
+					</div>
+
+					<div class="">
+						<Tooltip content={$i18n.t('New Chat')} placement="right">
+							<a
+								class=" cursor-pointer flex size-8 items-center justify-center transition group"
+                                                                href={withBasePath('/')}
+								draggable="false"
+								on:click={async (e) => {
+									e.stopImmediatePropagation();
+									e.preventDefault();
+
+                                                                        goto(withBasePath('/'));
+									newChatHandler();
+								}}
+								aria-label={$i18n.t('New Chat')}
+							>
+								<div
+									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition group-hover:bg-gray-100 dark:group-hover:bg-gray-900"
+								>
+									<EditPencilIcon className="size-4" strokeWidth="1.5" />
 								</div>
 							</a>
 						</Tooltip>
@@ -1090,6 +1074,7 @@
 							</a>
 						</Tooltip>
 					</div>
+
 					<div>
 						<Tooltip content={$i18n.t('Inbox')} placement="right">
 							<a
@@ -1114,6 +1099,7 @@
 							</a>
 						</Tooltip>
 					</div>
+
 					{#each pinnedItems as itemId (itemId)}
 						{@const meta = getMenuItemMeta(itemId)}
 						{#if meta && isMenuItemVisible(itemId)}
@@ -1156,6 +1142,28 @@
 							</div>
 						{/if}
 					{/each}
+
+					<div>
+						<Tooltip content={$i18n.t('Search')} placement="right">
+							<button
+								class=" cursor-pointer flex size-8 items-center justify-center transition group"
+								on:click={(e) => {
+									e.stopImmediatePropagation();
+									e.preventDefault();
+
+									showSearch.set(true);
+								}}
+								draggable="false"
+								aria-label={$i18n.t('Search')}
+							>
+								<div
+									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition group-hover:bg-gray-100 dark:group-hover:bg-gray-900"
+								>
+									<SearchIcon className="size-4" strokeWidth="1.5" />
+								</div>
+							</button>
+						</Tooltip>
+					</div>
 				</div>
 			</button>
 
@@ -1297,48 +1305,6 @@
 					}}
 				>
 					<div class="pb-1">
-						<div class="px-1 flex justify-center text-gray-700 dark:text-gray-300">
-							<a
-								id="sidebar-new-chat-button"
-								class="group grow flex items-center space-x-2 rounded-xl px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-900 transition outline-none"
-                                                                href={withBasePath('/')}
-								draggable="false"
-								on:click={newChatHandler}
-								aria-label={$i18n.t('New Chat')}
-							>
-								<div class="self-center flex size-4 shrink-0 items-center justify-center">
-									<EditPencilIcon className=" size-4" strokeWidth="1.5" />
-								</div>
-
-								<div class="flex flex-1 self-center translate-y-[0.5px]">
-									<div class=" self-center text-[0.8125rem] leading-5">{$i18n.t('New Chat')}</div>
-								</div>
-
-								<HotkeyHint name="newChat" className=" hover-reveal " />
-							</a>
-						</div>
-
-						<div class="px-1 flex justify-center text-gray-700 dark:text-gray-300">
-							<button
-								id="sidebar-search-button"
-								class="group grow flex items-center space-x-2 rounded-xl px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-900 transition outline-none"
-								on:click={() => {
-									showSearch.set(true);
-								}}
-								draggable="false"
-								aria-label={$i18n.t('Search')}
-							>
-								<div class="self-center flex size-4 shrink-0 items-center justify-center">
-									<SearchIcon strokeWidth="1.5" className="size-4" />
-								</div>
-
-								<div class="flex flex-1 self-center translate-y-[0.5px]">
-									<div class=" self-center text-[0.8125rem] leading-5">{$i18n.t('Search')}</div>
-								</div>
-								<HotkeyHint name="search" className=" hover-reveal " />
-							</button>
-						</div>
-
 						<!-- Biz GPT: dashboard link, always visible (independent of pinned items) -->
 						<div class="px-1 flex justify-center text-gray-700 dark:text-gray-300">
 							<a
@@ -1357,6 +1323,27 @@
 								<div class="flex self-center translate-y-[0.5px]">
 									<div class=" self-center text-[0.8125rem] leading-5">{$i18n.t('Dashboard')}</div>
 								</div>
+							</a>
+						</div>
+
+						<div class="px-1 flex justify-center text-gray-700 dark:text-gray-300">
+							<a
+								id="sidebar-new-chat-button"
+								class="group grow flex items-center space-x-2 rounded-xl px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-900 transition outline-none"
+                                                                href={withBasePath('/')}
+								draggable="false"
+								on:click={newChatHandler}
+								aria-label={$i18n.t('New Chat')}
+							>
+								<div class="self-center flex size-4 shrink-0 items-center justify-center">
+									<EditPencilIcon className=" size-4" strokeWidth="1.5" />
+								</div>
+
+								<div class="flex flex-1 self-center translate-y-[0.5px]">
+									<div class=" self-center text-[0.8125rem] leading-5">{$i18n.t('New Chat')}</div>
+								</div>
+
+								<HotkeyHint name="newChat" className=" hover-reveal " />
 							</a>
 						</div>
 
@@ -1380,6 +1367,7 @@
 								</div>
 							</a>
 						</div>
+
 						<!-- Biz GPT: Inbox (self-hosted Inbox Zero, embedded) -->
 						<div class="px-1 flex justify-center text-gray-700 dark:text-gray-300">
 							<a
@@ -1400,6 +1388,7 @@
 								</div>
 							</a>
 						</div>
+
 						<div id="pinned-menu-items-list">
 							{#each pinnedItems as itemId (itemId)}
 								{@const meta = getMenuItemMeta(itemId)}
@@ -1444,6 +1433,27 @@
 									</div>
 								{/if}
 							{/each}
+						</div>
+
+						<div class="px-1 flex justify-center text-gray-700 dark:text-gray-300">
+							<button
+								id="sidebar-search-button"
+								class="group grow flex items-center space-x-2 rounded-xl px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-900 transition outline-none"
+								on:click={() => {
+									showSearch.set(true);
+								}}
+								draggable="false"
+								aria-label={$i18n.t('Search')}
+							>
+								<div class="self-center flex size-4 shrink-0 items-center justify-center">
+									<SearchIcon strokeWidth="1.5" className="size-4" />
+								</div>
+
+								<div class="flex flex-1 self-center translate-y-[0.5px]">
+									<div class=" self-center text-[0.8125rem] leading-5">{$i18n.t('Search')}</div>
+								</div>
+								<HotkeyHint name="search" className=" hover-reveal " />
+							</button>
 						</div>
 					</div>
 

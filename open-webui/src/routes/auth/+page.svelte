@@ -62,7 +62,7 @@
 			}
 
                         if (!redirectPath) {
-                                redirectPath = $page.url.searchParams.get('redirect') || '/';
+                                redirectPath = $page.url.searchParams.get('redirect') || '/dashboard'; // Biz GPT: land on the dashboard
                         }
 
                         goto(withBasePath(redirectPath));
@@ -158,7 +158,7 @@
 		const logout = $page.url.searchParams.get('state') === 'logout';
 
                 if ($user && !logout) {
-                        goto(withBasePath(redirectPath || '/'));
+                        goto(withBasePath(redirectPath || '/dashboard')); // Biz GPT: land on the dashboard
 		} else {
 			if (redirectPath) {
 				localStorage.setItem('redirectPath', redirectPath);
