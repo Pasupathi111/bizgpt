@@ -1,4 +1,4 @@
-From ef57656c0ca02528bb53ee6826fd460c0ed1785d Mon Sep 17 00:00:00 2001
+From ea2004d9a75f6b92f24cb55c273a2e608d20f7d8 Mon Sep 17 00:00:00 2001
 From: velan <noreply@anthropic.com>
 Date: Sat, 26 Sep 2026 08:16:52 +0000
 Subject: [PATCH] BizGPT: serve Inbox Zero under a sub-path (Next.js
@@ -6,13 +6,15 @@ Subject: [PATCH] BizGPT: serve Inbox Zero under a sub-path (Next.js
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ---
+ apps/web/app/(landing)/login/LoginForm.tsx    | 14 ++++----
  apps/web/app/api/auth/[...all]/route.ts       | 35 +++++++++++++++++--
  .../api/mcp/[integration]/callback/route.ts   |  3 +-
+ apps/web/app/api/sso/signin/route.ts          |  3 +-
  apps/web/app/layout.tsx                       |  2 ++
  apps/web/components/BasePathShim.tsx          |  8 +++++
  apps/web/next.config.ts                       |  2 ++
  apps/web/utils/auth-client.ts                 |  4 +--
- apps/web/utils/auth.ts                        |  2 +-
+ apps/web/utils/auth.ts                        |  5 +--
  apps/web/utils/base-path.ts                   | 29 +++++++++++++++
  .../calendar/handle-calendar-callback.ts      |  3 +-
  .../utils/calendar/oauth-callback-helpers.ts  |  3 +-
@@ -21,11 +23,57 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
  .../utils/oauth/account-linking-redirect.ts   |  3 +-
  apps/web/utils/oauth/account-linking.ts       |  5 +--
  apps/web/utils/outlook/watch.ts               |  3 +-
+ apps/web/utils/redirect.ts                    |  3 +-
  docker/Dockerfile.prod                        |  3 ++
- 16 files changed, 100 insertions(+), 17 deletions(-)
+ 19 files changed, 114 insertions(+), 26 deletions(-)
  create mode 100644 apps/web/components/BasePathShim.tsx
  create mode 100644 apps/web/utils/base-path.ts
 
+diff --git a/apps/web/app/(landing)/login/LoginForm.tsx b/apps/web/app/(landing)/login/LoginForm.tsx
+index 7b6d9eb..9a5ab75 100644
+--- a/apps/web/app/(landing)/login/LoginForm.tsx
++++ b/apps/web/app/(landing)/login/LoginForm.tsx
+@@ -1,5 +1,7 @@
+ "use client";
+ 
++import { withBasePath } from "@/utils/base-path"; // BizGPT: sub-path redirects
++
+ import Image from "next/image";
+ import Link from "next/link";
+ import { useSearchParams } from "next/navigation";
+@@ -43,8 +45,8 @@ export function LoginForm({
+       if (useGoogleOauthEmulator) {
+         const result = await signInWithOauth2({
+           providerId: "google",
+-          errorCallbackURL,
+-          callbackURL,
++          errorCallbackURL: withBasePath(errorCallbackURL),
++          callbackURL: withBasePath(callbackURL),
+         });
+         if (!result.url) {
+           throw new Error("Missing Google sign-in redirect URL");
+@@ -53,8 +55,8 @@ export function LoginForm({
+       } else {
+         await signIn.social({
+           provider: "google",
+-          errorCallbackURL,
+-          callbackURL,
++          errorCallbackURL: withBasePath(errorCallbackURL),
++          callbackURL: withBasePath(callbackURL),
+         });
+       }
+     } catch (error) {
+@@ -185,8 +187,8 @@ async function handleSocialSignIn({
+   try {
+     await signIn.social({
+       provider,
+-      errorCallbackURL,
+-      callbackURL,
++      errorCallbackURL: withBasePath(errorCallbackURL),
++      callbackURL: withBasePath(callbackURL),
+     });
+   } catch (error) {
+     const description = getSocialSignInErrorMessage(error);
 diff --git a/apps/web/app/api/auth/[...all]/route.ts b/apps/web/app/api/auth/[...all]/route.ts
 index ff9a898..36ef0c1 100644
 --- a/apps/web/app/api/auth/[...all]/route.ts
@@ -87,6 +135,24 @@ index 4db36cf..8df8266 100644
  
    if (error) {
      logger.warn("OAuth error in MCP callback", {
+diff --git a/apps/web/app/api/sso/signin/route.ts b/apps/web/app/api/sso/signin/route.ts
+index 6512153..fbf9264 100644
+--- a/apps/web/app/api/sso/signin/route.ts
++++ b/apps/web/app/api/sso/signin/route.ts
+@@ -1,3 +1,4 @@
++import { withBasePath } from "@/utils/base-path";
+ import { z } from "zod";
+ import { NextResponse } from "next/server";
+ import { betterAuthConfig } from "@/utils/auth";
+@@ -51,7 +52,7 @@ export const GET = withError("sso/signin", async (request) => {
+   const ssoResponse = await betterAuthConfig.api.signInSSO({
+     body: {
+       providerId: provider.providerId,
+-      callbackURL: "/accounts",
++      callbackURL: withBasePath("/accounts"),
+       email,
+       loginHint: email,
+     },
 diff --git a/apps/web/app/layout.tsx b/apps/web/app/layout.tsx
 index e5dc289..974a966 100644
 --- a/apps/web/app/layout.tsx
@@ -155,10 +221,15 @@ index 8d03c26..8da0455 100644
    });
  }
 diff --git a/apps/web/utils/auth.ts b/apps/web/utils/auth.ts
-index 77c8144..032978c 100644
+index 77c8144..9884703 100644
 --- a/apps/web/utils/auth.ts
 +++ b/apps/web/utils/auth.ts
-@@ -201,7 +201,7 @@ export const betterAuthConfig = betterAuth({
+@@ -1,3 +1,4 @@
++import { withBasePath } from "@/utils/base-path";
+ import { sso } from "@better-auth/sso";
+ import { scim } from "@better-auth/scim";
+ import { expo } from "@better-auth/expo";
+@@ -201,7 +202,7 @@ export const betterAuthConfig = betterAuth({
        }
      },
    },
@@ -167,6 +238,15 @@ index 77c8144..032978c 100644
    trustedOrigins: [
      env.NEXT_PUBLIC_BASE_URL,
      "https://appleid.apple.com",
+@@ -326,7 +327,7 @@ export const betterAuthConfig = betterAuth({
+     onError: (error: unknown, ctx: AuthContext) => {
+       logger.error("Auth API encountered an error", { error, ctx });
+     },
+-    errorURL: "/login/error",
++    errorURL: withBasePath("/login/error"), // BizGPT: sub-path
+   },
+ });
+ 
 diff --git a/apps/web/utils/base-path.ts b/apps/web/utils/base-path.ts
 new file mode 100644
 index 0000000..95167f7
@@ -364,6 +444,24 @@ index 06a9dfc..e19d653 100644
    if (notificationUrl.protocol === "http:") {
      notificationUrl.protocol = "https:";
    }
+diff --git a/apps/web/utils/redirect.ts b/apps/web/utils/redirect.ts
+index 51588be..bcc2c4c 100644
+--- a/apps/web/utils/redirect.ts
++++ b/apps/web/utils/redirect.ts
+@@ -1,3 +1,4 @@
++import { withBasePath } from "@/utils/base-path";
+ import { normalizeInternalPath } from "@/utils/path";
+ 
+ type SafeRedirectUrlOptions = {
+@@ -69,7 +70,7 @@ export function redirectToSafeUrl(
+   redirectUrl: string | null | undefined,
+   options: SafeRedirectUrlOptions = {},
+ ) {
+-  window.location.assign(getSafeRedirectUrl(redirectUrl, options));
++  window.location.assign(withBasePath(getSafeRedirectUrl(redirectUrl, options))); // BizGPT: sub-path
+ }
+ 
+ function getCurrentOrigin() {
 diff --git a/docker/Dockerfile.prod b/docker/Dockerfile.prod
 index ea90c8d..ac5a8de 100644
 --- a/docker/Dockerfile.prod

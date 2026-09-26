@@ -24,6 +24,8 @@ Upstream only runs at a domain root, and its `/api` routes collide with Biz GPT'
 - `new URL("/x", base)` → `new URL("./x", withTrailingSlash(base))` in 8 server files so redirects keep the prefix.
 - better-auth: `baseURL` is `${NEXT_PUBLIC_BASE_URL}/api/auth`, and `app/api/auth/[...all]/route.ts`
   restores the prefix Next.js strips from route-handler URLs before better-auth matches the path.
+- Sign-in success/error redirects (`callbackURL`, `errorCallbackURL`, `errorURL`, SSO) and the one
+  `window.location.assign` get the prefix, since better-auth and the browser use them verbatim.
 
 With `NEXT_PUBLIC_BASE_PATH` unset the app behaves exactly like upstream.
 
@@ -70,3 +72,5 @@ https://test.gpt.dbizlab.com/inbox_zero/api/google/linking/callback
 - Inbox Zero keeps its `X-Frame-Options: DENY` / `frame-ancestors 'none'`; it is linked from Biz GPT, not iframed.
 - Mailbox OAuth tokens stay in Inbox Zero's database, encrypted with `EMAIL_ENCRYPT_*`.
 - Inbox Zero cannot reuse the Gmail MCP credentials; it signs users in with its own Google OAuth flow.
+
+Google Cloud APIs that must be enabled in the OAuth project: People API, Gmail API (and Cloud Pub/Sub for push).
