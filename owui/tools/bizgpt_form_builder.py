@@ -158,12 +158,15 @@ class Tools:
         context = {'user_id': (__user__ or {}).get('id'), 'chat_id': (__metadata__ or {}).get('chat_id'), 'preview': True}
         form = await self._api('POST', '/api/forms', {'form_type': form_id, 'prefill': prefill or {}, 'context': context})
         public_url = f'{self.valves.FORMS_PUBLIC_URL.rstrip("/")}/f/{form["form_id"]}'
-        if __event_emitter__:
-            await __event_emitter__({'type': 'embeds', 'data': {'embeds': [public_url]}})
-        return HTMLResponse(content=public_url, headers={'Content-Disposition': 'inline'}), {
+        context_for_llm = {
             'status': 'preview_displayed',
             'instructions': 'The preview is visible. Ask if any field should change; if so call save_form again.',
         }
+        if __event_emitter__:
+            # Embedded in the message; an inline tool result would render it a second time.
+            await __event_emitter__({'type': 'embeds', 'data': {'embeds': [public_url]}})
+            return json.dumps(context_for_llm)
+        return HTMLResponse(content=public_url, headers={'Content-Disposition': 'inline'}), context_for_llm
 
     async def delete_form(self, form_id: str, confirm: bool = False, __user__: Optional[dict] = None) -> str:
         """

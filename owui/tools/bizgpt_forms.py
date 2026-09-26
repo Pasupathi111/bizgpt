@@ -109,6 +109,9 @@ class Tools:
             'prefilled and which fields they still need to fill in, then stop. Do not repeat the form as text. '
             'When the user reports it was submitted, confirm using the reference number.',
         }
+        if __event_emitter__:
+            # Already embedded in the message above; an inline tool result would render it a second time.
+            return json.dumps(context_for_llm)
         return HTMLResponse(content=public_url, headers={'Content-Disposition': 'inline'}), context_for_llm
 
     async def get_form_status(self, form_id: str) -> str:

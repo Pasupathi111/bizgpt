@@ -114,6 +114,9 @@ class Tools:
                 'message': f'The {integration.title()} authorization panel is displayed in chat.',
                 'instructions': 'The OAuth panel is already visible to the user in chat. Tell them to complete authorization in that panel. Do not mention any URL, browser address, or link text, and do not repeat any raw URL.',
             }
+            if __event_emitter__:
+                # Already embedded in the message above; an inline tool result would render it a second time.
+                return json.dumps(context)
             return HTMLResponse(content=embed_url, headers={'Content-Disposition': 'inline'}), context
 
         fallback = {
