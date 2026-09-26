@@ -54,7 +54,16 @@
 	});
 
 	$: isAdmin = $user?.role === 'admin';
-	$: firstName = (data?.user?.name || $user?.name || '').split(/[ @]/)[0];
+	// Greeting name: the account's display name, or, when that is a placeholder
+	// ("User", "Admin", an email address), the first part of the email address.
+	const GENERIC_NAMES = ['', 'user', 'admin', 'administrator'];
+	const titleCase = (w: string) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : '');
+	$: displayName = (() => {
+		const name = (data?.user?.name || $user?.name || '').trim();
+		if (name && !GENERIC_NAMES.includes(name.toLowerCase()) && !name.includes('@')) return name.split(/\s+/)[0];
+		const email = data?.user?.email || $user?.email || (name.includes('@') ? name : '');
+		return titleCase(email.split('@')[0].split(/[._\-+]/)[0]);
+	})();
 	$: greeting = now.hour() < 12 ? 'Good morning' : now.hour() < 17 ? 'Good afternoon' : 'Good evening';
 	$: cards = data?.cards;
 	$: inboxHref = chat('bizgpt-gmail', 'Show my 10 latest emails');
@@ -68,7 +77,7 @@
 			]
 		: [];
 
-	type Action = { label: string; icon: string; tone: Tone; href: string | null; external?: boolean; hint?: string };
+	type Action = { label: string; icon: string; tone: Tone; href: string | null; external?: boolean; hint?: string; onClick?: () => void };
 	$: actions = [
 		{
 			label: 'Create Workflow',
@@ -86,7 +95,7 @@
 			hint: isAdmin ? 'Form Builder' : 'Admins only'
 		},
 		{ label: 'Connect App', icon: 'link', tone: 'orange', href: chat('bizgpt-assistant', 'Connect my Gmail') },
-		{ label: 'Manage Nango', icon: 'cloud', tone: 'sky', href: chat('bizgpt-assistant', 'Show my integration status') },
+		{ label: 'Search Chats', icon: 'search', tone: 'sky', href: null, onClick: () => showSearch.set(true) },
 		{ label: 'Open Inbox', icon: 'mail', tone: 'rose', href: inboxHref },
 		{ label: 'Chat with AI', icon: 'sparkles', tone: 'violet', href: chat('bizgpt-assistant') }
 	] as Action[];
@@ -135,7 +144,7 @@
 		<div>
 			<div class="text-sm text-gray-500 dark:text-gray-400">Welcome back,</div>
 			<h1 class="text-3xl font-bold tracking-tight text-[#0f1a3d] dark:text-white">
-				{greeting}{firstName ? `, ${firstName}` : ''}! 👋
+				{greeting}{displayName ? `, ${displayName}` : ''}! 👋
 			</h1>
 			<p class="mt-1 text-gray-500 dark:text-gray-400">
 				Here's what's happening across your Biz GPT {data?.scope === 'personal' ? 'account' : 'workspace'}.
@@ -171,12 +180,12 @@
 		{/if}
 
 		<!-- stat cards -->
-		<div class="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
+		<div class="grid grid-cols-2 gap-3 xl:grid-cols-4">
 			<StatCard title="Dify Workflows" icon="workflow" tone="violet"
 				value={cards.workflows.available ? cards.workflows.active : '—'}
 				caption={cards.workflows.available ? `Active of ${cards.workflows.total} workflows` : 'Workflows API unavailable'}
 				href={data.links.dify_console} external />
-			<StatCard title="Dynamic Forms" icon="form" tone="emerald"
+			<StatCard title="BizForms" icon="form" tone="emerald"
 				value={cards.forms.available ? cards.forms.types : '—'}
 				caption={`${cards.forms.submissions} submitted · ${cards.forms.custom} custom`}
 				href={isAdmin ? chat('bizgpt-form-builder', 'List all forms') : chat('bizgpt-assistant')} />
@@ -184,12 +193,7 @@
 				value={`${cards.integrations.connected}/${cards.integrations.total}`}
 				caption="Connected services"
 				href={isAdmin ? withBasePath('/admin/settings/tools') : null} />
-			<StatCard title="Nango" icon="cloud" tone="sky"
-				value={cards.nango.up ? cards.nango.connections : 'Down'}
-				muted={!cards.nango.up}
-				caption={cards.nango.up ? 'Personal connections' : 'OAuth broker offline'}
-				href={chat('bizgpt-assistant', 'Show my integration status')} />
-			<StatCard title="Inbox Zero" icon="mail" tone="rose"
+			<StatCard title="Inbox" icon="mail" tone="rose"
 				value={cards.inbox.available ? `${cards.inbox.unread}${cards.inbox.unread_capped ? '+' : ''}` : '—'}
 				muted={!cards.inbox.available}
 				caption={cards.inbox.available ? 'Unread messages' : cards.inbox.reason === 'restricted' ? 'Admins only' : 'Mailbox unavailable'}
@@ -217,12 +221,14 @@
 				<div class="grid flex-1 grid-cols-2 gap-2.5 sm:grid-cols-3">
 					{#each actions as a (a.label)}
 						<svelte:element
-							this={a.href ? 'a' : 'div'}
+							this={a.href ? 'a' : a.onClick ? 'button' : 'div'}
+							type={!a.href && a.onClick ? 'button' : undefined}
+							on:click={() => !a.href && a.onClick?.()}
 							href={a.href ?? undefined}
 							target={a.href && a.external ? '_blank' : undefined}
 							rel={a.href && a.external ? 'noopener noreferrer' : undefined}
 							title={a.hint}
-							class="group flex min-h-24 flex-col justify-between rounded-xl p-3 transition {TONES[a.tone].soft} {a.href
+							class="group flex min-h-24 flex-col justify-between rounded-xl p-3 transition {TONES[a.tone].soft} text-left {a.href || a.onClick
 								? ''
 								: 'cursor-not-allowed opacity-50'}"
 						>

@@ -15,7 +15,7 @@
 
 	$: workspace = [
 		{ id: 'dify', label: 'Dify Workflows', href: withBasePath('/lead-generation'), icon: 'workflow', tone: 'text-violet-500', match: '/lead-generation' },
-		{ id: 'inbox', label: 'Inbox Zero', href: withBasePath('/inbox'), icon: 'inbox', tone: 'text-rose-500', match: '/inbox' }
+		{ id: 'inbox', label: 'Inbox', href: withBasePath('/inbox'), icon: 'inbox', tone: 'text-rose-500', match: '/inbox' }
 	] as Item[];
 
 	$: productivity = [

@@ -302,7 +302,7 @@ async def get_dashboard(days: int = Query(7, ge=1, le=90), user=Depends(get_veri
             'name': f'{name} (personal)',
             'kind': key,
             'status': status,
-            'detail': item.get('message') or ('Nango is not reachable' if not nango_up else 'Connect from chat'),
+            'detail': item.get('message') if nango_up and item.get('message') else ('Connection service offline' if not nango_up else 'Connect from chat'),
             'account': item.get('email') or item.get('account_email'),
         }
 
@@ -324,17 +324,10 @@ async def get_dashboard(days: int = Query(7, ge=1, le=90), user=Depends(get_veri
         },
         {
             'id': 'forms',
-            'name': 'Dynamic Forms',
+            'name': 'BizForms',
             'kind': 'forms',
             'status': 'connected' if forms['ok'] else 'down',
             'detail': f"{len(forms['types'])} form types",
-        },
-        {
-            'id': 'nango',
-            'name': 'Nango',
-            'kind': 'nango',
-            'status': 'connected' if nango_up else 'down',
-            'detail': 'OAuth broker for personal Gmail / Outlook',
         },
         personal_item('gmail', 'Gmail'),
         personal_item('outlook', 'Outlook'),
@@ -379,7 +372,7 @@ async def get_dashboard(days: int = Query(7, ge=1, le=90), user=Depends(get_veri
 
     return {
         'generated_at': now,
-        'user': {'name': user.name, 'role': user.role},
+        'user': {'name': user.name, 'email': user.email, 'role': user.role},
         'scope': 'workspace' if is_admin else 'personal',
         'cards': {
             'workflows': {
