@@ -85,7 +85,7 @@
 	import NotesIcon from './Sidebar/icons/Notes.svelte';
 	import SearchIcon from './Sidebar/icons/Search.svelte';
 	import ChartBar from '../icons/ChartBar.svelte';
-	import Bolt from '../icons/Bolt.svelte';
+	import Cube from '../icons/Cube.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
 	import WorkspaceIcon from './Sidebar/icons/Workspace.svelte';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
@@ -1066,7 +1066,7 @@
 					</div>
 
 					<div>
-						<Tooltip content={$i18n.t('Lead Generation')} placement="right">
+						<Tooltip content={$i18n.t('Dify Workflow')} placement="right">
 							<a
 								class=" cursor-pointer flex size-8 items-center justify-center transition group"
 								href={withBasePath('/lead-generation')}
@@ -1077,12 +1077,14 @@
 									itemClickHandler();
 								}}
 								draggable="false"
-								aria-label={$i18n.t('Lead Generation')}
+								aria-label={$i18n.t('Dify Workflow')}
 							>
 								<div
-									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition group-hover:bg-gray-100 dark:group-hover:bg-gray-900"
+									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition {$page.url.pathname.startsWith('/lead-generation')
+										? 'bg-gray-100 dark:bg-gray-900'
+										: 'group-hover:bg-gray-100 dark:group-hover:bg-gray-900'}"
 								>
-									<Bolt className="size-4" strokeWidth="1.5" />
+									<Cube className="size-4" strokeWidth="1.5" />
 								</div>
 							</a>
 						</Tooltip>
@@ -1333,21 +1335,23 @@
 							</a>
 						</div>
 
-						<!-- Biz GPT: Lead Generation workflow builder (standalone page) -->
+						<!-- Biz GPT: Dify Workflow (lead-generation workflow builder) -->
 						<div class="px-1 flex justify-center text-gray-700 dark:text-gray-300">
 							<a
 								id="sidebar-lead-generation-button"
-								class="grow flex items-center space-x-2 rounded-xl px-2 py-1.5 transition hover:bg-gray-100 dark:hover:bg-gray-900"
+								class="grow flex items-center space-x-2 rounded-xl px-2 py-1.5 transition {$page.url.pathname.startsWith('/lead-generation')
+									? 'bg-black/[0.035] dark:bg-white/[0.045]'
+									: 'hover:bg-gray-100 dark:hover:bg-gray-900'}"
 								href={withBasePath('/lead-generation')}
 								on:click={itemClickHandler}
 								draggable="false"
-								aria-label={$i18n.t('Lead Generation')}
+								aria-label={$i18n.t('Dify Workflow')}
 							>
 								<div class="self-center flex size-4 shrink-0 items-center justify-center">
-									<Bolt className="size-4" strokeWidth="1.5" />
+									<Cube className="size-4" strokeWidth="1.5" />
 								</div>
 								<div class="flex self-center translate-y-[0.5px]">
-									<div class=" self-center text-[0.8125rem] leading-5">{$i18n.t('Lead Generation')}</div>
+									<div class=" self-center text-[0.8125rem] leading-5">{$i18n.t('Dify Workflow')}</div>
 								</div>
 							</a>
 						</div>

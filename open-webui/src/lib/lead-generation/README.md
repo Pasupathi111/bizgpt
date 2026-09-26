@@ -3,10 +3,10 @@
 A self-contained, static Dify/n8n-style workflow builder for lead-generation
 workflows, served at **`/lead-generation`**.
 
-Nothing outside this folder is imported or modified. The only file outside it is the
-route wrapper `src/routes/lead-generation/+page.svelte`. That route sits outside the
-`(app)` group, so the page renders its own Biz GPT shell, including a sidebar with a
-**Lead Generation** item, and existing pages and the main sidebar are left untouched.
+The page is served inside the normal Biz GPT layout, so the app's own sidebar
+wraps it. The route file is `src/routes/(app)/lead-generation/+page.svelte`, and the
+sidebar entry is **Dify Workflow** in `src/lib/components/layout/Sidebar.svelte`.
+Everything else lives in this folder.
 
 ## What it does
 
@@ -40,7 +40,7 @@ lead-generation/
   data/       catalog.ts (node kinds, colours) · workflows.ts (samples, templates) · samples.ts
   engine/     geometry.ts (node size, edge paths) · simulate.ts (run planner)
   components/ Canvas, WorkflowNode, NodePalette, RightPanel, WorkflowEditor, WorkflowList,
-              TemplateGallery, ExecutionHistory, VariablesView, SettingsView, Sidebar,
+              TemplateGallery, ExecutionHistory, VariablesView, SettingsView,
               MiniGraph, JsonView, LGIcon
   styles/     lead-generation.css (every rule scoped under .lg-app)
 ```

@@ -3,7 +3,6 @@
 	import { onMount } from 'svelte';
 	import './styles/lead-generation.css';
 	import LGIcon from './components/LGIcon.svelte';
-	import Sidebar from './components/Sidebar.svelte';
 	import WorkflowList from './components/WorkflowList.svelte';
 	import WorkflowEditor from './components/WorkflowEditor.svelte';
 	import TemplateGallery from './components/TemplateGallery.svelte';
@@ -14,8 +13,6 @@
 	import { RUN_HISTORY, VARIABLES, type Variable } from './data/samples';
 	import type { RunRecord, Workflow } from './types';
 
-	export let base = '';
-
 	type Tab = 'workflows' | 'templates' | 'history' | 'variables' | 'settings';
 	const STORE_KEY = 'bizgpt.lead-generation.v1';
 
@@ -25,7 +22,6 @@
 	let variables: Variable[] = clone(VARIABLES);
 	let openId: string | null = null;
 	let query = '';
-	let sideOpen = false;
 	let toasts: { id: number; message: string; kind: string }[] = [];
 	let toastSeq = 0;
 	let loaded = false;
@@ -50,7 +46,6 @@
 	function open(id: string) {
 		tab = 'workflows';
 		openId = id;
-		sideOpen = false;
 	}
 
 	function useTemplate(id: string) {
@@ -169,27 +164,12 @@
 </script>
 
 <div class="lg-app">
-	<Sidebar {base} open={sideOpen} on:home={() => setTab('workflows')} on:close={() => (sideOpen = false)} />
-
 	<main class="lg-main">
-		<header class="lg-topbar">
-			<button class="lg-icon-btn lg-only-narrow" on:click={() => (sideOpen = true)} aria-label="Open menu"><LGIcon name="menu" size={18} /></button>
-			<label class="lg-search">
-				<LGIcon name="search" size={15} />
-				<input placeholder="Search workflows, tools, templates..." bind:value={query} />
-				<kbd class="lg-hide-sm">⌘K</kbd>
-			</label>
-			<span class="lg-spacer"></span>
-			<button class="lg-env lg-hide-sm"><span class="lg-dot"></span> Development <LGIcon name="chevronDown" size={13} /></button>
-			<button class="lg-icon-btn" aria-label="Notifications"><LGIcon name="bell" size={18} /><span class="lg-notif">3</span></button>
-			<span class="lg-avatar">PS</span>
-		</header>
-
 		<div class="lg-page-head">
-			<span class="lg-page-icon"><LGIcon name="target" size={22} /></span>
+			<span class="lg-page-icon"><LGIcon name="workflow" size={22} /></span>
 			<div style="flex:1;min-width:0">
-				<h1 class="lg-page-title">Lead Generation <span class="lg-pill blue">Dify Workflow</span></h1>
-				<p class="lg-page-sub">Build, run and monitor AI lead-generation workflows — capture, enrich, score and route every lead automatically.</p>
+				<h1 class="lg-page-title">Dify Workflow <span class="lg-pill blue">Lead Generation</span></h1>
+				<p class="lg-page-sub">Build and manage AI workflows to automate your business processes — capture, enrich, score and route every lead.</p>
 			</div>
 			<button class="lg-btn lg-hide-sm" on:click={resetDemo} title="Restore the sample workflows"><LGIcon name="refresh" size={14} /> Reset demo</button>
 			<button class="lg-btn primary" on:click={createBlank}><LGIcon name="plus" size={15} /> Create Workflow</button>
@@ -239,11 +219,6 @@
 			{/if}
 		</section>
 	</main>
-
-	{#if sideOpen}
-		<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-		<div class="lg-only-narrow" style="position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:55" on:click={() => (sideOpen = false)}></div>
-	{/if}
 
 	<div class="lg-toasts" aria-live="polite">
 		{#each toasts as t (t.id)}
