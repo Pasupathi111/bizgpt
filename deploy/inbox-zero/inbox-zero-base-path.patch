@@ -1,0 +1,383 @@
+From ef57656c0ca02528bb53ee6826fd460c0ed1785d Mon Sep 17 00:00:00 2001
+From: velan <noreply@anthropic.com>
+Date: Sat, 26 Sep 2026 08:16:52 +0000
+Subject: [PATCH] BizGPT: serve Inbox Zero under a sub-path (Next.js
+ basePath=/inbox_zero)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ apps/web/app/api/auth/[...all]/route.ts       | 35 +++++++++++++++++--
+ .../api/mcp/[integration]/callback/route.ts   |  3 +-
+ apps/web/app/layout.tsx                       |  2 ++
+ apps/web/components/BasePathShim.tsx          |  8 +++++
+ apps/web/next.config.ts                       |  2 ++
+ apps/web/utils/auth-client.ts                 |  4 +--
+ apps/web/utils/auth.ts                        |  2 +-
+ apps/web/utils/base-path.ts                   | 29 +++++++++++++++
+ .../calendar/handle-calendar-callback.ts      |  3 +-
+ .../utils/calendar/oauth-callback-helpers.ts  |  3 +-
+ apps/web/utils/drive/handle-drive-callback.ts |  9 ++---
+ .../providers/slack/handle-slack-callback.ts  |  3 +-
+ .../utils/oauth/account-linking-redirect.ts   |  3 +-
+ apps/web/utils/oauth/account-linking.ts       |  5 +--
+ apps/web/utils/outlook/watch.ts               |  3 +-
+ docker/Dockerfile.prod                        |  3 ++
+ 16 files changed, 100 insertions(+), 17 deletions(-)
+ create mode 100644 apps/web/components/BasePathShim.tsx
+ create mode 100644 apps/web/utils/base-path.ts
+
+diff --git a/apps/web/app/api/auth/[...all]/route.ts b/apps/web/app/api/auth/[...all]/route.ts
+index ff9a898..36ef0c1 100644
+--- a/apps/web/app/api/auth/[...all]/route.ts
++++ b/apps/web/app/api/auth/[...all]/route.ts
+@@ -1,5 +1,36 @@
+ import { betterAuthConfig } from "@/utils/auth";
++import { BASE_PATH } from "@/utils/base-path";
+ import { toNextJsHandler } from "better-auth/next-js";
+ 
+-export const { POST, GET, PUT, PATCH, DELETE } =
+-  toNextJsHandler(betterAuthConfig);
++const handlers = toNextJsHandler(betterAuthConfig);
++
++// BizGPT patch: with a Next.js basePath (e.g. /inbox_zero), route handlers receive
++// request URLs without the prefix, while better-auth matches on the full path of its
++// baseURL (/inbox_zero/api/auth). Restore the prefix before handing the request over.
++function withBasePathRequest(handler: (request: Request) => Promise<Response>) {
++  return (request: Request) => {
++    if (!BASE_PATH) return handler(request);
++    const url = new URL(request.url);
++    if (url.pathname === BASE_PATH || url.pathname.startsWith(`${BASE_PATH}/`)) {
++      return handler(request);
++    }
++    url.pathname = `${BASE_PATH}${url.pathname}`;
++    const hasBody = request.method !== "GET" && request.method !== "HEAD";
++    return handler(
++      new Request(url, {
++        method: request.method,
++        headers: request.headers,
++        body: hasBody ? request.body : undefined,
++        signal: request.signal,
++        redirect: request.redirect,
++        ...(hasBody ? { duplex: "half" } : {}),
++      } as RequestInit),
++    );
++  };
++}
++
++export const GET = withBasePathRequest(handlers.GET);
++export const POST = withBasePathRequest(handlers.POST);
++export const PUT = withBasePathRequest(handlers.PUT);
++export const PATCH = withBasePathRequest(handlers.PATCH);
++export const DELETE = withBasePathRequest(handlers.DELETE);
+diff --git a/apps/web/app/api/mcp/[integration]/callback/route.ts b/apps/web/app/api/mcp/[integration]/callback/route.ts
+index 4db36cf..8df8266 100644
+--- a/apps/web/app/api/mcp/[integration]/callback/route.ts
++++ b/apps/web/app/api/mcp/[integration]/callback/route.ts
+@@ -1,3 +1,4 @@
++import { withTrailingSlash } from "@/utils/base-path";
+ import { NextResponse } from "next/server";
+ import { withError } from "@/utils/middleware";
+ import { SafeError } from "@/utils/error";
+@@ -48,7 +49,7 @@ export const GET = withError("mcp/callback", async (request, { params }) => {
+   };
+ 
+   // Default redirect - will be updated once we decode state
+-  let redirectUrl = new URL("/integrations", env.NEXT_PUBLIC_BASE_URL);
++  let redirectUrl = new URL("./integrations", withTrailingSlash(env.NEXT_PUBLIC_BASE_URL));
+ 
+   if (error) {
+     logger.warn("OAuth error in MCP callback", {
+diff --git a/apps/web/app/layout.tsx b/apps/web/app/layout.tsx
+index e5dc289..974a966 100644
+--- a/apps/web/app/layout.tsx
++++ b/apps/web/app/layout.tsx
+@@ -13,6 +13,7 @@ import "../styles/globals.css";
+ import { PostHogPageview, PostHogProvider } from "@/providers/PostHogProvider";
+ import { env } from "@/env";
+ import { GlobalProviders } from "@/providers/GlobalProviders";
++import { BasePathShim } from "@/components/BasePathShim";
+ import { UTM } from "@/app/utm";
+ import { startupImage } from "@/app/startup-image";
+ import { Toaster } from "@/components/Toast";
+@@ -141,6 +142,7 @@ export default async function RootLayout({
+             __html: JSON.stringify(jsonLd),
+           }}
+         />
++        <BasePathShim />
+         <PostHogProvider>
+           <Suspense>
+             <PostHogPageview />
+diff --git a/apps/web/components/BasePathShim.tsx b/apps/web/components/BasePathShim.tsx
+new file mode 100644
+index 0000000..e7a3792
+--- /dev/null
++++ b/apps/web/components/BasePathShim.tsx
+@@ -0,0 +1,8 @@
++"use client";
++
++// BizGPT patch: loads the sub-path fetch shim in the browser bundle.
++import "@/utils/base-path";
++
++export function BasePathShim() {
++  return null;
++}
+diff --git a/apps/web/next.config.ts b/apps/web/next.config.ts
+index aaa4939..f82221a 100644
+--- a/apps/web/next.config.ts
++++ b/apps/web/next.config.ts
+@@ -17,6 +17,8 @@ const isProductionBuild = process.env.NODE_ENV === "production";
+ const repoRoot = path.resolve(import.meta.dirname, "../..");
+ 
+ const nextConfig: NextConfig = {
++  // BizGPT patch: optional sub-path deployment (e.g. /inbox_zero)
++  basePath: process.env.NEXT_PUBLIC_BASE_PATH || undefined,
+   reactStrictMode: true,
+   allowedDevOrigins: ["127.0.0.1"],
+   logging: {
+diff --git a/apps/web/utils/auth-client.ts b/apps/web/utils/auth-client.ts
+index 8d03c26..8da0455 100644
+--- a/apps/web/utils/auth-client.ts
++++ b/apps/web/utils/auth-client.ts
+@@ -8,13 +8,13 @@ import {
+ 
+ export const { signIn, signOut, signUp, useSession, getSession, sso } =
+   createAuthClient({
+-    baseURL: env.NEXT_PUBLIC_BASE_URL,
++    baseURL: `${env.NEXT_PUBLIC_BASE_URL}/api/auth`, // BizGPT: explicit auth endpoint for sub-path deploys
+     plugins: [ssoClient(), organizationClient()],
+   });
+ 
+ function createGenericOauthAuthClient() {
+   return createAuthClient({
+-    baseURL: env.NEXT_PUBLIC_BASE_URL,
++    baseURL: `${env.NEXT_PUBLIC_BASE_URL}/api/auth`, // BizGPT: explicit auth endpoint for sub-path deploys
+     plugins: [genericOAuthClient()],
+   });
+ }
+diff --git a/apps/web/utils/auth.ts b/apps/web/utils/auth.ts
+index 77c8144..032978c 100644
+--- a/apps/web/utils/auth.ts
++++ b/apps/web/utils/auth.ts
+@@ -201,7 +201,7 @@ export const betterAuthConfig = betterAuth({
+       }
+     },
+   },
+-  baseURL: env.NEXT_PUBLIC_BASE_URL,
++  baseURL: `${env.NEXT_PUBLIC_BASE_URL}/api/auth`, // BizGPT: explicit auth endpoint for sub-path deploys
+   trustedOrigins: [
+     env.NEXT_PUBLIC_BASE_URL,
+     "https://appleid.apple.com",
+diff --git a/apps/web/utils/base-path.ts b/apps/web/utils/base-path.ts
+new file mode 100644
+index 0000000..95167f7
+--- /dev/null
++++ b/apps/web/utils/base-path.ts
+@@ -0,0 +1,29 @@
++// BizGPT patch: support serving Inbox Zero under a sub-path (Next.js basePath),
++// e.g. https://test.gpt.dbizlab.com/inbox_zero. Empty when served at the root.
++export const BASE_PATH = (process.env.NEXT_PUBLIC_BASE_PATH || "").replace(/\/$/, "");
++
++// For `new URL("./x", withTrailingSlash(base))`: keeps the base URL's path.
++export const withTrailingSlash = (base: string | URL) => String(base).replace(/\/?$/, "/");
++
++// Prefix a root-relative path ("/api/...") with the base path.
++export const withBasePath = (path: string) =>
++  BASE_PATH && path.startsWith("/") && !path.startsWith("//") && path !== BASE_PATH && !path.startsWith(`${BASE_PATH}/`)
++    ? `${BASE_PATH}${path}`
++    : path;
++
++// Browser: route root-relative fetch() / EventSource calls (e.g. fetch("/api/user")) through the base path.
++// Next.js prefixes links, router navigation and its own requests, but not hand-written fetch URLs.
++if (typeof window !== "undefined" && BASE_PATH && !(window as any).__bizgptBasePathPatched) {
++  (window as any).__bizgptBasePathPatched = true;
++  const originalFetch = window.fetch.bind(window);
++  window.fetch = (input: RequestInfo | URL, init?: RequestInit) =>
++    originalFetch(typeof input === "string" ? withBasePath(input) : input, init);
++  const OriginalEventSource = window.EventSource;
++  if (OriginalEventSource) {
++    window.EventSource = class extends OriginalEventSource {
++      constructor(url: string | URL, config?: EventSourceInit) {
++        super(typeof url === "string" ? withBasePath(url) : url, config);
++      }
++    } as typeof EventSource;
++  }
++}
+diff --git a/apps/web/utils/calendar/handle-calendar-callback.ts b/apps/web/utils/calendar/handle-calendar-callback.ts
+index a33db6c..ceccbd0 100644
+--- a/apps/web/utils/calendar/handle-calendar-callback.ts
++++ b/apps/web/utils/calendar/handle-calendar-callback.ts
+@@ -1,3 +1,4 @@
++import { withTrailingSlash } from "@/utils/base-path";
+ import { NextResponse, type NextRequest } from "next/server";
+ import { env } from "@/env";
+ import type { Logger } from "@/utils/logger";
+@@ -165,7 +166,7 @@ export async function handleCalendarCallback(
+     logger.error("Error in calendar callback", { error });
+ 
+     // Try to build a redirect URL, fallback to /calendars
+-    const errorRedirectUrl = new URL("/calendars", env.NEXT_PUBLIC_BASE_URL);
++    const errorRedirectUrl = new URL("./calendars", withTrailingSlash(env.NEXT_PUBLIC_BASE_URL));
+     return redirectWithError(
+       errorRedirectUrl,
+       "connection_failed",
+diff --git a/apps/web/utils/calendar/oauth-callback-helpers.ts b/apps/web/utils/calendar/oauth-callback-helpers.ts
+index af975ec..07002ff 100644
+--- a/apps/web/utils/calendar/oauth-callback-helpers.ts
++++ b/apps/web/utils/calendar/oauth-callback-helpers.ts
+@@ -1,3 +1,4 @@
++import { withTrailingSlash } from "@/utils/base-path";
+ import type { NextRequest } from "next/server";
+ import { NextResponse } from "next/server";
+ import { z } from "zod";
+@@ -38,7 +39,7 @@ export async function validateOAuthCallback(
+   const receivedState = searchParams.get("state");
+   const storedState = request.cookies.get(CALENDAR_STATE_COOKIE_NAME)?.value;
+ 
+-  const baseRedirectUrl = new URL("/calendars", env.NEXT_PUBLIC_BASE_URL);
++  const baseRedirectUrl = new URL("./calendars", withTrailingSlash(env.NEXT_PUBLIC_BASE_URL));
+   const response = NextResponse.redirect(baseRedirectUrl);
+ 
+   response.cookies.delete(CALENDAR_STATE_COOKIE_NAME);
+diff --git a/apps/web/utils/drive/handle-drive-callback.ts b/apps/web/utils/drive/handle-drive-callback.ts
+index b530d8f..d5fe9a4 100644
+--- a/apps/web/utils/drive/handle-drive-callback.ts
++++ b/apps/web/utils/drive/handle-drive-callback.ts
+@@ -1,3 +1,4 @@
++import { withTrailingSlash } from "@/utils/base-path";
+ import { z } from "zod";
+ import { type NextRequest, NextResponse } from "next/server";
+ import { env } from "@/env";
+@@ -53,7 +54,7 @@ export async function handleDriveCallback(
+     const cachedResult = await getOAuthCodeResult(code);
+     if (cachedResult) {
+       logger.info("OAuth code already processed, returning cached result");
+-      const cachedRedirectUrl = new URL("/drive", env.NEXT_PUBLIC_BASE_URL);
++      const cachedRedirectUrl = new URL("./drive", withTrailingSlash(env.NEXT_PUBLIC_BASE_URL));
+       for (const [key, value] of Object.entries(cachedResult.params)) {
+         cachedRedirectUrl.searchParams.set(key, value);
+       }
+@@ -68,7 +69,7 @@ export async function handleDriveCallback(
+     const acquiredLock = await acquireOAuthCodeLock(code);
+     if (!acquiredLock) {
+       logger.info("OAuth code is being processed by another request");
+-      const lockRedirectUrl = new URL("/drive", env.NEXT_PUBLIC_BASE_URL);
++      const lockRedirectUrl = new URL("./drive", withTrailingSlash(env.NEXT_PUBLIC_BASE_URL));
+       response.cookies.delete(DRIVE_STATE_COOKIE_NAME);
+       return redirectWithMessage(
+         lockRedirectUrl,
+@@ -150,7 +151,7 @@ export async function handleDriveCallback(
+     logger.error("Error in drive callback", { error });
+ 
+     // Try to build a redirect URL, fallback to /drive
+-    const errorRedirectUrl = new URL("/drive", env.NEXT_PUBLIC_BASE_URL);
++    const errorRedirectUrl = new URL("./drive", withTrailingSlash(env.NEXT_PUBLIC_BASE_URL));
+     return redirectWithError(
+       errorRedirectUrl,
+       "connection_failed",
+@@ -175,7 +176,7 @@ async function validateOAuthCallback(
+   const receivedState = searchParams.get("state");
+   const storedState = request.cookies.get(DRIVE_STATE_COOKIE_NAME)?.value;
+ 
+-  const redirectUrl = new URL("/drive", env.NEXT_PUBLIC_BASE_URL);
++  const redirectUrl = new URL("./drive", withTrailingSlash(env.NEXT_PUBLIC_BASE_URL));
+   const response = NextResponse.redirect(redirectUrl);
+ 
+   response.cookies.delete(DRIVE_STATE_COOKIE_NAME);
+diff --git a/apps/web/utils/messaging/providers/slack/handle-slack-callback.ts b/apps/web/utils/messaging/providers/slack/handle-slack-callback.ts
+index 92fcb37..3681078 100644
+--- a/apps/web/utils/messaging/providers/slack/handle-slack-callback.ts
++++ b/apps/web/utils/messaging/providers/slack/handle-slack-callback.ts
+@@ -1,3 +1,4 @@
++import { withTrailingSlash } from "@/utils/base-path";
+ import { z } from "zod";
+ import { type NextRequest, NextResponse } from "next/server";
+ import { env } from "@/env";
+@@ -214,7 +215,7 @@ function validateOAuthCallback(
+   const oauthError = searchParams.get("error");
+   const storedState = request.cookies.get(SLACK_STATE_COOKIE_NAME)?.value;
+ 
+-  const redirectUrl = new URL("/channels", env.NEXT_PUBLIC_BASE_URL);
++  const redirectUrl = new URL("./channels", withTrailingSlash(env.NEXT_PUBLIC_BASE_URL));
+   const response = NextResponse.redirect(redirectUrl);
+ 
+   response.cookies.delete(SLACK_STATE_COOKIE_NAME);
+diff --git a/apps/web/utils/oauth/account-linking-redirect.ts b/apps/web/utils/oauth/account-linking-redirect.ts
+index 4f70123..0a4458e 100644
+--- a/apps/web/utils/oauth/account-linking-redirect.ts
++++ b/apps/web/utils/oauth/account-linking-redirect.ts
+@@ -1,3 +1,4 @@
++import { withTrailingSlash } from "@/utils/base-path";
+ import { NextResponse } from "next/server";
+ import { env } from "@/env";
+ 
+@@ -5,7 +6,7 @@ export function createAccountLinkingRedirect(params?: {
+   query?: Record<string, string | null | undefined>;
+   stateCookieName?: string;
+ }) {
+-  const redirectUrl = new URL("/accounts", env.NEXT_PUBLIC_BASE_URL);
++  const redirectUrl = new URL("./accounts", withTrailingSlash(env.NEXT_PUBLIC_BASE_URL));
+ 
+   for (const [key, value] of Object.entries(params?.query ?? {})) {
+     if (value != null) {
+diff --git a/apps/web/utils/oauth/account-linking.ts b/apps/web/utils/oauth/account-linking.ts
+index cc5684e..ff51029 100644
+--- a/apps/web/utils/oauth/account-linking.ts
++++ b/apps/web/utils/oauth/account-linking.ts
+@@ -1,3 +1,4 @@
++import { withTrailingSlash } from "@/utils/base-path";
+ import { NextResponse } from "next/server";
+ import { env } from "@/env";
+ import prisma from "@/utils/prisma";
+@@ -28,7 +29,7 @@ export async function handleAccountLinking({
+   | { type: "merge"; sourceAccountId: string; sourceUserId: string }
+   | { type: "update_tokens"; existingAccountId: string }
+ > {
+-  const redirectUrl = new URL("/accounts", env.NEXT_PUBLIC_BASE_URL);
++  const redirectUrl = new URL("./accounts", withTrailingSlash(env.NEXT_PUBLIC_BASE_URL));
+   const hasActiveTargetUser = await hasActiveAccountLinkingUser({
+     targetUserId,
+     logger,
+@@ -38,7 +39,7 @@ export async function handleAccountLinking({
+     return {
+       type: "redirect",
+       response: NextResponse.redirect(
+-        new URL("/logout", env.NEXT_PUBLIC_BASE_URL),
++        new URL("./logout", withTrailingSlash(env.NEXT_PUBLIC_BASE_URL)),
+       ),
+     };
+   }
+diff --git a/apps/web/utils/outlook/watch.ts b/apps/web/utils/outlook/watch.ts
+index 06a9dfc..e19d653 100644
+--- a/apps/web/utils/outlook/watch.ts
++++ b/apps/web/utils/outlook/watch.ts
+@@ -1,3 +1,4 @@
++import { withTrailingSlash } from "@/utils/base-path";
+ import type { Client } from "@microsoft/microsoft-graph-client";
+ import type { Subscription } from "@microsoft/microsoft-graph-types";
+ import { addDays } from "date-fns/addDays";
+@@ -9,7 +10,7 @@ export async function watchOutlook(client: Client, logger: Logger) {
+   const base = env.WEBHOOK_URL || env.NEXT_PUBLIC_BASE_URL;
+ 
+   // must be https
+-  const notificationUrl = new URL("/api/outlook/webhook", base);
++  const notificationUrl = new URL("./api/outlook/webhook", withTrailingSlash(base));
+   if (notificationUrl.protocol === "http:") {
+     notificationUrl.protocol = "https:";
+   }
+diff --git a/docker/Dockerfile.prod b/docker/Dockerfile.prod
+index ea90c8d..ac5a8de 100644
+--- a/docker/Dockerfile.prod
++++ b/docker/Dockerfile.prod
+@@ -41,6 +41,9 @@ COPY . .
+ ENV NODE_ENV=production
+ # Increase V8 heap for Next build to avoid OOM in builder
+ ENV NODE_OPTIONS=--max_old_space_size=4096
++# BizGPT patch: optional sub-path (Next.js basePath), fixed at build time
++ARG NEXT_PUBLIC_BASE_PATH=""
++ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
+ ARG NEXT_PUBLIC_BASE_URL="http://NEXT_PUBLIC_BASE_URL_PLACEHOLDER"
+ ENV NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
+ ARG NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS="NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS_PLACEHOLDER"
+-- 
+2.34.1
+

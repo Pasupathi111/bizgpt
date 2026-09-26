@@ -1,0 +1,65 @@
+# BizGPT deployment overrides (upstream docker-compose.yml is untouched).
+# - locally built image with Next.js basePath=/inbox_zero (branch bizgpt/base-path)
+# - web published on localhost only; nginx serves https://test.gpt.dbizlab.com/inbox_zero
+# - internal callers (cron, INTERNAL_API_URL) use the /inbox_zero prefix
+services:
+  web:
+    image: inbox-zero:2.30.0-bizgpt
+    pull_policy: never
+    ports: !override
+      - "127.0.0.1:3010:3000"
+    environment:
+      INTERNAL_API_URL: http://web:3000/inbox_zero
+  worker:
+    image: inbox-zero:2.30.0-bizgpt
+    pull_policy: never
+    environment:
+      INTERNAL_API_URL: http://web:3000/inbox_zero
+  cron:
+    command: >
+      sh -c "
+        apk add --no-cache curl &&
+        (
+          while true; do
+            echo \"[cron] Processing scheduled actions...\"
+            curl -s -X GET 'http://web:3000/inbox_zero/api/cron/scheduled-actions' -H \"Authorization: Bearer $${CRON_SECRET}\" || echo \"[cron] Warning: scheduled-actions request failed\"
+            sleep 900
+          done
+        ) &
+        (
+          while true; do
+            echo \"[cron] Processing automation jobs...\"
+            curl -s -X GET 'http://web:3000/inbox_zero/api/cron/automation-jobs' -H \"Authorization: Bearer $${CRON_SECRET}\" || echo \"[cron] Warning: automation-jobs request failed\"
+            sleep 900
+          done
+        ) &
+        (
+          while true; do
+            echo \"[cron] Processing follow-up reminders...\"
+            curl -s -X GET 'http://web:3000/inbox_zero/api/follow-up-reminders' -H \"Authorization: Bearer $${CRON_SECRET}\" || echo \"[cron] Warning: follow-up-reminders request failed\"
+            sleep 3600
+          done
+        ) &
+        (
+          while true; do
+            echo \"[cron] Processing digest emails...\"
+            curl -s -X GET 'http://web:3000/inbox_zero/api/resend/digest/all' -H \"Authorization: Bearer $${CRON_SECRET}\" || echo \"[cron] Warning: digest request failed\"
+            sleep 1800
+          done
+        ) &
+        (
+          while true; do
+            echo \"[cron] Processing meeting briefs...\"
+            curl -s -X GET 'http://web:3000/inbox_zero/api/meeting-briefs' -H \"Authorization: Bearer $${CRON_SECRET}\" || echo \"[cron] Warning: meeting-briefs request failed\"
+            sleep 900
+          done
+        ) &
+        (
+          while true; do
+            echo \"[cron] Renewing email watches...\"
+            curl -s -X GET 'http://web:3000/inbox_zero/api/watch/all' -H \"Authorization: Bearer $${CRON_SECRET}\" || echo \"[cron] Warning: watch request failed\"
+            sleep 21600
+          done
+        ) &
+        wait
+      "
