@@ -15,6 +15,7 @@
 	import RecentActivity from './RecentActivity.svelte';
 	import StatCard from './StatCard.svelte';
 	import { TONES, type Tone } from './tones';
+        import { SAMPLE_WORKFLOWS } from '../../../lead-generation/data/workflows';
 
 	const REFRESH_MS = 60_000;
 	const RANGES = [7, 14, 30];
@@ -26,6 +27,7 @@
 	let now = dayjs();
 	let timer: ReturnType<typeof setInterval>;
 	let clock: ReturnType<typeof setInterval>;
+        const DIFY_STORE_KEY = 'bizgpt.lead-generation.v1';
 
 	const chat = (model: string, q = '') =>
 		withBasePath(`/?models=${encodeURIComponent(model)}${q ? `&q=${encodeURIComponent(q)}` : ''}`);
@@ -66,6 +68,22 @@
 	})();
 	$: greeting = now.hour() < 12 ? 'Good morning' : now.hour() < 17 ? 'Good afternoon' : 'Good evening';
 	$: cards = data?.cards;
+        $: difyCounts = (() => {
+                if (!data?.cards) return null;
+                try {
+                        const saved = JSON.parse(localStorage.getItem(DIFY_STORE_KEY) ?? 'null');
+                        const workflows = Array.isArray(saved?.w) ? saved.w : SAMPLE_WORKFLOWS;
+                        return {
+                                total: workflows.length,
+                                active: workflows.filter((workflow: { status?: string }) => workflow?.status === 'active').length
+                        };
+                } catch {
+                        return {
+                                total: SAMPLE_WORKFLOWS.length,
+                                active: SAMPLE_WORKFLOWS.filter((workflow: { status?: string }) => workflow.status === 'active').length
+                        };
+                }
+        })();
 	$: inboxHref = chat('bizgpt-gmail', 'Show my 10 latest emails');
 
 	$: chartSeries = data
@@ -182,8 +200,8 @@
 		<!-- stat cards -->
 		<div class="grid grid-cols-2 gap-3 xl:grid-cols-4">
 			<StatCard title="Dify Workflows" icon="workflow" tone="violet"
-				value={cards.workflows.available ? cards.workflows.active : '—'}
-				caption={cards.workflows.available ? `Active of ${cards.workflows.total} workflows` : 'Workflows API unavailable'}
+                                value={difyCounts ? difyCounts.active : cards.workflows.available ? cards.workflows.active : '—'}
+                                caption={difyCounts ? `Active of ${difyCounts.total} workflows` : cards.workflows.available ? `Active of ${cards.workflows.total} workflows` : 'Workflows API unavailable'}
 				href={data.links.dify_console} external />
 			<StatCard title="BizForms" icon="form" tone="emerald"
 				value={cards.forms.available ? cards.forms.types : '—'}
@@ -235,10 +253,9 @@
 							<div class="flex size-8 items-center justify-center rounded-lg bg-white/80 dark:bg-gray-900/60 {TONES[a.tone].text}">
 								<Icon name={a.icon} className="size-4" />
 							</div>
-							<div class="flex items-end justify-between gap-1">
-								<span class="text-xs font-medium text-gray-800 dark:text-gray-100">{a.label}</span>
-								<Icon name="arrow" className="size-3.5 shrink-0 {TONES[a.tone].text} transition group-hover:translate-x-0.5" strokeWidth="2" />
-							</div>
+                                                        <div class="flex items-end justify-between gap-1">
+                                                                <span class="text-xs font-medium text-gray-800 dark:text-gray-100">{a.label}</span>
+                                                        </div>
 						</svelte:element>
 					{/each}
 				</div>

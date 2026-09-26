@@ -87,8 +87,7 @@
 	import ChartBar from '../icons/ChartBar.svelte';
 	import Cube from '../icons/Cube.svelte';
 	import InboxIcon from '../bizgpt/icons/Inbox.svelte';
-	import BizNav from '../bizgpt/sidebar/BizNav.svelte';
-	import AssistantShortcut from '../bizgpt/sidebar/AssistantShortcut.svelte';
+        import BizNav from '../bizgpt/sidebar/BizNav.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
 	import WorkspaceIcon from './Sidebar/icons/Workspace.svelte';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
@@ -101,8 +100,9 @@
 	const BREAKPOINT = 768;
 	const DEFAULT_PINNED_ITEMS = ['notes', 'workspace'];
         const BIZ_SIDEBAR_BACKGROUND = [
-                'radial-gradient(120% 80% at 100% 0%, rgba(251, 146, 60, 0.18), transparent 55%)',
-                'linear-gradient(160deg, #0b1330 0%, #0f1a3d 45%, #111436 100%)'
+                'radial-gradient(120% 90% at 100% 0%, rgba(251, 146, 60, 0.34), transparent 52%)',
+                'radial-gradient(120% 100% at 82% 22%, rgba(245, 158, 11, 0.14), transparent 42%)',
+                'linear-gradient(165deg, #08112c 0%, #0d1940 46%, #171337 100%)'
         ].join(', ');
 
 	let scrollTop = 0;
@@ -692,7 +692,7 @@
 			document.documentElement.style.setProperty('--sidebar-width', `${w}px`);
 		});
 
-		showSidebar.set(!$mobile ? localStorage.sidebar === 'true' : false);
+                showSidebar.set(!$mobile ? localStorage.sidebar !== 'false' : false);
 
 		const unsubscribers = [
 			mobile.subscribe((value) => {
@@ -1729,9 +1729,6 @@
                                                 class=" sidebar-bg-gradient-to-t bg-linear-to-t from-[#111436]/95 to-transparent from-50% pointer-events-none absolute inset-0 -z-10 -mt-6"
                                         ></div>
 					<div class="flex flex-col">
-						{#if $user !== undefined && $user !== null}
-							<AssistantShortcut onClick={itemClickHandler} />
-						{/if}
 						{#if $user !== undefined && $user !== null}
 							<UserMenu
 								role={$user?.role}

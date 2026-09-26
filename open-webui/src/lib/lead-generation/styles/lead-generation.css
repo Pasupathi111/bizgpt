@@ -9,14 +9,14 @@
 	--lg-text: #0f172a;
 	--lg-muted: #64748b;
 	--lg-faint: #94a3b8;
-	--lg-primary: #2563eb;
-	--lg-primary-600: #1d4ed8;
-	--lg-primary-soft: #eff4ff;
+        --lg-primary: #111827;
+        --lg-primary-600: #000000;
+        --lg-primary-soft: #e5e7eb;
 	--lg-success: #16a34a;
 	--lg-danger: #ef4444;
 	--lg-warn: #d97706;
-	--lg-side-1: #0d1b46;
-	--lg-side-2: #13265f;
+        --lg-side-1: #08112c;
+        --lg-side-2: #171337;
 	--lg-radius: 12px;
 	--lg-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
 	--lg-shadow-lg: 0 10px 30px -10px rgba(15, 23, 42, 0.25);
@@ -72,7 +72,10 @@
 	flex-shrink: 0;
 	display: flex;
 	flex-direction: column;
-	background: linear-gradient(180deg, var(--lg-side-1), var(--lg-side-2));
+        background:
+                radial-gradient(125% 100% at 100% 0%, rgba(251, 146, 60, 0.34), transparent 48%),
+                radial-gradient(110% 90% at 82% 22%, rgba(245, 158, 11, 0.14), transparent 38%),
+                linear-gradient(165deg, var(--lg-side-1), #0d1940 44%, var(--lg-side-2));
 	color: #c9d3f5;
 	padding: 16px 12px 12px;
 	transition: margin 0.2s ease;
@@ -122,9 +125,9 @@
 	color: #fff;
 }
 .lg-app .lg-side-item.active {
-	background: linear-gradient(90deg, #2c50c9, #2447b3);
+        background: rgba(0, 0, 0, 0.74);
 	color: #fff;
-	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        box-shadow: inset 3px 0 0 rgba(251, 146, 60, 0.95), inset 0 0 0 1px rgba(251, 146, 60, 0.18);
 }
 .lg-app .lg-side-item .lg-grow {
 	flex: 1;
@@ -331,8 +334,9 @@
 	color: var(--lg-text);
 }
 .lg-app .lg-tab.active {
-	color: var(--lg-primary);
+        color: #111827;
 	border-color: var(--lg-primary);
+        font-weight: 700;
 }
 .lg-app .lg-count {
 	font-size: 10.5px;
@@ -343,8 +347,8 @@
 	color: var(--lg-muted);
 }
 .lg-app .lg-tab.active .lg-count {
-	background: var(--lg-primary-soft);
-	color: var(--lg-primary);
+        background: #111827;
+        color: #fff;
 }
 .lg-app .lg-content {
 	flex: 1;
@@ -385,15 +389,15 @@
 	background: var(--lg-primary);
 	border-color: var(--lg-primary);
 	color: #fff;
-	box-shadow: 0 1px 2px rgba(37, 99, 235, 0.35);
+        box-shadow: 0 8px 18px -12px rgba(17, 24, 39, 0.85);
 }
 .lg-app .lg-btn.primary:hover {
 	background: var(--lg-primary-600);
 }
 .lg-app .lg-btn.outline-primary {
-	color: var(--lg-primary);
-	border-color: #bcd0fb;
-	background: #f6f9ff;
+        color: #111827;
+        border-color: #d1d5db;
+        background: #fff;
 }
 .lg-app .lg-btn.danger {
 	color: var(--lg-danger);
@@ -449,9 +453,9 @@
 	border: 1px solid #fecaca;
 }
 .lg-app .lg-pill.blue {
-	background: #eff6ff;
-	color: #1d4ed8;
-	border: 1px solid #bfdbfe;
+        background: #f3f4f6;
+        color: #111827;
+        border: 1px solid #d1d5db;
 }
 .lg-app .lg-pill .lg-dot {
 	width: 6px;

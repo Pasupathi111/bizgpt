@@ -317,8 +317,9 @@
 		border-bottom: 2px solid transparent !important;
 	}
 	.ptabs > button.active {
-		color: #2563eb;
-		border-bottom-color: #2563eb !important;
+                color: #111827;
+                border-bottom-color: #111827 !important;
+                font-weight: 700;
 	}
 	.pbody {
 		flex: 1;
@@ -355,9 +356,9 @@
 		white-space: nowrap;
 	}
 	.mini-tabs button.active {
-		background: #fff !important;
-		color: #2563eb;
-		box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+                background: #111827 !important;
+                color: #fff;
+                box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14);
 	}
 	.raw {
 		margin: 0;

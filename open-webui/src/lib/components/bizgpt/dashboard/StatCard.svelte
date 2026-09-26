@@ -38,12 +38,5 @@
 			</div>
 			<div class="text-xs text-gray-500 dark:text-gray-400">{caption}</div>
 		</div>
-		{#if href}
-			<div
-				class="flex size-7 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition group-hover:translate-x-0.5 group-hover:text-gray-800 dark:border-gray-700 dark:text-gray-400 dark:group-hover:text-gray-100"
-			>
-				<Icon name="arrow" className="size-3.5" strokeWidth="2" />
-			</div>
-		{/if}
 	</div>
 </svelte:element>

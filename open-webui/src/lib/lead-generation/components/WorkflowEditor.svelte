@@ -25,6 +25,7 @@
 	let selectedEdgeId: string | null = null;
 	let panelTab: 'run' | 'config' | 'output' = 'run';
 	let panelOpen = true;
+        const PANEL_STATE_KEY = 'bizgpt.lead-generation.panel-open';
 	let dirty = false;
 	let savedAt = workflow.updated;
 	let editingName = false;
@@ -73,7 +74,6 @@
 
 	async function run() {
 		if (runStatus === 'running') return;
-		panelOpen = true;
 		panelTab = 'run';
 		let input: Record<string, any>;
 		try {
@@ -193,7 +193,6 @@
 		selectedNodeId = id;
 		selectedEdgeId = null;
 		panelTab = 'config';
-		panelOpen = true;
 		markDirty();
 		dispatch('toast', { message: `Added “${t.label}”${anchor && t.category !== 'trigger' ? ` after “${anchor.title}”` : ''}`, kind: 'info' });
 	}
@@ -279,6 +278,15 @@
 		if (!(e.target as HTMLElement).closest('.lg-split, .lg-more')) publishMenu = moreMenu = false;
 	}
 
+        function setPanelOpen(next: boolean) {
+                panelOpen = next;
+                try {
+                        localStorage.setItem(PANEL_STATE_KEY, String(next));
+                } catch {
+                        /* ignore storage failures */
+                }
+        }
+
 	// selecting a node opens its config, like Dify
 	let lastSelected: string | null = null;
 	$: if (selectedNodeId !== lastSelected) {
@@ -287,6 +295,12 @@
 	}
 
 	onMount(() => {
+                try {
+                        const saved = localStorage.getItem(PANEL_STATE_KEY);
+                        panelOpen = saved === null ? true : saved === 'true';
+                } catch {
+                        panelOpen = true;
+                }
 		window.addEventListener('keydown', onKey);
 		window.addEventListener('click', closeMenus);
 	});
@@ -394,10 +408,10 @@
 				on:remove={(e) => removeNode(e.detail)}
 				on:duplicate={(e) => duplicateNode(e.detail)}
 				on:focus={(e) => focusNode(e.detail)}
-				on:collapse={() => (panelOpen = false)}
+                                on:collapse={() => setPanelOpen(false)}
 			/>
 		{:else}
-			<button class="reopen" on:click={() => (panelOpen = true)} title="Show panel"><LGIcon name="chevronLeft" size={14} /><span>Run · Config</span></button>
+                        <button class="reopen" on:click={() => setPanelOpen(true)} title="Show panel"><LGIcon name="chevronLeft" size={14} /><span>Run · Config</span></button>
 		{/if}
 	</div>
 </div>

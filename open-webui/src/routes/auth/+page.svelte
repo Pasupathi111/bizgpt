@@ -224,32 +224,32 @@
 />
 
 <!-- Biz GPT sign-in: decorative hero (left) + sign-in panel (right). Auth logic above is unchanged. -->
-<div class="relative h-screen max-h-[100dvh] w-full bg-white dark:bg-gray-950" id="auth-page">
+<div class="relative min-h-screen w-full bg-white dark:bg-gray-950" id="auth-page">
 	<div class="drag-region absolute left-0 right-0 top-0 h-8" />
 
 	{#if loaded}
-		<div class="grid h-full w-full lg:grid-cols-[minmax(0,1.15fr)_minmax(26rem,1fr)]" id="auth-container">
+                <div class="grid h-full w-full lg:grid-cols-[minmax(0,1.02fr)_minmax(22rem,0.98fr)]" id="auth-container">
 			<AuthHero name={$WEBUI_NAME} />
 
-			<main class="flex h-full flex-col overflow-y-auto bg-white px-6 py-6 text-gray-900 dark:bg-gray-950 dark:text-gray-100 sm:px-10">
+                        <main class="flex h-full min-h-screen flex-col overflow-y-auto bg-white px-4 py-4 text-gray-900 dark:bg-gray-950 dark:text-gray-100 sm:px-6 lg:px-8">
 				<!-- top bar -->
 				<div class="flex items-center justify-end gap-3 text-sm">
 					{#if $config?.features.enable_signup && !($config?.onboarding ?? false) && ($config?.features.enable_login_form || form) && mode !== 'ldap'}
 						<span class="text-gray-600 dark:text-gray-400">
 							{mode === 'signin' ? `New to ${$WEBUI_NAME}?` : $i18n.t('Already have an account?')}
 						</span>
-						<button
-							type="button"
-							class="rounded-xl bg-orange-50 px-4 py-2 font-medium text-orange-600 transition hover:bg-orange-100 dark:bg-orange-500/10 dark:text-orange-300"
+                                                <button
+                                                        type="button"
+                                                        class="rounded-xl bg-orange-50 px-3.5 py-1.5 font-medium text-orange-600 transition hover:bg-orange-100 dark:bg-orange-500/10 dark:text-orange-300"
 							on:click={() => (mode = mode === 'signin' ? 'signup' : 'signin')}
 						>
 							{mode === 'signin' ? $i18n.t('Sign up') : $i18n.t('Sign in')}
 						</button>
 					{:else if !($config?.onboarding ?? false)}
 						<span class="text-gray-600 dark:text-gray-400">New to {$WEBUI_NAME}?</span>
-						<button
-							type="button"
-							class="rounded-xl bg-orange-50 px-4 py-2 font-medium text-orange-600 transition hover:bg-orange-100 dark:bg-orange-500/10 dark:text-orange-300"
+                                                <button
+                                                        type="button"
+                                                        class="rounded-xl bg-orange-50 px-3.5 py-1.5 font-medium text-orange-600 transition hover:bg-orange-100 dark:bg-orange-500/10 dark:text-orange-300"
 							on:click={() => toast.info('Ask your administrator to create an account for you.')}
 						>
 							Contact Admin
@@ -257,7 +257,7 @@
 					{/if}
 				</div>
 
-				<div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-8">
+                                <div class="mx-auto flex w-full max-w-[27rem] flex-1 flex-col justify-center py-4 sm:py-6">
 					{#if ($config?.features.auth_trusted_header ?? false) || $config?.features.auth === false}
 						<div class="flex items-center justify-center gap-3 text-xl font-normal">
 							<div>{$i18n.t('Signing in to {{WEBUI_NAME}}', { WEBUI_NAME: $WEBUI_NAME })}</div>
@@ -277,10 +277,10 @@
 										class="size-12 rounded-xl"
 										alt="{$WEBUI_NAME} logo"
 									/>
-									<span class="text-3xl font-bold tracking-tight text-[#0f1a3d] dark:text-white">{$WEBUI_NAME}</span>
+                                                                        <span class="text-[1.9rem] font-bold tracking-tight text-[#0f1a3d] dark:text-white">{$WEBUI_NAME}</span>
 								</div>
 
-								<h1 class="mt-8 text-3xl font-bold tracking-tight">
+                                                                <h1 class="mt-6 text-[2rem] font-bold tracking-tight">
 									{#if $config?.onboarding ?? false}
 										{$i18n.t(`Get started with {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
 									{:else if mode === 'signup'}
@@ -308,8 +308,8 @@
 								{/if}
 							</div>
 
-							<form
-								class="mt-8 flex flex-col"
+                                                        <form
+                                                                class="mt-6 flex flex-col"
 								on:submit={(e) => {
 									e.preventDefault();
 									submitHandler();
@@ -388,8 +388,8 @@
 										</div>
 									{/if}
 
-									<button
-										class="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 py-3.5 text-base font-semibold text-white shadow-lg shadow-orange-500/25 transition hover:from-orange-600 hover:to-amber-500 disabled:opacity-60"
+                                                                        <button
+                                                                                class="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 py-3 text-[0.96rem] font-semibold text-white shadow-lg shadow-orange-500/25 transition hover:from-orange-600 hover:to-amber-500 disabled:opacity-60"
 										type="submit"
 										disabled={submitting}
 									>
@@ -458,7 +458,7 @@
 								</button>
 							{/if}
 
-							<div class="mt-8">
+                                                        <div class="mt-6">
 								<AssistantCard />
 							</div>
 						</div>
@@ -482,7 +482,7 @@
 		gap: 0.75rem;
 		border-radius: 1rem;
 		border: 1px solid rgb(229 231 235);
-		padding: 0.95rem 1rem;
+                padding: 0.8rem 0.95rem;
 		transition: border-color 0.15s, box-shadow 0.15s;
 	}
 	:global(#auth-page .bz-field:focus-within) {
@@ -501,7 +501,7 @@
 	:global(#auth-page .bz-input) {
 		width: 100%;
 		background: transparent;
-		font-size: 0.95rem;
+                font-size: 0.92rem;
 		outline: none;
 	}
 	:global(#auth-page .bz-input::placeholder) {

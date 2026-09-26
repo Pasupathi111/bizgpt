@@ -57,9 +57,9 @@
 			id="sidebar-{item.id}-button"
 			href={item.href}
 			draggable="false"
-			class="flex items-center gap-3 rounded-xl px-3 py-2 text-[0.875rem] transition {on
-                                ? 'bg-white/[0.1] font-semibold text-white'
-                                : 'text-white/80 hover:bg-white/[0.08]'}"
+                        class="flex items-center gap-3 rounded-xl border px-3 py-2 text-[0.875rem] transition {on
+                                ? 'border-orange-400/40 bg-black/75 font-semibold text-white shadow-[inset_3px_0_0_0_rgba(251,146,60,0.95)]'
+                                : 'border-transparent text-white/80 hover:bg-white/[0.08]'}"
 			on:click={(e) => {
 				item.onClick?.(e);
 				itemClickHandler();
@@ -72,7 +72,7 @@
 		<button
 			id="sidebar-{item.id}-button"
 			type="button"
-                        class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-[0.875rem] text-white/80 transition hover:bg-white/[0.08]"
+                        class="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2 text-left text-[0.875rem] text-white/80 transition hover:bg-white/[0.08]"
 			on:click={() => item.onClick?.()}
 		>
 			{@render itemIcon(item)}
@@ -95,7 +95,7 @@
 		New Chat
 	</a>
 
-	{@render navItem({ id: 'dashboard', label: 'Dashboard', href: withBasePath('/dashboard'), icon: 'home', tone: 'text-blue-600 dark:text-blue-400', match: '/dashboard' })}
+        {@render navItem({ id: 'dashboard', label: 'Dashboard', href: withBasePath('/dashboard'), icon: 'home', tone: 'text-orange-300', match: '/dashboard' })}
 
         <div class="mt-4 px-3 pb-1 text-[0.7rem] font-semibold uppercase tracking-wider text-white/45">Workspace</div>
 	{#each workspace as item (item.id)}

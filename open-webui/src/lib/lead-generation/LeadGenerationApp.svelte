@@ -124,6 +124,11 @@
 			if (r.status === 'success' && (r.score ?? 0) > 70) w.leads += 1;
 			workflows = workflows;
 		}
+                try {
+                        localStorage.setItem(STORE_KEY, JSON.stringify({ w: workflows, r: runs.slice(0, 50), v: variables }));
+                } catch {
+                        /* ignore storage failures */
+                }
 	}
 
 	function setTab(t: Tab) {

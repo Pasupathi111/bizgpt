@@ -40,29 +40,29 @@
 		<div class="bz-grid absolute inset-0 opacity-[0.07]"></div>
 	</div>
 
-	<div class="relative z-10 flex h-full flex-col px-10 py-9 xl:px-16">
+        <div class="relative z-10 flex h-full flex-col px-7 py-5 xl:px-11">
 		<header class="flex items-center justify-between">
-			<div class="flex items-center gap-3">
+                        <div class="flex min-w-0 items-center gap-3">
 				<!-- LICENSE covers this Biz GPT sign-in logo.
 				Do not alter, remove, obscure, or replace it except as LICENSE permits:
 				https://docs.openwebui.com/license. -->
 				<img
 					crossorigin="anonymous"
 					src="{WEBUI_BASE_URL}/static/favicon.png"
-					class="size-10 rounded-xl bg-white/95 p-1"
+                                        class="size-9 rounded-xl bg-white/95 p-1"
 					alt="{name} logo"
 				/>
-				<span class="text-2xl font-bold tracking-tight">{name}</span>
+                                <span class="shrink-0 whitespace-nowrap text-[1.45rem] font-bold tracking-tight xl:text-[1.55rem]">{name}</span>
 			</div>
-                                <div class="hidden text-xs font-medium tracking-[0.35em] text-white/70 xl:block">
+                                <div class="hidden text-[0.68rem] font-medium tracking-[0.3em] text-white/70 2xl:block">
                                         THE AI OPERATING LAYER &nbsp;|&nbsp; KNOWLEDGE &nbsp;|&nbsp; WORKFLOWS &nbsp;|&nbsp; AUTOMATION
 			</div>
 		</header>
 
-		<div class="relative mt-12 flex-1 xl:mt-16">
-			<div class="relative z-10 max-w-[34rem]">
+                <div class="relative mt-7 flex-1 xl:mt-8">
+                        <div class="relative z-10 max-w-[30rem]">
 				<div
-					class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm backdrop-blur"
+                                        class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-[0.82rem] backdrop-blur"
 				>
 					<svg viewBox="0 0 24 24" fill="currentColor" class="size-4 text-orange-300" aria-hidden="true">
 						<path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6L12 2Zm6 12 .9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9L18 14Z" />
@@ -70,26 +70,26 @@
                                         The AI Operating Layer
 				</div>
 
-				<h1 class="mt-7 text-5xl font-extrabold leading-[1.08] tracking-tight xl:text-6xl">
+                                <h1 class="mt-4 text-[2.65rem] font-extrabold leading-[1.02] tracking-tight xl:text-[3.85rem]">
                                         Turn Business Knowledge Into Action<br />with <span class="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">{name}</span>
 				</h1>
-				<p class="mt-6 max-w-md text-lg leading-relaxed text-white/75">
+                                <p class="mt-3.5 max-w-md text-[0.96rem] leading-relaxed text-white/75 xl:text-[1rem]">
                                         Connect your knowledge, conversations, workflows, and business tools in one intelligent workspace - designed to help teams find information, automate work, and act with confidence.
 				</p>
 
-				<ul class="mt-10 space-y-6">
+                                <ul class="mt-6 space-y-4">
 					{#each features as f}
-						<li class="flex items-center gap-5">
+                                                <li class="flex items-center gap-4">
 							<div
-								class="flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/40 to-violet-500/20 ring-1 ring-white/15"
+                                                                class="flex size-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/40 to-violet-500/20 ring-1 ring-white/15"
 							>
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="size-6 text-orange-200" aria-hidden="true">
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="size-5 text-orange-200" aria-hidden="true">
 									<path stroke-linecap="round" stroke-linejoin="round" d={icons[f.icon]} />
 								</svg>
 							</div>
 							<div>
-								<div class="text-lg font-semibold">{f.title}</div>
-								<div class="text-sm text-white/65">{f.text}</div>
+                                                                <div class="text-[1rem] font-semibold xl:text-[1.05rem]">{f.title}</div>
+                                                                <div class="text-[0.84rem] text-white/65 xl:text-[0.9rem]">{f.text}</div>
 							</div>
 						</li>
 					{/each}
@@ -134,15 +134,15 @@
 			</div>
 		</div>
 
-		<footer class="mt-10 flex flex-wrap items-center gap-x-10 gap-y-4 border-t border-white/10 pt-7">
+                <footer class="mt-7 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-white/10 pt-5">
 			{#each highlights as h}
 				<div class="flex items-center gap-3">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="size-8 text-orange-300" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="size-7 text-orange-300" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" d={icons[h.icon]} />
 					</svg>
 					<div>
-						<div class="text-xl font-bold leading-tight">{h.value}</div>
-						<div class="text-sm text-white/60">{h.label}</div>
+                                                <div class="text-[1rem] font-bold leading-tight xl:text-[1.08rem]">{h.value}</div>
+                                                <div class="text-[0.78rem] text-white/60 xl:text-[0.82rem]">{h.label}</div>
 					</div>
 				</div>
 			{/each}
