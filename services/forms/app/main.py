@@ -124,6 +124,7 @@ def internal_view(form: dict) -> dict:
         'values': form['values'],
         'result': form['result'],
         'url': form_url(form['id']),
+        'user_id': (form.get('context') or {}).get('user_id'),
         'created_at': form['created_at'],
         'updated_at': form['updated_at'],
     }

@@ -84,6 +84,7 @@
 	import EditPencilIcon from './Sidebar/icons/EditPencil.svelte';
 	import NotesIcon from './Sidebar/icons/Notes.svelte';
 	import SearchIcon from './Sidebar/icons/Search.svelte';
+	import ChartBar from '../icons/ChartBar.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
 	import WorkspaceIcon from './Sidebar/icons/Workspace.svelte';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
@@ -1038,6 +1039,30 @@
 						</Tooltip>
 					</div>
 
+					<div>
+						<Tooltip content={$i18n.t('Dashboard')} placement="right">
+							<a
+								class=" cursor-pointer flex size-8 items-center justify-center transition group"
+								href={withBasePath('/dashboard')}
+								on:click={async (e) => {
+									e.stopImmediatePropagation();
+									e.preventDefault();
+									goto(withBasePath('/dashboard'));
+									itemClickHandler();
+								}}
+								draggable="false"
+								aria-label={$i18n.t('Dashboard')}
+							>
+								<div
+									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition {$page.url.pathname.startsWith('/dashboard')
+										? 'bg-gray-100 dark:bg-gray-900'
+										: 'group-hover:bg-gray-100 dark:group-hover:bg-gray-900'}"
+								>
+									<ChartBar className="size-4" strokeWidth="1.5" />
+								</div>
+							</a>
+						</Tooltip>
+					</div>
 					{#each pinnedItems as itemId (itemId)}
 						{@const meta = getMenuItemMeta(itemId)}
 						{#if meta && isMenuItemVisible(itemId)}
@@ -1263,6 +1288,26 @@
 							</button>
 						</div>
 
+						<!-- Biz GPT: dashboard link, always visible (independent of pinned items) -->
+						<div class="px-1 flex justify-center text-gray-700 dark:text-gray-300">
+							<a
+								id="sidebar-dashboard-button"
+								class="grow flex items-center space-x-2 rounded-xl px-2 py-1.5 transition {$page.url.pathname.startsWith('/dashboard')
+									? 'bg-black/[0.035] dark:bg-white/[0.045]'
+									: 'hover:bg-gray-100 dark:hover:bg-gray-900'}"
+								href={withBasePath('/dashboard')}
+								on:click={itemClickHandler}
+								draggable="false"
+								aria-label={$i18n.t('Dashboard')}
+							>
+								<div class="self-center flex size-4 shrink-0 items-center justify-center">
+									<ChartBar className="size-4" strokeWidth="1.5" />
+								</div>
+								<div class="flex self-center translate-y-[0.5px]">
+									<div class=" self-center text-[0.8125rem] leading-5">{$i18n.t('Dashboard')}</div>
+								</div>
+							</a>
+						</div>
 						<div id="pinned-menu-items-list">
 							{#each pinnedItems as itemId (itemId)}
 								{@const meta = getMenuItemMeta(itemId)}
