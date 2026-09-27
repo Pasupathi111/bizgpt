@@ -1,5 +1,5 @@
 <script lang="ts">
-	// Biz GPT primary navigation for the expanded sidebar (New Chat, Dashboard, Workspace, Productivity).
+        // Biz GPT primary navigation for the expanded sidebar (Dashboard, Workspace, Productivity).
 	import { page } from '$app/stores';
 	import { showSearch } from '$lib/stores';
 	import { withBasePath } from '$lib/constants';
@@ -11,7 +11,7 @@
 	export let showNotes = true;
 	export let showWorkspace = true;
 
-	type Item = { id: string; label: string; href?: string; icon: string; tone: string; match?: string; onClick?: () => void };
+        type Item = { id: string; label: string; href?: string; icon: string; tone: string; match?: string; onClick?: () => void };
 
 	$: workspace = [
 		{ id: 'dify', label: 'Dify Workflows', href: withBasePath('/lead-generation'), icon: 'workflow', tone: 'text-violet-500', match: '/lead-generation' },
@@ -26,7 +26,14 @@
 	] as Item[];
 
 	$: path = $page.url.pathname;
-	const active = (item: Item) => !!item.match && (path === item.match || path.startsWith(item.match));
+        const active = (item: Item) => {
+                if (item.id === 'chats' && path === withBasePath('/')) {
+                        return true;
+                }
+
+                return !!item.match && (path === item.match || path.startsWith(item.match));
+        };
+        const iconClass = (item: Item, on: boolean) => (on ? 'text-orange-100' : item.tone || 'text-white/80');
 
 	// Extra outline icons not in the dashboard set.
 	const extra: Record<string, string> = {
@@ -39,14 +46,14 @@
 </script>
 
 {#snippet itemIcon(item)}
-	{#if item.icon === 'inbox'}
-		<InboxIcon className="size-[1.15rem] {item.tone}" strokeWidth="1.6" />
+        {#if item.icon === 'inbox'}
+                <InboxIcon className="size-[1.15rem] {iconClass(item, active(item))}" strokeWidth="1.6" />
 	{:else if extra[item.icon]}
-		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="size-[1.15rem] {item.tone}" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="size-[1.15rem] {iconClass(item, active(item))}" aria-hidden="true">
 			<path stroke-linecap="round" stroke-linejoin="round" d={extra[item.icon]} />
 		</svg>
 	{:else}
-		<Icon name={item.icon} className="size-[1.15rem] {item.tone}" strokeWidth="1.6" />
+                <Icon name={item.icon} className="size-[1.15rem] {iconClass(item, active(item))}" strokeWidth="1.6" />
 	{/if}
 {/snippet}
 
@@ -58,7 +65,7 @@
 			href={item.href}
 			draggable="false"
                         class="flex items-center gap-3 rounded-xl border px-3 py-2 text-[0.875rem] transition {on
-                                ? 'border-orange-400/40 bg-black/75 font-semibold text-white shadow-[inset_3px_0_0_0_rgba(251,146,60,0.95)]'
+                                ? 'border-orange-400/70 bg-orange-500 font-semibold text-white shadow-[0_8px_24px_rgba(249,115,22,0.28)]'
                                 : 'border-transparent text-white/80 hover:bg-white/[0.08]'}"
 			on:click={(e) => {
 				item.onClick?.(e);
@@ -72,7 +79,9 @@
 		<button
 			id="sidebar-{item.id}-button"
 			type="button"
-                        class="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2 text-left text-[0.875rem] text-white/80 transition hover:bg-white/[0.08]"
+                        class="flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-[0.875rem] transition {on
+                                ? 'border-orange-400/70 bg-orange-500 font-semibold text-white shadow-[0_8px_24px_rgba(249,115,22,0.28)]'
+                                : 'border-transparent text-white/80 hover:bg-white/[0.08]'}"
 			on:click={() => item.onClick?.()}
 		>
 			{@render itemIcon(item)}
@@ -82,19 +91,6 @@
 {/snippet}
 
 <nav class="flex flex-col gap-0.5 px-2" aria-label="Biz GPT">
-	<a
-		id="sidebar-new-chat-button"
-		href={withBasePath('/')}
-		draggable="false"
-		class="mb-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-3 py-2.5 text-[0.875rem] font-semibold text-white shadow-sm shadow-orange-500/30 transition hover:from-orange-600 hover:to-amber-500"
-		on:click={newChatHandler}
-	>
-		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="size-[1.15rem]" aria-hidden="true">
-			<path stroke-linecap="round" stroke-linejoin="round" d={extra.chat} />
-		</svg>
-		New Chat
-	</a>
-
         {@render navItem({ id: 'dashboard', label: 'Dashboard', href: withBasePath('/dashboard'), icon: 'home', tone: 'text-orange-300', match: '/dashboard' })}
 
         <div class="mt-4 px-3 pb-1 text-[0.7rem] font-semibold uppercase tracking-wider text-white/45">Workspace</div>

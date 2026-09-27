@@ -32,7 +32,7 @@
 			</Tooltip>
 		</nav>
 	{/if}
-	<div class="flex-1 overflow-y-auto bg-gray-50/60 dark:bg-gray-950">
+        <div class="app-page-bg flex-1 overflow-y-auto">
 		<Dashboard />
 	</div>
 </div>

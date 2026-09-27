@@ -37,7 +37,7 @@
 			</Tooltip>
 		</nav>
 	{/if}
-	<div class="flex-1 overflow-y-auto bg-gray-50/60 dark:bg-gray-950">
+        <div class="app-page-bg flex-1 overflow-y-auto">
 		<div class="mx-auto w-full max-w-5xl px-4 py-6 md:px-8">
 			<h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">{$i18n.t('Integrations')}</h1>
 			<p class="mb-5 text-sm text-gray-500 dark:text-gray-400">

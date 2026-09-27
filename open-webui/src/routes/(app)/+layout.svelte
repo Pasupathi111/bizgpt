@@ -261,7 +261,7 @@
 				} else if (shortcut === Shortcut.NEW_CHAT) {
 					console.log('Shortcut triggered: NEW_CHAT');
 					event.preventDefault();
-					document.getElementById('sidebar-new-chat-button')?.click();
+                                        document.getElementById('sidebar-new-chat-button')?.click();
 				} else if (shortcut === Shortcut.FOCUS_INPUT) {
 					console.log('Shortcut triggered: FOCUS_INPUT');
 					event.preventDefault();
@@ -439,9 +439,7 @@
 
 {#if $user}
 	<div class="app relative">
-		<div
-			class=" text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-900 h-screen max-h-[100dvh] overflow-auto flex flex-row justify-end"
-		>
+                <div class="app-page-bg text-gray-700 dark:text-gray-100 h-screen max-h-[100dvh] overflow-auto flex flex-row justify-end">
 			{#if !['user', 'admin'].includes($user?.role)}
 				<AccountPending />
 			{:else}

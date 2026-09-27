@@ -2,7 +2,7 @@
    nothing leaks into the rest of Biz GPT. */
 
 .lg-app {
-	--lg-bg: #f4f6fb;
+        --lg-bg: var(--app-page-bg, #f4f6fb);
 	--lg-surface: #ffffff;
 	--lg-border: #e6e9f0;
 	--lg-border-strong: #d5dae4;

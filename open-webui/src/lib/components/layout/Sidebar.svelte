@@ -81,7 +81,6 @@
 	import CalendarIcon from './Sidebar/icons/Calendar.svelte';
 	import ClockIcon from './Sidebar/icons/Clock.svelte';
 	import CodeIcon from './Sidebar/icons/Code.svelte';
-	import EditPencilIcon from './Sidebar/icons/EditPencil.svelte';
 	import NotesIcon from './Sidebar/icons/Notes.svelte';
 	import SearchIcon from './Sidebar/icons/Search.svelte';
 	import ChartBar from '../icons/ChartBar.svelte';
@@ -955,14 +954,14 @@
 		}}
 	/>
 
-	<button
-		id="sidebar-new-chat-button"
-		class="hidden"
-		on:click={() => {
+        <button
+                id="sidebar-new-chat-button"
+                class="hidden"
+                on:click={() => {
                         goto(withBasePath('/'));
-			newChatHandler();
-		}}
-	/>
+                        newChatHandler();
+                }}
+        />
 
 	{#if !$mobile && !$showSidebar}
 		<div
@@ -1028,30 +1027,6 @@
                                                                                 : 'group-hover:bg-white/[0.08]'}"
 								>
 									<ChartBar className="size-4" strokeWidth="1.5" />
-								</div>
-							</a>
-						</Tooltip>
-					</div>
-
-					<div class="">
-						<Tooltip content={$i18n.t('New Chat')} placement="right">
-							<a
-								class=" cursor-pointer flex size-8 items-center justify-center transition group"
-                                                                href={withBasePath('/')}
-								draggable="false"
-								on:click={async (e) => {
-									e.stopImmediatePropagation();
-									e.preventDefault();
-
-                                                                        goto(withBasePath('/'));
-									newChatHandler();
-								}}
-								aria-label={$i18n.t('New Chat')}
-							>
-								<div
-                                                                class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition group-hover:bg-white/[0.08]"
-								>
-									<EditPencilIcon className="size-4" strokeWidth="1.5" />
 								</div>
 							</a>
 						</Tooltip>
@@ -1311,7 +1286,7 @@
 						}
 					}}
 				>
-					<!-- Biz GPT: primary navigation (New Chat, Dashboard, Workspace, Productivity) -->
+                                        <!-- Biz GPT: primary navigation (Dashboard, Workspace, Productivity) -->
 					<div class="pb-1">
 						<BizNav
 							{newChatHandler}
