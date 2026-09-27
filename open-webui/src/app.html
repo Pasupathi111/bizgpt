@@ -6,25 +6,25 @@
 		visual, textual, symbolic identifiers, metadata, and surrounding UI.
 		Do not alter, remove, obscure, or replace it except as LICENSE permits:
 		https://docs.openwebui.com/license. -->
-		<link rel="icon" type="image/png" href="/static/favicon.png" crossorigin="use-credentials" />
+		<link rel="icon" type="image/png" href="/static/favicon.png?v=bizgpt2" crossorigin="use-credentials" />
 		<link
 			rel="icon"
 			type="image/png"
-			href="/static/favicon-96x96.png"
+			href="/static/favicon-96x96.png?v=bizgpt2"
 			sizes="96x96"
 			crossorigin="use-credentials"
 		/>
 		<link
 			rel="icon"
 			type="image/svg+xml"
-			href="/static/favicon.svg"
+			href="/static/favicon.svg?v=bizgpt2"
 			crossorigin="use-credentials"
 		/>
-		<link rel="shortcut icon" href="/static/favicon.ico" crossorigin="use-credentials" />
+		<link rel="shortcut icon" href="/static/favicon.ico?v=bizgpt2" crossorigin="use-credentials" />
 		<link
 			rel="apple-touch-icon"
 			sizes="180x180"
-			href="/static/apple-touch-icon.png"
+			href="/static/apple-touch-icon.png?v=bizgpt2"
 			crossorigin="use-credentials"
 		/>
 		<link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
@@ -79,8 +79,8 @@
 				// Do not alter, remove, obscure, or replace them except as LICENSE permits:
 				// https://docs.openwebui.com/license.
 				const preloadHref = document.documentElement.classList.contains('dark')
-					? '/static/splash-dark.png'
-					: '/static/splash.png';
+					? '/static/splash-dark.png?v=bizgpt2'
+					: '/static/splash.png?v=bizgpt2';
 				const preload = document.createElement('link');
 				preload.rel = 'preload';
 				preload.as = 'image';
@@ -106,13 +106,13 @@
 				const logo = document.createElement('img');
 				logo.id = 'logo';
 				logo.style =
-					'position: absolute; width: auto; height: 6rem; top: 44%; left: 50%; transform: translateX(-50%); display:block;';
+					'position: absolute; width: min(18rem, 75vw); height: auto; top: 44%; left: 50%; transform: translate(-50%, -50%); display:block;';
 				logo.loading = 'eager';
 				logo.fetchPriority = 'high';
 				// LICENSE covers this Biz GPT splash logo.
 				// Do not alter, remove, obscure, or replace it except as LICENSE permits:
 				// https://docs.openwebui.com/license.
-				logo.src = isDarkMode ? '/static/splash-dark.png' : '/static/splash.png';
+				logo.src = isDarkMode ? '/static/splash-dark.png?v=bizgpt2' : '/static/splash.png?v=bizgpt2';
 
 				document.addEventListener('DOMContentLoaded', function () {
 					const splash = document.getElementById('splash-screen');
@@ -162,8 +162,8 @@
 				https://docs.openwebui.com/license. -->
 				<img
 					id="logo-her"
-					style="width: auto; height: 13rem"
-					src="/static/splash.png"
+					style="width: 20rem; max-width: 80vw; height: auto"
+					src="/static/splash.png?v=bizgpt2"
 					loading="eager"
 					fetchpriority="high"
 					class="animate-pulse-fast"

@@ -273,7 +273,7 @@
 									<img
 										id="logo"
 										crossorigin="anonymous"
-										src="{WEBUI_BASE_URL}/static/favicon.png"
+										src="{WEBUI_BASE_URL}/static/favicon.png?v=bizgpt2"
 										class="size-12 rounded-xl"
 										alt="{$WEBUI_NAME} logo"
 									/>

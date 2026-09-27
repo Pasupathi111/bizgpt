@@ -2918,13 +2918,13 @@ async def get_manifest_json():
                 # Do not alter, remove, obscure, or replace it except as LICENSE permits:
                 # https://docs.openwebui.com/license.
                 {
-                    'src': '/static/logo.png',
+                    'src': '/static/logo.png?v=bizgpt2',
                     'type': 'image/png',
                     'sizes': '500x500',
                     'purpose': 'any',
                 },
                 {
-                    'src': '/static/logo.png',
+                    'src': '/static/logo.png?v=bizgpt2',
                     'type': 'image/png',
                     'sizes': '500x500',
                     'purpose': 'maskable',

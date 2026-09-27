@@ -48,7 +48,7 @@
 				https://docs.openwebui.com/license. -->
 				<img
 					crossorigin="anonymous"
-					src="{WEBUI_BASE_URL}/static/favicon.png"
+					src="{WEBUI_BASE_URL}/static/favicon.png?v=bizgpt2"
                                         class="size-9 rounded-xl bg-white/95 p-1"
 					alt="{name} logo"
 				/>
