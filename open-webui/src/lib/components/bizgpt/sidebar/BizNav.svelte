@@ -26,7 +26,7 @@
 	] as Item[];
 
 	$: path = $page.url.pathname;
-        const active = (item: Item) => {
+        $: active = (item: Item) => {
                 if (item.id === 'chats' && path === withBasePath('/')) {
                         return true;
                 }
