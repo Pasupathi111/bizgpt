@@ -1,0 +1,113 @@
+{
+  "id": "tshirt_order",
+  "title": "T-shirt order",
+  "description": "Order custom T-shirts for a customer: size, colour, quantity, print, delivery location, date and service level.",
+  "keywords": [
+    "tshirt",
+    "t-shirt",
+    "tee",
+    "shirt",
+    "merch",
+    "apparel",
+    "order"
+  ],
+  "schema": {
+    "type": "object",
+    "required": [
+      "customer_name",
+      "customer_email",
+      "size",
+      "color",
+      "quantity",
+      "delivery_location",
+      "delivery_date",
+      "service_level"
+    ],
+    "properties": {
+      "customer_name": {
+        "type": "string",
+        "title": "Customer name",
+        "minLength": 2,
+        "maxLength": 120
+      },
+      "customer_email": {
+        "type": "string",
+        "format": "email",
+        "title": "Customer email",
+        "description": "The order confirmation is emailed here after approval."
+      },
+      "size": {
+        "type": "string",
+        "title": "Size",
+        "enum": ["XS", "S", "M", "L", "XL", "XXL"]
+      },
+      "color": {
+        "type": "string",
+        "title": "Colour",
+        "enum": ["White", "Black", "Navy", "Grey", "Red", "Royal blue", "Green"]
+      },
+      "quantity": {
+        "type": "integer",
+        "title": "Quantity",
+        "minimum": 1,
+        "maximum": 5000,
+        "default": 1
+      },
+      "print_text": {
+        "type": "string",
+        "title": "Print text / design notes",
+        "maxLength": 300
+      },
+      "delivery_location": {
+        "type": "string",
+        "title": "Delivery location",
+        "description": "Full delivery address with city and PIN code.",
+        "minLength": 5,
+        "maxLength": 300
+      },
+      "delivery_date": {
+        "type": "string",
+        "format": "date",
+        "title": "Delivery date"
+      },
+      "service_level": {
+        "type": "string",
+        "title": "Service level",
+        "enum": ["Standard (5-7 days)", "Express (2-3 days)", "Same day"]
+      },
+      "notes": {
+        "type": "string",
+        "title": "Notes",
+        "maxLength": 500
+      }
+    }
+  },
+  "ui_schema": {
+    "ui:order": [
+      "customer_name",
+      "customer_email",
+      "size",
+      "color",
+      "quantity",
+      "print_text",
+      "delivery_location",
+      "delivery_date",
+      "service_level",
+      "notes"
+    ],
+    "delivery_location": {
+      "ui:widget": "textarea",
+      "ui:options": { "rows": 2 }
+    },
+    "notes": {
+      "ui:widget": "textarea",
+      "ui:options": { "rows": 2 }
+    }
+  },
+  "action": {
+    "type": "record",
+    "reference_prefix": "TS"
+  },
+  "submit_label": "Review order",
+  "success_message": "Order {reference}: {quantity} × {color} T-shirt, size {size}, for {customer_name} <{customer_email}>, {service_level} delivery to {delivery_location} by {delivery_date}."
+}

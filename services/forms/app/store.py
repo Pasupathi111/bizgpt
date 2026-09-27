@@ -103,6 +103,20 @@ class Store:
             )
             self._conn.commit()
 
+    def record_decision(self, form_id: str, decision: dict) -> bool:
+        """Attach an approver's decision to an executed form, once. False if it was already decided."""
+        with self._lock:
+            row = self._conn.execute("SELECT result FROM forms WHERE id=? AND status='executed'", (form_id,)).fetchone()
+            result = json.loads(row[0]) if row and row[0] else None
+            if result is None or result.get('decision'):
+                return False
+            result['decision'] = decision
+            self._conn.execute(
+                'UPDATE forms SET result=?, updated_at=? WHERE id=?', (json.dumps(result), _now().isoformat(), form_id)
+            )
+            self._conn.commit()
+            return True
+
     def recent(self, limit: int = 50) -> list[dict]:
         with self._lock:
             ids = [r[0] for r in self._conn.execute('SELECT id FROM forms ORDER BY created_at DESC LIMIT ?', (limit,))]

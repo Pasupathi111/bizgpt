@@ -192,6 +192,32 @@ services:
       whatsapp-db:
         condition: service_healthy
 
+  # Email-driven T-shirt order workflow (Biz Inbox > Orders). Reads and sends mail through gmail_mcp.
+  bizgpt-orders:
+    build: ./services/orders
+    image: bizgpt-orders:local
+    container_name: bizgpt-orders
+    networks:
+      - default
+      - dify
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${ORDERS_PORT:-8105}:8000"
+    environment:
+      - GMAIL_MCP_URL=${ORDERS_GMAIL_MCP_URL:-http://gmail_mcp:8010/mcp}
+      - ORDERS_MAILBOX=${ORDERS_MAILBOX:-dbizgpt.assistant@gmail.com}
+      - ORDERS_MODEL=${BIZGPT_BASE_MODEL:-gpt-4.1-mini}
+      - ORDERS_POLL_SECONDS=${ORDERS_POLL_SECONDS:-60}
+      - ORDERS_POLLING_ENABLED=${ORDERS_POLLING_ENABLED:-true}
+      - OPENWEBUI_BASE_URL=http://open-webui:8080
+      - OPENWEBUI_API_KEY=${OPEN_WEBUI_API_KEY:-}
+      - FORMS_API_URL=http://bizgpt-forms:8000
+      - FORMS_API_KEY=${FORMS_API_KEY:?set FORMS_API_KEY in .env}
+    volumes:
+      - bizgpt-orders-data:/data
+    depends_on:
+      - bizgpt-forms
+
   whatsapp-db:
     image: postgres:16-alpine
     container_name: bizgpt-whatsapp-db
@@ -213,6 +239,7 @@ volumes:
   bizgpt-api-data:
   bizgpt-webui-data:
   bizgpt-forms-data:
+  bizgpt-orders-data:
   bizgpt-automation-data:
   nango-db-data:
 

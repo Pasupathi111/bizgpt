@@ -995,7 +995,7 @@
 							Do not alter, remove, obscure, or replace it except as LICENSE permits:
 							https://docs.openwebui.com/license. -->
 								<img
-									src="{WEBUI_BASE_URL}/static/favicon.png"
+									src="{WEBUI_BASE_URL}/static/favicon.png?v=bizgpt2"
 									class="sidebar-new-chat-icon size-5 rounded-full group-hover:hidden"
 									alt=""
 								/>
@@ -1058,7 +1058,7 @@
 					</div>
 
 					<div>
-						<Tooltip content={$i18n.t('Inbox')} placement="right">
+						<Tooltip content={$i18n.t('Biz Inbox')} placement="right">
 							<a
 								class=" cursor-pointer flex size-8 items-center justify-center transition group"
 								href={withBasePath('/inbox')}
@@ -1069,7 +1069,7 @@
 									itemClickHandler();
 								}}
 								draggable="false"
-								aria-label={$i18n.t('Inbox')}
+								aria-label={$i18n.t('Biz Inbox')}
 							>
 								<div
 									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition {$page.url.pathname.startsWith('/inbox')
@@ -1233,7 +1233,7 @@
 					https://docs.openwebui.com/license. -->
 						<img
 							crossorigin="anonymous"
-							src="{WEBUI_BASE_URL}/static/favicon.png"
+							src="{WEBUI_BASE_URL}/static/favicon.png?v=bizgpt2"
 							class="sidebar-new-chat-icon size-7 rounded-lg"
 							alt=""
 						/>

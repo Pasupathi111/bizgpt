@@ -7,6 +7,7 @@ unguessable form id is the capability for that one form.
 """
 
 import hmac
+from datetime import datetime, timezone
 import os
 import secrets
 import string
@@ -323,6 +324,23 @@ def create_view(req: CreateViewRequest):
 async def submit_form_internal(form_id: str, req: SubmitRequest):
     form = load_form(form_id)
     return await submit(form, req.values)
+
+
+class DecisionRequest(BaseModel):
+    decision: str = Field(pattern='^(approved|rejected)$')
+    by: str | None = None
+    gmail_message_id: str | None = None
+    note: str | None = Field(default=None, max_length=1000)
+
+
+@app.post('/api/forms/{form_id}/decision', dependencies=[Depends(require_api_key)])
+def record_decision(form_id: str, req: DecisionRequest):
+    """Record an approver's approve/reject decision on a submitted form. Each form can be decided once."""
+    load_form(form_id)
+    decision = {**req.model_dump(exclude_none=True), 'at': datetime.now(timezone.utc).isoformat()}
+    if not store.record_decision(form_id, decision):
+        raise HTTPException(409, 'form is not submitted or already has a decision')
+    return internal_view(load_form(form_id))
 
 
 # ---------- public API (form page) ----------

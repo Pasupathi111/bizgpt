@@ -40,7 +40,7 @@ cp /home/ubuntu/bizgpt/deploy/inbox-zero/docker-compose.override.yml .
 
 cp apps/web/.env.example apps/web/.env   # fill in, see below; chmod 600
 docker build -f docker/Dockerfile.prod --build-arg NEXT_PUBLIC_BASE_PATH=/inbox_zero \
-  -t inbox-zero:2.30.0-bizgpt .
+  --build-arg "NEXT_PUBLIC_BRAND_NAME=Biz Inbox" -t inbox-zero:2.30.0-bizgpt .
 docker compose --profile all up -d
 ```
 
@@ -55,9 +55,24 @@ Root `.env` (compose interpolation only): `WEB_PORT=3010`, `POSTGRES_PORT=5434`,
 - `GOOGLE_PUBSUB_TOPIC_NAME` — must exist for push notifications (not created yet)
 - `AUTH_SECRET`, `EMAIL_ENCRYPT_SECRET`, `EMAIL_ENCRYPT_SALT`, `INTERNAL_API_KEY`, `API_KEY_SALT`, `CRON_SECRET`, `UPSTASH_REDIS_TOKEN` — `openssl rand -hex 32` (salt: `-hex 16`)
 - `DEFAULT_LLM_PROVIDER=openai`, `DEFAULT_LLM_MODEL=gpt-5.4-mini`, `LLM_API_KEY`
+- `BIZGPT_SSO_EMAIL=dbizgpt.assistant@gmail.com`, `BIZGPT_AUTH_URL=https://test.gpt.dbizlab.com/api/v1/auths/` — Biz GPT single sign-on (below)
 - `AUTH_ALLOWED_EMAIL_DOMAINS=dbizsolution.com`, `AUTH_ALLOWED_EMAILS=dbizgpt.assistant@gmail.com` — restricts sign-up
 
 Upstream template lines like `KEY= # comment` must be emptied (`KEY=`); Docker reads the comment as the value.
+
+## Biz Inbox single sign-on
+
+The UI is branded **Biz Inbox** (`NEXT_PUBLIC_BRAND_NAME`, a build arg; hard-coded UI strings are
+changed by the patch). Biz GPT's `/inbox` page opens the `BIZGPT_SSO_EMAIL` mailbox directly:
+
+1. The page `POST`s `/inbox_zero/api/bizgpt/sso` with the user's Biz GPT token (`Authorization: Bearer`, or the `token` cookie).
+2. Inbox Zero validates it against `BIZGPT_AUTH_URL` (Open WebUI `GET /api/v1/auths/`, roles `user`/`admin` only).
+3. It sets a normal better-auth session cookie for the mailbox owner (reused if already valid) and returns the `emailAccountId`.
+4. The iframe loads `/inbox_zero/<emailAccountId>/mail`.
+
+No Google sign-in, account picker or second login: any browser signed into Biz GPT gets the inbox.
+The mailbox must have been connected once through the normal Google sign-in (done).
+Anyone with Biz GPT `user`/`admin` access can read and act on this mailbox.
 
 ## Google OAuth redirect URIs
 
