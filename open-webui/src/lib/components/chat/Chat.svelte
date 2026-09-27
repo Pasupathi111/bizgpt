@@ -15,6 +15,7 @@
 	import equal from 'fast-deep-equal';
 
 	import {
+                activeModelId,
 		chatId,
 		config,
 		type Model,
@@ -935,6 +936,8 @@
 		saveSessionSelectedModels();
 	}
 
+        $: activeModelId.set(selectedModels.find((modelId) => modelId) ?? null);
+
 	const saveSessionSelectedModels = () => {
 		const selectedModelsString = JSON.stringify(selectedModels);
 		if (
@@ -1645,6 +1648,7 @@
 				// in the sidebar and deleting/archiving it wrongly navigates away.
 				chatId.set('');
 				chatTitle.set('');
+                                activeModelId.set(null);
 
 				window.removeEventListener('message', onMessageHandler);
 				$socket?.off('events', chatEventHandler);

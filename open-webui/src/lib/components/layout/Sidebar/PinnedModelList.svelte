@@ -4,6 +4,7 @@
 	import { onMount, tick } from 'svelte';
 
 	import {
+                activeModelId,
 		chatId,
 		mobile,
 		models,
@@ -66,6 +67,7 @@
 			{shiftKey}
 			onClick={() => {
 				selectedChatId = null;
+                                activeModelId.set(modelId);
 				chatId.set('');
 				if ($mobile) {
 					showSidebar.set(false);

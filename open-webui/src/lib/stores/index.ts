@@ -54,6 +54,7 @@ export const TTSWorker = writable(null);
 
 export const chatId = writable('');
 export const chatTitle = writable('');
+export const activeModelId: Writable<string | null> = writable(null);
 
 export const channels = writable([]);
 export const channelId = writable(null);

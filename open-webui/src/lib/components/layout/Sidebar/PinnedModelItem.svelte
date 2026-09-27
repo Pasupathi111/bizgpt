@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
+        import { activeModelId } from '$lib/stores';
 
 	const i18n = getContext('i18n');
 
@@ -16,6 +17,7 @@
 
 	let mouseOver = false;
 	$: localizedModelName = resolveLocalizedModelName(model, $i18n.language);
+        $: selected = $activeModelId === model?.id;
 </script>
 
 {#if model}
@@ -31,7 +33,9 @@
 		}}
 	>
 		<a
-			class="grow flex items-center space-x-2 rounded-xl px-2 py-[0.4375rem] group-hover:bg-gray-100 dark:group-hover:bg-gray-900 transition"
+                        class="grow flex items-center space-x-2 rounded-xl px-2 py-[0.4375rem] transition {selected
+                                ? 'bg-black/[0.035] dark:bg-white/[0.045]'
+                                : 'group-hover:bg-gray-100 dark:group-hover:bg-gray-900'}"
 			href="/?model={model?.id}"
 			on:click={onClick}
 			draggable="false"
