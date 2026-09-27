@@ -1033,7 +1033,7 @@
 					</div>
 
 					<div>
-						<Tooltip content={$i18n.t('Dify Workflow')} placement="right">
+						<Tooltip content={$i18n.t('Biz Workflow')} placement="right">
 							<a
 								class=" cursor-pointer flex size-8 items-center justify-center transition group"
 								href={withBasePath('/lead-generation')}
@@ -1044,7 +1044,7 @@
 									itemClickHandler();
 								}}
 								draggable="false"
-								aria-label={$i18n.t('Dify Workflow')}
+								aria-label={$i18n.t('Biz Workflow')}
 							>
 								<div
 									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition {$page.url.pathname.startsWith('/lead-generation')

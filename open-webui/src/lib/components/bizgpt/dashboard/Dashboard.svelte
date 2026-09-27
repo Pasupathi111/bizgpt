@@ -199,7 +199,7 @@
 
 		<!-- stat cards -->
 		<div class="grid grid-cols-2 gap-3 xl:grid-cols-4">
-			<StatCard title="Dify Workflows" icon="workflow" tone="violet"
+			<StatCard title="Biz Workflows" icon="workflow" tone="violet"
                                 value={difyCounts ? difyCounts.active : cards.workflows.available ? cards.workflows.active : '—'}
                                 caption={difyCounts ? `Active of ${difyCounts.total} workflows` : cards.workflows.available ? `Active of ${cards.workflows.total} workflows` : 'Workflows API unavailable'}
 				href={data.links.dify_console} external />

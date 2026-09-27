@@ -15,6 +15,7 @@ from .store import STATUSES, Store
 from .workflow import Workflow, WorkflowError, confirmation_email
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s: %(message)s')
+logging.getLogger('httpx').setLevel(logging.WARNING)
 
 store = Store(os.getenv('ORDERS_DB_PATH', '/data/orders.db'))
 workflow = Workflow(store, Gmail())
@@ -96,7 +97,7 @@ def status(user: dict = Depends(current_user)):
 def list_orders(status: str | None = Query(default=None), user: dict = Depends(current_user)):
     if status and status not in STATUSES:
         raise HTTPException(400, f'unknown status {status}')
-    return {'orders': [order_view(o) for o in store.list(status)], 'counts': store.counts(),
+    return {'orders': [order_view(o) for o in store.list_orders(status)], 'counts': store.counts(),
             'can_decide': user['role'] == 'admin'}
 
 

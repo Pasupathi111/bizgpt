@@ -5,8 +5,23 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import SidebarIcon from '$lib/components/icons/Sidebar.svelte';
 	import InboxZeroFrame from '$lib/components/bizgpt/inbox/InboxZeroFrame.svelte';
+	import OrdersPanel from '$lib/components/bizgpt/inbox/OrdersPanel.svelte';
+	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 
 	const i18n = getContext('i18n');
+
+	const TABS = [
+		{ id: 'mail', label: 'Mail' },
+		{ id: 'orders', label: 'Action' }
+	];
+	$: tab = $page.url.searchParams.get('tab') === 'orders' ? 'orders' : 'mail';
+	const selectTab = (id: string) => {
+		const url = new URL($page.url);
+		if (id === 'mail') url.searchParams.delete('tab');
+		else url.searchParams.set('tab', id);
+		goto(url, { replaceState: true, keepFocus: true, noScroll: true });
+	};
 </script>
 
 <svelte:head>
@@ -32,7 +47,24 @@
 			</Tooltip>
 		</nav>
 	{/if}
+	<div class="flex gap-1 border-b border-gray-100 px-4 pt-2 dark:border-gray-850" role="tablist">
+		{#each TABS as t}
+			<button
+				type="button"
+				role="tab"
+				aria-selected={tab === t.id}
+				on:click={() => selectTab(t.id)}
+				class="-mb-px border-b-2 px-3 pb-2 text-sm font-medium transition {tab === t.id
+					? 'border-gray-900 text-gray-900 dark:border-white dark:text-white'
+					: 'border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'}">{t.label}</button
+			>
+		{/each}
+	</div>
 	<div class="flex-1 min-h-0">
-		<InboxZeroFrame />
+		{#if tab === 'orders'}
+			<OrdersPanel />
+		{:else}
+			<InboxZeroFrame />
+		{/if}
 	</div>
 </div>

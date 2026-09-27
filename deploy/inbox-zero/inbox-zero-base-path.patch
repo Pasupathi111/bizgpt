@@ -1,7 +1,7 @@
 From ea2004d9a75f6b92f24cb55c273a2e608d20f7d8 Mon Sep 17 00:00:00 2001
 From: velan <noreply@anthropic.com>
 Date: Sat, 26 Sep 2026 08:16:52 +0000
-Subject: [PATCH] BizGPT: serve Inbox Zero under a sub-path (Next.js
+Subject: [PATCH 1/2] BizGPT: serve Inbox Zero under a sub-path (Next.js
  basePath=/inbox_zero)
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
@@ -473,6 +473,453 @@ index ea90c8d..ac5a8de 100644
 +# BizGPT patch: optional sub-path (Next.js basePath), fixed at build time
 +ARG NEXT_PUBLIC_BASE_PATH=""
 +ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
+ ARG NEXT_PUBLIC_BASE_URL="http://NEXT_PUBLIC_BASE_URL_PLACEHOLDER"
+ ENV NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
+ ARG NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS="NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS_PLACEHOLDER"
+-- 
+2.34.1
+
+
+From e96f42987bda80b5d39bcc114f9a9eef7e7f4945 Mon Sep 17 00:00:00 2001
+From: velan <vadivelan.r@dbizsolution.com>
+Date: Sun, 27 Sep 2026 15:19:06 +0000
+Subject: [PATCH 2/2] BizGPT: Biz Inbox branding, Biz GPT single sign-on and
+ embedded layout
+
+- NEXT_PUBLIC_BRAND_NAME build arg; UI text and wordmark read "Biz Inbox"
+- POST /api/bizgpt/sso: a valid Biz GPT token gets a session for BIZGPT_SSO_EMAIL
+- Hide the app sidebar when framed by Biz GPT; drop the mail beta banner; fix content overflow
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ .../web/app/(app)/ProviderRateLimitBanner.tsx |  2 +-
+ .../assistant/settings/MultiRuleSetting.tsx   |  2 +-
+ .../settings/ProactiveUpdatesSetting.tsx      |  2 +-
+ .../settings/SyncToExtensionSetting.tsx       |  4 +-
+ .../calendars/BookingLinksSection.tsx         |  2 +-
+ .../[emailAccountId]/channels/Channels.tsx    |  4 +-
+ .../app/(app)/[emailAccountId]/mail/page.tsx  |  5 --
+ .../onboarding/StepHowYouHeard.tsx            |  2 +-
+ .../settings/ConnectedAppsSection.tsx         |  2 +-
+ apps/web/app/api/bizgpt/sso/route.ts          | 81 +++++++++++++++++++
+ apps/web/app/layout.tsx                       |  8 ++
+ apps/web/components/Celebration.tsx           |  2 +-
+ apps/web/components/Logo.tsx                  | 21 +++++
+ apps/web/components/ReferralDialog.tsx        |  6 +-
+ apps/web/components/SideNavWithTopNav.tsx     | 11 ++-
+ apps/web/components/email-list/EmailList.tsx  |  2 +-
+ apps/web/env.ts                               |  3 +
+ apps/web/utils/mobile-review.ts               |  2 +-
+ docker/Dockerfile.prod                        |  2 +
+ 19 files changed, 139 insertions(+), 24 deletions(-)
+ create mode 100644 apps/web/app/api/bizgpt/sso/route.ts
+
+diff --git a/apps/web/app/(app)/ProviderRateLimitBanner.tsx b/apps/web/app/(app)/ProviderRateLimitBanner.tsx
+index 9daa0b9..177eacc 100644
+--- a/apps/web/app/(app)/ProviderRateLimitBanner.tsx
++++ b/apps/web/app/(app)/ProviderRateLimitBanner.tsx
+@@ -23,7 +23,7 @@ export function ProviderRateLimitBanner() {
+         title={`${providerLabel} Is Rate Limiting This Account`}
+         description={
+           <p className="mt-2">
+-            Inbox Zero actions are temporarily paused until around{" "}
++            Biz Inbox actions are temporarily paused until around{" "}
+             <strong>{retryAtLabel}</strong>. This limit is enforced by{" "}
+             {providerLabel}, and other apps connected to this mailbox can
+             contribute to the same shared limit.
+diff --git a/apps/web/app/(app)/[emailAccountId]/assistant/settings/MultiRuleSetting.tsx b/apps/web/app/(app)/[emailAccountId]/assistant/settings/MultiRuleSetting.tsx
+index 08409f5..dc64ea6 100644
+--- a/apps/web/app/(app)/[emailAccountId]/assistant/settings/MultiRuleSetting.tsx
++++ b/apps/web/app/(app)/[emailAccountId]/assistant/settings/MultiRuleSetting.tsx
+@@ -51,7 +51,7 @@ export function MultiRuleSetting() {
+           <span>Multi-rule selection</span>
+           <TooltipExplanation
+             side="top"
+-            text="Turning this off stops the AI from intentionally choosing multiple custom rules for one email. Inbox Zero can still apply more than one rule in a few special cases."
++            text="Turning this off stops the AI from intentionally choosing multiple custom rules for one email. Biz Inbox can still apply more than one rule in a few special cases."
+           />
+         </div>
+       }
+diff --git a/apps/web/app/(app)/[emailAccountId]/assistant/settings/ProactiveUpdatesSetting.tsx b/apps/web/app/(app)/[emailAccountId]/assistant/settings/ProactiveUpdatesSetting.tsx
+index 7a698a0..6466f95 100644
+--- a/apps/web/app/(app)/[emailAccountId]/assistant/settings/ProactiveUpdatesSetting.tsx
++++ b/apps/web/app/(app)/[emailAccountId]/assistant/settings/ProactiveUpdatesSetting.tsx
+@@ -223,7 +223,7 @@ export function ProactiveUpdatesSetting({
+           <DialogHeader>
+             <DialogTitle>Scheduled check-ins</DialogTitle>
+             <DialogDescription>
+-              Configure when Inbox Zero sends scheduled summaries to{" "}
++              Configure when Biz Inbox sends scheduled summaries to{" "}
+               {getMessagingProviderName(channel.provider)}.
+             </DialogDescription>
+           </DialogHeader>
+diff --git a/apps/web/app/(app)/[emailAccountId]/assistant/settings/SyncToExtensionSetting.tsx b/apps/web/app/(app)/[emailAccountId]/assistant/settings/SyncToExtensionSetting.tsx
+index e9c0851..7a49275 100644
+--- a/apps/web/app/(app)/[emailAccountId]/assistant/settings/SyncToExtensionSetting.tsx
++++ b/apps/web/app/(app)/[emailAccountId]/assistant/settings/SyncToExtensionSetting.tsx
+@@ -134,7 +134,7 @@ export function SyncToExtensionSetting() {
+       if (error instanceof Error && error.message === "not_chrome") {
+         toast.error("Syncing to extension requires a Chromium browser");
+       } else {
+-        toast.error("Inbox Zero Tabs extension not found. Install it first.", {
++        toast.error("Biz Inbox Tabs extension not found. Install it first.", {
+           action: {
+             label: "Install",
+             onClick: () => window.open(EXTENSION_URL, "_blank"),
+@@ -151,7 +151,7 @@ export function SyncToExtensionSetting() {
+   return (
+     <SettingCard
+       title="Sync to browser extension"
+-      description="Sync your rules to the Inbox Zero Tabs browser extension. Each label rule becomes a tab in Gmail."
++      description="Sync your rules to the Biz Inbox Tabs browser extension. Each label rule becomes a tab in Gmail."
+       right={
+         <Dialog open={open} onOpenChange={handleOpenChange}>
+           <DialogTrigger asChild>
+diff --git a/apps/web/app/(app)/[emailAccountId]/calendars/BookingLinksSection.tsx b/apps/web/app/(app)/[emailAccountId]/calendars/BookingLinksSection.tsx
+index c56ff76..415b796 100644
+--- a/apps/web/app/(app)/[emailAccountId]/calendars/BookingLinksSection.tsx
++++ b/apps/web/app/(app)/[emailAccountId]/calendars/BookingLinksSection.tsx
+@@ -249,7 +249,7 @@ function CalendarBookingLinkCard({
+         >
+           {disabledByInboxZeroLink ? (
+             <span className="text-sm text-muted-foreground">
+-              Using Inbox Zero booking link
++              Using Biz Inbox booking link
+             </span>
+           ) : (
+             <form
+diff --git a/apps/web/app/(app)/[emailAccountId]/channels/Channels.tsx b/apps/web/app/(app)/[emailAccountId]/channels/Channels.tsx
+index d13285f..7124683 100644
+--- a/apps/web/app/(app)/[emailAccountId]/channels/Channels.tsx
++++ b/apps/web/app/(app)/[emailAccountId]/channels/Channels.tsx
+@@ -264,7 +264,7 @@ function ChannelsIntro({
+     <section className="rounded-xl border border-blue-100 bg-blue-50/40 p-6 dark:border-blue-950 dark:bg-blue-950/20">
+       <h2 className="flex items-start gap-2 text-lg font-semibold tracking-tight">
+         <BellIcon className="mt-1 size-5 shrink-0 text-blue-600 dark:text-blue-400" />
+-        <span>Inbox Zero where you work.</span>
++        <span>Biz Inbox where you work.</span>
+       </h2>
+       <MutedText className="mt-2 text-sm">
+         Important emails, pre-drafted replies, meeting briefs, and a daily inbox
+@@ -623,7 +623,7 @@ function LinkCodeDialog({
+         <DialogHeader>
+           <DialogTitle>Connect {providerName}</DialogTitle>
+           <DialogDescription>
+-            Send this command in a direct message with the Inbox Zero bot on{" "}
++            Send this command in a direct message with the Biz Inbox bot on{" "}
+             {providerName}. The code is one-time use and expires in 10 minutes.
+           </DialogDescription>
+         </DialogHeader>
+diff --git a/apps/web/app/(app)/[emailAccountId]/mail/page.tsx b/apps/web/app/(app)/[emailAccountId]/mail/page.tsx
+index d4f14db..8c80a96 100644
+--- a/apps/web/app/(app)/[emailAccountId]/mail/page.tsx
++++ b/apps/web/app/(app)/[emailAccountId]/mail/page.tsx
+@@ -8,8 +8,6 @@ import { LoadingContent } from "@/components/LoadingContent";
+ import type { ThreadsQuery } from "@/utils/threads/validation";
+ import type { ThreadsResponse } from "@/app/api/threads/route";
+ import { refetchEmailListAtom } from "@/store/email";
+-import { BetaBanner } from "@/app/(app)/[emailAccountId]/mail/BetaBanner";
+-import { ClientOnly } from "@/components/ClientOnly";
+ import { PermissionsCheck } from "@/app/(app)/[emailAccountId]/PermissionsCheck";
+ 
+ export default function Mail(props: {
+@@ -93,9 +91,6 @@ export default function Mail(props: {
+   return (
+     <>
+       <PermissionsCheck />
+-      <ClientOnly>
+-        <BetaBanner />
+-      </ClientOnly>
+       <LoadingContent loading={isLoading && !data} error={error}>
+         {allThreads && (
+           <List
+diff --git a/apps/web/app/(app)/[emailAccountId]/onboarding/StepHowYouHeard.tsx b/apps/web/app/(app)/[emailAccountId]/onboarding/StepHowYouHeard.tsx
+index df7fd85..2fa4ea0 100644
+--- a/apps/web/app/(app)/[emailAccountId]/onboarding/StepHowYouHeard.tsx
++++ b/apps/web/app/(app)/[emailAccountId]/onboarding/StepHowYouHeard.tsx
+@@ -152,7 +152,7 @@ export function StepHowYouHeard({ onNext }: { onNext: () => void }) {
+       </IconCircle>
+ 
+       <div className="text-center mt-4">
+-        <PageHeading>How did you hear about Inbox Zero?</PageHeading>
++        <PageHeading>How did you hear about Biz Inbox?</PageHeading>
+         <TypographyP className="mt-2 max-w-lg mx-auto">
+           We'd love to know how you found us.
+         </TypographyP>
+diff --git a/apps/web/app/(app)/[emailAccountId]/settings/ConnectedAppsSection.tsx b/apps/web/app/(app)/[emailAccountId]/settings/ConnectedAppsSection.tsx
+index d3dfd03..b4c43d8 100644
+--- a/apps/web/app/(app)/[emailAccountId]/settings/ConnectedAppsSection.tsx
++++ b/apps/web/app/(app)/[emailAccountId]/settings/ConnectedAppsSection.tsx
+@@ -414,7 +414,7 @@ function MessagingConnectCodeDialog({
+         <DialogHeader>
+           <DialogTitle>Connect {providerName}</DialogTitle>
+           <DialogDescription>
+-            Send this command in a direct message with the Inbox Zero bot on{" "}
++            Send this command in a direct message with the Biz Inbox bot on{" "}
+             {providerName}. The code is one-time use and expires in 10 minutes.
+           </DialogDescription>
+         </DialogHeader>
+diff --git a/apps/web/app/api/bizgpt/sso/route.ts b/apps/web/app/api/bizgpt/sso/route.ts
+new file mode 100644
+index 0000000..cbc9cc1
+--- /dev/null
++++ b/apps/web/app/api/bizgpt/sso/route.ts
+@@ -0,0 +1,81 @@
++// BizGPT: single sign-on from Biz GPT (Open WebUI) into the one shared mailbox.
++// A caller with a valid Biz GPT token gets an Inbox Zero session for BIZGPT_SSO_EMAIL,
++// so the embedded inbox never shows the Google sign-in or account picker.
++import { NextResponse } from "next/server";
++import { env } from "@/env";
++import { auth, betterAuthConfig } from "@/utils/auth";
++import { SafeError } from "@/utils/error";
++import { withError } from "@/utils/middleware";
++import { buildSessionCookie } from "@/utils/mobile-review";
++import prisma from "@/utils/prisma";
++
++const ALLOWED_ROLES = new Set(["user", "admin"]);
++
++export const POST = withError("bizgpt/sso", async (request) => {
++  const email = env.BIZGPT_SSO_EMAIL;
++  if (!email || !env.BIZGPT_AUTH_URL) {
++    throw new SafeError("Biz GPT sign-in is not configured", 404);
++  }
++
++  const bizGptUser = await getBizGptUser(request);
++  if (!bizGptUser) throw new SafeError("Sign in to Biz GPT first", 401);
++
++  const emailAccount = await prisma.emailAccount.findUnique({
++    where: { email },
++    select: { id: true, userId: true },
++  });
++  if (!emailAccount) {
++    request.logger.warn("Biz GPT SSO mailbox is not connected", { email });
++    throw new SafeError("Biz Inbox mailbox is not connected", 503);
++  }
++
++  const response = NextResponse.json({ emailAccountId: emailAccount.id, email });
++  response.headers.set("Cache-Control", "no-store");
++
++  // Reuse the current session when it already belongs to the mailbox owner.
++  const current = await auth(request.headers).catch(() => null);
++  if (current?.user.id === emailAccount.userId) return response;
++
++  const authContext = await betterAuthConfig.$context;
++  const session = await authContext.internalAdapter.createSession(
++    emailAccount.userId,
++    false,
++    {},
++  );
++  const cookie = await buildSessionCookie({
++    authContext,
++    expiresAt: session.expiresAt,
++    sessionToken: session.token,
++  });
++  response.cookies.set(cookie.name, cookie.value, cookie.options);
++
++  request.logger.info("Created Biz GPT SSO session", {
++    bizGptUserId: bizGptUser.id,
++    emailAccountId: emailAccount.id,
++  });
++
++  return response;
++});
++
++async function getBizGptUser(request: Request) {
++  const bearer = request.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
++  const cookieToken = request.headers
++    .get("cookie")
++    ?.match(/(?:^|;\s*)token=([^;]+)/)?.[1];
++  const token = bearer || cookieToken;
++  if (!token) return null;
++
++  const res = await fetch(env.BIZGPT_AUTH_URL!, {
++    headers: { Authorization: `Bearer ${token}` },
++    cache: "no-store",
++    signal: AbortSignal.timeout(5000),
++  }).catch(() => null);
++  if (!res?.ok) return null;
++
++  const user = (await res.json().catch(() => null)) as {
++    id?: string;
++    role?: string;
++  } | null;
++  if (!user?.id || !ALLOWED_ROLES.has(user.role ?? "")) return null;
++  return { id: user.id };
++}
+diff --git a/apps/web/app/layout.tsx b/apps/web/app/layout.tsx
+index 974a966..1e3fa41 100644
+--- a/apps/web/app/layout.tsx
++++ b/apps/web/app/layout.tsx
+@@ -142,6 +142,14 @@ export default async function RootLayout({
+             __html: JSON.stringify(jsonLd),
+           }}
+         />
++        {/* BizGPT: mark pages framed by Biz GPT before first paint, so the embedded view hides its own sidebar. */}
++        <script
++          // biome-ignore lint/security/noDangerouslySetInnerHtml: static inline script
++          dangerouslySetInnerHTML={{
++            __html:
++              "if(window.self!==window.top)document.documentElement.classList.add('bizgpt-embed')",
++          }}
++        />
+         <BasePathShim />
+         <PostHogProvider>
+           <Suspense>
+diff --git a/apps/web/components/Celebration.tsx b/apps/web/components/Celebration.tsx
+index d3b54ee..f0ce48a 100644
+--- a/apps/web/components/Celebration.tsx
++++ b/apps/web/components/Celebration.tsx
+@@ -34,7 +34,7 @@ export function Celebration(props: { message: string }) {
+           size="2xl"
+           onClick={() => {
+             const tweet = encodeURIComponent(
+-              "I made it to Inbox Zero thanks to @inboxzero_ai!",
++              "I made it to Biz Inbox thanks to @inboxzero_ai!",
+             );
+             const twitterIntentURL = `https://x.com/intent/tweet?text=${tweet}`;
+             window.open(
+diff --git a/apps/web/components/Logo.tsx b/apps/web/components/Logo.tsx
+index a7688fc..22bf6dc 100644
+--- a/apps/web/components/Logo.tsx
++++ b/apps/web/components/Logo.tsx
+@@ -19,6 +19,27 @@ export function Logo({ className }: LogoProps) {
+     );
+   }
+ 
++  // BizGPT: the built-in wordmark spells "INBOX ZERO"; draw the brand name instead.
++  if (BRAND_NAME !== "Inbox Zero") {
++    return (
++      <svg viewBox="0 0 355 47" fill="none" className={className}>
++        <title>{BRAND_NAME}</title>
++        <text
++          x="0"
++          y="40"
++          fill="currentColor"
++          fontSize="46"
++          fontWeight="700"
++          fontFamily="inherit"
++          textLength="355"
++          lengthAdjust="spacingAndGlyphs"
++        >
++          {BRAND_NAME.toUpperCase()}
++        </text>
++      </svg>
++    );
++  }
++
+   return (
+     <svg viewBox="0 0 355 47" fill="none" className={className}>
+       <title>{BRAND_NAME}</title>
+diff --git a/apps/web/components/ReferralDialog.tsx b/apps/web/components/ReferralDialog.tsx
+index 670962f..18da0bd 100644
+--- a/apps/web/components/ReferralDialog.tsx
++++ b/apps/web/components/ReferralDialog.tsx
+@@ -71,8 +71,8 @@ export function Referrals() {
+     if (navigator.share) {
+       try {
+         await navigator.share({
+-          title: "Join Inbox Zero with my referral link",
+-          text: "Use my referral link to get started with Inbox Zero!",
++          title: "Join Biz Inbox with my referral link",
++          text: "Use my referral link to get started with Biz Inbox!",
+           url: link,
+         });
+       } catch (error) {
+@@ -101,7 +101,7 @@ export function Referrals() {
+       <div className="text-center">
+         <PageHeading>Refer Friends, Get Rewards</PageHeading>
+         <PageSubHeading className="mt-2">
+-          Share Inbox Zero with friends and get a free month for each friend who
++          Share Biz Inbox with friends and get a free month for each friend who
+           completes their trial
+         </PageSubHeading>
+       </div>
+diff --git a/apps/web/components/SideNavWithTopNav.tsx b/apps/web/components/SideNavWithTopNav.tsx
+index ce4d0e7..a694021 100644
+--- a/apps/web/components/SideNavWithTopNav.tsx
++++ b/apps/web/components/SideNavWithTopNav.tsx
+@@ -27,7 +27,8 @@ function ContentWrapper({ children }: { children: React.ReactNode }) {
+   return (
+     <div
+       className={cn(
+-        "flex-1 transition-all duration-200 ease-linear",
++        // BizGPT: min-w-0 so long email snippets truncate instead of widening the page
++        "min-w-0 flex-1 transition-all duration-200 ease-linear",
+         isRightSidebarOpen && "lg:mr-[450px]",
+       )}
+     >
+@@ -35,6 +36,7 @@ function ContentWrapper({ children }: { children: React.ReactNode }) {
+         className={cn(
+           "overflow-hidden bg-background pt-9 max-w-full",
+           noTopPadding && "pt-0",
++          "[.bizgpt-embed_&]:pt-0",
+         )}
+       >
+         {children}
+@@ -73,8 +75,11 @@ export function SideNavWithTopNav({
+       defaultOpen={defaultOpen ? ["left-sidebar"] : []}
+       sidebarNames={["left-sidebar", "chat-sidebar"]}
+     >
+-      <MobileHeader />
+-      <SideNav name="left-sidebar" />
++      {/* BizGPT: Biz GPT's iframe shows the mailbox only, without this sidebar. */}
++      <div className="contents [.bizgpt-embed_&]:hidden">
++        <MobileHeader />
++        <SideNav name="left-sidebar" />
++      </div>
+       <ContentWrapper>{children}</ContentWrapper>
+       {!isAssistantRoute ? <SidebarRight name="chat-sidebar" /> : null}
+     </SidebarProvider>
+diff --git a/apps/web/components/email-list/EmailList.tsx b/apps/web/components/email-list/EmailList.tsx
+index d007c07..1bd69e2 100644
+--- a/apps/web/components/email-list/EmailList.tsx
++++ b/apps/web/components/email-list/EmailList.tsx
+@@ -132,7 +132,7 @@ export function List({
+       ) : (
+         <div className="mt-20">
+           {type === "inbox" ? (
+-            <Celebration message={"You made it to Inbox Zero!"} />
++            <Celebration message={"You made it to Biz Inbox!"} />
+           ) : (
+             <div className="flex items-center justify-center font-title text-2xl text-primary">
+               No emails to display
+diff --git a/apps/web/env.ts b/apps/web/env.ts
+index 633ebcf..483a9d2 100644
+--- a/apps/web/env.ts
++++ b/apps/web/env.ts
+@@ -277,6 +277,9 @@ const parsedEnv = createEnv({
+     APP_REVIEW_DEMO_ENABLED: booleanString.optional().default(false),
+     APP_REVIEW_DEMO_ACCOUNTS: z.string().optional(),
+     SSO_LOGIN_ENABLED: booleanString.optional().default(false),
++    // BizGPT: Biz GPT users get a session for this one mailbox, no Google sign-in
++    BIZGPT_SSO_EMAIL: z.string().trim().toLowerCase().email().optional(),
++    BIZGPT_AUTH_URL: z.string().url().optional(),
+   },
+   client: {
+     // stripe
+diff --git a/apps/web/utils/mobile-review.ts b/apps/web/utils/mobile-review.ts
+index 3a4a95b..4697ce2 100644
+--- a/apps/web/utils/mobile-review.ts
++++ b/apps/web/utils/mobile-review.ts
+@@ -105,7 +105,7 @@ export async function createMobileReviewSession(input: {
+   };
+ }
+ 
+-async function buildSessionCookie(input: {
++export async function buildSessionCookie(input: {
+   authContext: Awaited<typeof betterAuthConfig.$context>;
+   expiresAt: Date;
+   sessionToken: string;
+diff --git a/docker/Dockerfile.prod b/docker/Dockerfile.prod
+index ac5a8de..c82c4be 100644
+--- a/docker/Dockerfile.prod
++++ b/docker/Dockerfile.prod
+@@ -44,6 +44,8 @@ ENV NODE_OPTIONS=--max_old_space_size=4096
+ # BizGPT patch: optional sub-path (Next.js basePath), fixed at build time
+ ARG NEXT_PUBLIC_BASE_PATH=""
+ ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
++ARG NEXT_PUBLIC_BRAND_NAME="Inbox Zero"
++ENV NEXT_PUBLIC_BRAND_NAME=${NEXT_PUBLIC_BRAND_NAME}
  ARG NEXT_PUBLIC_BASE_URL="http://NEXT_PUBLIC_BASE_URL_PLACEHOLDER"
  ENV NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
  ARG NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS="NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS_PLACEHOLDER"

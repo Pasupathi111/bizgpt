@@ -148,7 +148,7 @@ class Store:
             row = self._conn.execute('SELECT * FROM orders WHERE source_ref=?', (source_ref,)).fetchone()
         return _order(row) if row else None
 
-    def list(self, status: str | None = None, limit: int = 200) -> list[dict]:
+    def list_orders(self, status: str | None = None, limit: int = 200) -> list[dict]:
         with self._lock:
             if status:
                 rows = self._conn.execute('SELECT * FROM orders WHERE status=? ORDER BY updated_at DESC LIMIT ?', (status, limit)).fetchall()

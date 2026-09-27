@@ -35,7 +35,7 @@ With `NEXT_PUBLIC_BASE_PATH` unset the app behaves exactly like upstream.
 git clone https://github.com/elie222/inbox-zero.git /home/ubuntu/bizgpt-services/inbox-zero
 cd /home/ubuntu/bizgpt-services/inbox-zero
 git checkout -b bizgpt/base-path v2.30.0
-git am /home/ubuntu/bizgpt/deploy/inbox-zero/inbox-zero-base-path.patch
+git am /home/ubuntu/bizgpt/deploy/inbox-zero/inbox-zero-base-path.patch   # 2 commits: base path, then Biz Inbox SSO + branding
 cp /home/ubuntu/bizgpt/deploy/inbox-zero/docker-compose.override.yml .
 
 cp apps/web/.env.example apps/web/.env   # fill in, see below; chmod 600

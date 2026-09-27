@@ -14,7 +14,7 @@
         type Item = { id: string; label: string; href?: string; icon: string; tone: string; match?: string; onClick?: () => void };
 
 	$: workspace = [
-		{ id: 'dify', label: 'Dify Workflows', href: withBasePath('/lead-generation'), icon: 'workflow', tone: 'text-violet-500', match: '/lead-generation' },
+		{ id: 'dify', label: 'Biz Workflows', href: withBasePath('/lead-generation'), icon: 'workflow', tone: 'text-violet-500', match: '/lead-generation' },
 		{ id: 'inbox', label: 'Biz Inbox', href: withBasePath('/inbox'), icon: 'inbox', tone: 'text-rose-500', match: '/inbox' }
 	] as Item[];
 

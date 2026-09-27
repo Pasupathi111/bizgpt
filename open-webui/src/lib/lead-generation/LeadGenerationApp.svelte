@@ -173,7 +173,7 @@
 		<div class="lg-page-head">
 			<span class="lg-page-icon"><LGIcon name="workflow" size={22} /></span>
 			<div style="flex:1;min-width:0">
-				<h1 class="lg-page-title">Dify Workflow <span class="lg-pill blue">Lead Generation</span></h1>
+				<h1 class="lg-page-title">Biz Workflow <span class="lg-pill blue">Lead Generation</span></h1>
 				<p class="lg-page-sub">Build and manage AI workflows to automate your business processes — capture, enrich, score and route every lead.</p>
 			</div>
 			<button class="lg-btn lg-hide-sm" on:click={resetDemo} title="Restore the sample workflows"><LGIcon name="refresh" size={14} /> Reset demo</button>

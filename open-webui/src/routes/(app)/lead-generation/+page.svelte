@@ -10,7 +10,7 @@
 </script>
 
 <svelte:head>
-	<title>{$i18n.t('Dify Workflow')} / {$WEBUI_NAME}</title>
+	<title>{$i18n.t('Biz Workflow')} / {$WEBUI_NAME}</title>
 </svelte:head>
 
 <div

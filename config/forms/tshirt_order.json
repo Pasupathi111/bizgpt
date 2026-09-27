@@ -21,7 +21,10 @@
       "quantity",
       "delivery_location",
       "delivery_date",
-      "service_level"
+      "service_level",
+      "customer_phone",
+      "payment_method",
+      "delivery_time"
     ],
     "properties": {
       "customer_name": {
@@ -36,15 +39,36 @@
         "title": "Customer email",
         "description": "The order confirmation is emailed here after approval."
       },
+      "customer_phone": {
+        "type": "string",
+        "title": "Customer phone",
+        "pattern": "^[+0-9 ()-]{8,20}$",
+        "maxLength": 20
+      },
       "size": {
         "type": "string",
         "title": "Size",
-        "enum": ["XS", "S", "M", "L", "XL", "XXL"]
+        "enum": [
+          "XS",
+          "S",
+          "M",
+          "L",
+          "XL",
+          "XXL"
+        ]
       },
       "color": {
         "type": "string",
         "title": "Colour",
-        "enum": ["White", "Black", "Navy", "Grey", "Red", "Royal blue", "Green"]
+        "enum": [
+          "White",
+          "Black",
+          "Navy",
+          "Grey",
+          "Red",
+          "Royal blue",
+          "Green"
+        ]
       },
       "quantity": {
         "type": "integer",
@@ -70,10 +94,34 @@
         "format": "date",
         "title": "Delivery date"
       },
+      "delivery_time": {
+        "type": "string",
+        "title": "Preferred delivery time",
+        "enum": [
+          "Morning (9am-12pm)",
+          "Afternoon (12pm-4pm)",
+          "Evening (4pm-8pm)"
+        ]
+      },
       "service_level": {
         "type": "string",
         "title": "Service level",
-        "enum": ["Standard (5-7 days)", "Express (2-3 days)", "Same day"]
+        "enum": [
+          "Standard (5-7 days)",
+          "Express (2-3 days)",
+          "Same day"
+        ]
+      },
+      "payment_method": {
+        "type": "string",
+        "title": "Payment method",
+        "enum": [
+          "Bank transfer",
+          "UPI",
+          "Card",
+          "Cash on delivery",
+          "Invoice"
+        ]
       },
       "notes": {
         "type": "string",
@@ -86,22 +134,29 @@
     "ui:order": [
       "customer_name",
       "customer_email",
+      "customer_phone",
       "size",
       "color",
       "quantity",
       "print_text",
       "delivery_location",
       "delivery_date",
+      "delivery_time",
       "service_level",
+      "payment_method",
       "notes"
     ],
     "delivery_location": {
       "ui:widget": "textarea",
-      "ui:options": { "rows": 2 }
+      "ui:options": {
+        "rows": 2
+      }
     },
     "notes": {
       "ui:widget": "textarea",
-      "ui:options": { "rows": 2 }
+      "ui:options": {
+        "rows": 2
+      }
     }
   },
   "action": {
@@ -109,5 +164,5 @@
     "reference_prefix": "TS"
   },
   "submit_label": "Review order",
-  "success_message": "Order {reference}: {quantity} × {color} T-shirt, size {size}, for {customer_name} <{customer_email}>, {service_level} delivery to {delivery_location} by {delivery_date}."
+  "success_message": "Order {reference}: {quantity} × {color} T-shirt, size {size}, for {customer_name} <{customer_email}>, {service_level} delivery to {delivery_location} on {delivery_date} ({delivery_time}), paid by {payment_method}. It is now in Biz Inbox > Action for approval."
 }
