@@ -43,9 +43,10 @@ Approve is blocked until the report is generated and no photo still needs review
 
 ## Model
 
-Created in **Workspace → Models** (not a repo file):
+Source `owui/models/monthly-report-vision.json` (base model from `MONTHLY_REPORT_BASE_MODEL`, e.g. `gpt-4o-mini`):
 
-- Name **Monthly Report Vision**, ID `monthly-report-vision`, base model `qwen2.5vl:3b` (vision), temperature from the service = 0
+- Name **Monthly Report Vision**, ID `monthly-report-vision`, temperature 0, hidden from the chat model picker
+  (`meta.hidden`): only the service calls it; users chat with the **Monthly Report** pipe
 - Capabilities: Vision + File Upload on; web search, code interpreter, image generation, memory, builtin tools off
 - Tool: **Biz GPT Dynamic Forms** (opens the `monthly_report_request` form in chat)
 - The service calls it by ID; change with `MONTHLY_REPORT_MODEL`. To use a stronger vision model, edit the
@@ -61,7 +62,22 @@ Created in **Workspace → Models** (not a repo file):
    missing information, confidence summary, **Save draft / Reject / Approve**.
 4. Typed messages work too: *"IMG_0103 is during"*, *"change the remarks to: …"*, *"write the report"*,
    *"approve the report"*. Approve/Reject only happen when you actually say approve/reject.
-5. After approval: ✓ Report Approved card + **View Report / Download PDF** links.
+5. After approval: the full report screen with **View report / Download PDF / Generate again / Delete & start fresh**.
+6. Natural requests work in any new chat: *"Generate the October month report"* syncs Gmail (🔄 loader), imports that
+   month's photo email and continues; if the month's report exists it opens at its current step (review, report,
+   or approved). Emails always keep the project/month they state themselves.
+7. **Approve** is always available in review; if photos are still flagged it asks to confirm them first
+   (`POST /approve {"confirm_flagged": true}`; each confirmation is logged).
+8. **Same result every time:** photo analyses are cached by image content + prompt + model, report text by its facts
+   (`ai_cache` table). Generate can be clicked any number of times, also after approval.
+9. **Delete & start fresh** (`DELETE /api/reports/{id}`): removes the report, photos, PDF and month folder, and re-arms
+   its Gmail email so the month can be run again from zero.
+
+**Photo library:** on approval the approved photos, the PDF and `photos.json` are filed in
+`/data/library/<project>/<YYYY-MM>/` (Monthly Report page → 📁 Photo library; API `/api/library/...`).
+
+**Gmail intake needs** the Google Workspace MCP server at tool tier `extended` (for `get_gmail_attachment_content`).
+Bounce / auto-reply emails are ignored; an email whose photos all fail to download stays `failed` and is retried.
 
 The pipe also answers Biz GPT background tasks (chat title) itself, so they never touch reports.
 

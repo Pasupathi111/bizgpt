@@ -5,12 +5,17 @@ which emails are new, where the photos go, file checks, and never importing an e
 """
 
 import logging
+import re
 
 from . import ai, config
 from .gmail import QUERY, Gmail, GmailError
 from .store import Store
 
 log = logging.getLogger('monthly-report.gmail')
+
+# Bounces and auto-replies carry Google's own icons as images; they are never site photos.
+AUTOMATED_SENDER = re.compile(r'^(mailer-daemon|postmaster)@', re.I)
+AUTOMATED_SUBJECT = re.compile(r'^(delivery status notification|undeliver(ed|able)|mail delivery (failed|subsystem)|returned mail)', re.I)
 
 
 async def import_from_gmail(store: Store, gmail: Gmail, add_photo, auth: str, *, project_id: str | None = None,
@@ -32,6 +37,10 @@ async def import_from_gmail(store: Store, gmail: Gmail, add_photo, auth: str, *,
         if not email['images']:
             store.gmail_record(message_id, email['subject'], email['from'], 'ignored', detail='no image attachments')
             out['skipped'].append({**summary, 'reason': 'no image attachments'})
+            continue
+        if AUTOMATED_SENDER.match(email['from_email']) or AUTOMATED_SUBJECT.match(email['subject'].strip()):
+            store.gmail_record(message_id, email['subject'], email['from'], 'ignored', detail='bounce / automated email')
+            out['skipped'].append({**summary, 'reason': 'bounce / automated email'})
             continue
 
         target_project, target_month = project_id, month
@@ -68,6 +77,11 @@ async def import_from_gmail(store: Store, gmail: Gmail, add_photo, auth: str, *,
                 added += 1
             else:
                 failed.append(f'{att["filename"]}: not a readable image')
+        if not added:
+            # Nothing stored (e.g. the Gmail server cannot download attachments): keep the email pending so it is retried.
+            store.gmail_record(message_id, email['subject'], email['from'], 'failed', report['id'], 0, '; '.join(failed)[:2000])
+            out['skipped'].append({**summary, 'reason': 'no photo could be downloaded', 'failed': failed})
+            continue
         store.gmail_record(message_id, email['subject'], email['from'], 'imported', report['id'], added,
                            '; '.join(failed) or None)
         store.event(report['id'], 'gmail_imported', email['from_email'], f'{added} photo(s) from "{email["subject"]}"')

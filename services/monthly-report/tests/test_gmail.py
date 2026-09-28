@@ -135,3 +135,28 @@ def test_project_and_month_read_from_text_when_model_is_sloppy():
     assert ai.normalise_email({'project': 'taman-park', 'month': '2026-09'}, cfg, 'Zone C drain works photos') == \
         {'is_site_photos': True, 'project_id': None, 'month': None}
     assert ai.find_month_in('photos for Sep 2026 and Oct 2026') is None  # two months: ask
+
+
+def test_bounces_are_ignored_and_failed_downloads_are_retried(store, monkeypatch):
+    img = lambda n: {'index': 0, 'filename': n, 'mime': 'image/jpeg', 'attachment_id': n}  # noqa: E731
+    fake = FakeGmail({
+        'b1': {'subject': 'Delivery Status Notification (Failure)', 'body': 'Address not found', 'images': [img('icon.png')]},
+        'm1': {'subject': 'Taman Park October 2026 photos', 'body': '', 'images': [img('A.jpg')]},
+    })
+
+    async def fake_complete(messages, auth, json_mode=True):
+        return json.dumps({'is_site_photos': True, 'project': 'taman-park', 'month': '2026-10'})
+    monkeypatch.setattr(ai, 'complete', fake_complete)
+
+    async def broken_download(message_id, att):
+        raise gmail.GmailError('Unknown tool')
+    monkeypatch.setattr(fake, 'download', broken_download)
+    add_photo = lambda rid, name, data: store.add_photo(rid, name, data, 'image/jpeg', None) or True  # noqa: E731
+
+    out = run(intake.import_from_gmail(store, fake, add_photo, 'token', project_id='taman-park', month='2026-10'))
+    assert out['imported'] == [] and store.gmail_seen('b1')['status'] == 'ignored'  # bounce never joins a report
+    assert store.gmail_seen('m1')['status'] == 'failed'
+
+    monkeypatch.setattr(fake, 'download', FakeGmail.download.__get__(fake))  # attachments downloadable again
+    again = run(intake.import_from_gmail(store, fake, add_photo, 'token'))
+    assert [(i['subject'], i['added']) for i in again['imported']] == [('Taman Park October 2026 photos', 1)]

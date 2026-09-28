@@ -44,6 +44,9 @@
 			allowForms && 'allow-forms',
 			allowSameOrigin && 'allow-same-origin',
 			allowPopups && 'allow-popups',
+			// Links an embed opens (e.g. "View report" PDF) load as normal tabs, not as sandboxed copies that
+			// browsers refuse to render PDFs in. The embed itself stays sandboxed.
+			allowPopups && 'allow-popups-to-escape-sandbox',
 			allowDownloads && 'allow-downloads'
 		]
 			.filter(Boolean)

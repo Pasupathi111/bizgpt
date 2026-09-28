@@ -49,6 +49,11 @@ CREATE TABLE IF NOT EXISTS gmail_messages (
     detail TEXT,
     at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS ai_cache (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     report_id TEXT NOT NULL,
@@ -69,6 +74,7 @@ class Store:
         self.data_dir = Path(data_dir)
         self.photo_dir = self.data_dir / 'photos'
         self.pdf_dir = self.data_dir / 'pdf'
+        self.library_dir = self.data_dir / 'library'  # approved photos + PDF, one folder per project/month
         self.photo_dir.mkdir(parents=True, exist_ok=True)
         self.pdf_dir.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()
@@ -191,6 +197,25 @@ class Store:
 
     def events(self, rid: str) -> list[dict]:
         return self._all('SELECT type, actor, detail, at FROM events WHERE report_id = ? ORDER BY id', (rid,))
+
+    def delete_report(self, rid: str) -> list[str]:
+        """Remove a report with its photos, PDF and history; its Gmail emails become importable again.
+        Returns the photo file paths so the caller can delete the files."""
+        paths = [r['path'] for r in self._all('SELECT path FROM photos WHERE report_id = ?', (rid,))]
+        with self._lock:
+            for sql in ('DELETE FROM photos WHERE report_id = ?', 'DELETE FROM events WHERE report_id = ?',
+                        'DELETE FROM gmail_messages WHERE report_id = ?', 'DELETE FROM reports WHERE id = ?'):
+                self._db.execute(sql, (rid,))
+            self._db.commit()
+        return paths
+
+    def cache_get(self, key: str) -> dict | None:
+        """Earlier AI answer for exactly the same input, so the same photos always give the same result."""
+        rows = self._all('SELECT value FROM ai_cache WHERE key = ?', (key,))
+        return json.loads(rows[0]['value']) if rows else None
+
+    def cache_put(self, key: str, value: dict):
+        self._exec('INSERT OR REPLACE INTO ai_cache (key, value, at) VALUES (?,?,?)', (key, json.dumps(value), now()))
 
     def pdf_path(self, rid: str) -> Path:
         return self.pdf_dir / f'{rid}.pdf'

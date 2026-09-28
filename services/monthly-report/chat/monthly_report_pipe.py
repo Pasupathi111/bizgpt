@@ -11,6 +11,7 @@ version: 0.1.0
 
 import asyncio
 import base64
+import copy
 import html
 import json
 import re
@@ -33,6 +34,8 @@ TASK_REPLIES = {
     'follow_up_generation': json.dumps({'follow_ups': []}),
 }
 CMD_RE = re.compile(r'```mr\s*(\{.*?\})\s*```', re.S)
+# Biz GPT prepends an <attached_files> list to the message text; it is not the user's words.
+ATTACHED_RE = re.compile(r'<attached_files>.*?</attached_files>', re.S)
 REPORT_RE = re.compile(r'\bMR-[A-Z0-9]{4,12}\b')
 HELP = (
     'I build the **monthly maintenance photo report** with you, step by step:\n\n'
@@ -80,6 +83,11 @@ class Pipe:
     ):
         if __task__:  # Biz GPT background tasks (chat title, tags, follow-ups): answer without touching reports.
             return TASK_REPLIES.get(__task__, '')
+        # Biz GPT shares one Pipe instance between all chats: keep this request's emitter, embeds and session on
+        # its own copy, or two chats running at once send each other's progress and cards to the wrong chat.
+        return await copy.copy(self)._handle(body, __request__, __event_emitter__, __chat_id__)
+
+    async def _handle(self, body: dict, __request__, __event_emitter__, __chat_id__: Optional[str]):
         self.emit = __event_emitter__
         self.embeds = []
         self.auth = self._auth(__request__)
@@ -113,25 +121,34 @@ class Pipe:
     # ------------------------------------------------------------------ actions
     async def _run(self, cmd: dict, report_id: Optional[str], messages: list, images: Optional[list] = None) -> str:
         action = cmd.get('action')
-        if action == 'start':
-            project_id, month = cmd.get('project_id'), cmd.get('month')
-            if not (project_id and month):
-                cfg = await self._api('GET', '/api/config')
-                await self._embed(setup_card(cfg, project_id, month))
-                return 'Choose the **project** and **month** in the form above and click **Start report**. I will analyse the photos you attached.'
-            report = await self._api('POST', '/api/reports', {'project_id': project_id, 'month': month})
-            photos = images if images is not None else self._all_images(messages)
-            if not photos:
-                return (f'**Report {report["id"]}** created for {report["project"]["name"]}, {month_label(month)}. '
-                        'Attach the site photos in your next message and I will analyse them.')
-            return await self._add_photos_and_process(report['id'], photos)
-
         if action == 'gmail_import':
             return await self._gmail_import(cmd.get('project_id'), cmd.get('month'))
+
+        project_id, month = cmd.get('project_id'), cmd.get('month')
+        if action == 'start' and report_id and not (project_id or month or images):
+            action = 'generate'  # "generate the report" inside a report's chat means this report
+        if action == 'start' or (action in ('status', 'generate') and not report_id and (project_id or month)):
+            return await self._report_for(project_id, month, messages, images)
+
+        if action == 'status' and not report_id:
+            found = await self._latest_report()
+            if not found:
+                return ('There is no report yet. Say e.g. *"generate the October month report"*, or attach the site photos here.')
+            return await self._continue_report(found)
 
         if not report_id:
             return HELP
 
+        if action == 'delete_report':
+            try:
+                report = await self._api('GET', f'/api/reports/{report_id}')
+            except ServiceError:
+                return (f'Report {report_id} was already deleted. Say e.g. *"Generate the October month report"* to start the '
+                        'month fresh, or *"show me the October month report"* to open the current one.')
+            await self._api('DELETE', f'/api/reports/{report_id}')
+            label = month_label(report['month'])
+            return (f'🗑 **{label}** report {report_id} deleted: photos, PDF and month folder removed, and its Gmail email can be '
+                    f'imported again. Say *"Generate the {label.split()[0]} month report"* to start fresh.')
         if action == 'process':
             return await self._process(report_id)
         if action == 'update_photos':
@@ -159,7 +176,13 @@ class Pipe:
             return await self._show_report(report_id, 'Report rejected. Correct it below and click **Save draft** to send it back for review.')
         if action == 'approve':
             await self._save(report_id, cmd)
-            report = await self._api('POST', f'/api/reports/{report_id}/approve')
+            current = await self._api('GET', f'/api/reports/{report_id}')
+            flagged = current['needs_review'] if current['status'] == 'in_review' else 0
+            if flagged and not cmd.get('confirm_flagged'):
+                return await self._show_report(report_id, f'{flagged} photo(s) are still flagged for review. Click **Approve** in the '
+                                                          'report and then **Confirm photos & approve**, or correct them first.')
+            report = await self._api('POST', f'/api/reports/{report_id}/approve',
+                                     {'confirm_flagged': bool(cmd.get('confirm_flagged'))})
             return await self._show_approved(report)
         if action == 'status':
             report = await self._api('GET', f'/api/reports/{report_id}')
@@ -182,7 +205,7 @@ class Pipe:
         return await self._process(report_id, extra=('Skipped files:' + rejected) if rejected else '')
 
     async def _gmail_import(self, project_id: Optional[str], month: Optional[str]) -> str:
-        await self._status('Checking the reports mailbox in Gmail…')
+        await self._status('🔄 Syncing with Gmail…')
         result = await self._api('POST', '/api/gmail/import', {'project_id': project_id, 'month': month})
         lines = []
         for i in result['imported']:
@@ -198,6 +221,11 @@ class Pipe:
         if not result['imported']:
             await self._status('No new photos imported', done=True)
             if not result['needs_info']:
+                existing = await (self._find_report(project_id, month) if (project_id or month) else self._latest_gmail_report())
+                if existing:
+                    return await self._continue_report(
+                        existing, f"No new site-photo emails in **{result['mailbox']}**; continuing **Report {existing}** "
+                                  'with the photos already imported.')
                 return f"No new site-photo emails in **{result['mailbox']}**. Send the photos there (subject e.g. *\"Taman Park September 2026 photos\"*) and ask me again."
             return '\n\n'.join(lines)
         report_id = result['reports'][0] if result['reports'] else result['imported'][0]['report_id']
@@ -205,6 +233,60 @@ class Pipe:
         if more:
             lines.append('Other reports updated: ' + ', '.join(more) + ' (say *"show report MR-…"* to open one).')
         return await self._wait_and_review(report_id, '\n\n'.join(lines))
+
+    async def _report_for(self, project_id: Optional[str], month: Optional[str], messages: list,
+                          images: Optional[list]) -> str:
+        """The user asked for a month's report: continue it if it exists, else fetch that month's photos from Gmail."""
+        photos = images if images is not None else self._all_images(messages)
+        existing = await self._find_report(project_id, month) if month else None
+        if existing:
+            if photos and await self._editable(existing):
+                return await self._add_photos_and_process(existing, photos)
+            return await self._continue_report(existing, f'**Report {existing}** for {month_label(month)} already exists; continuing it.')
+        if not photos and month:
+            # Emails keep the project/month they state themselves, so another month's photos never land here.
+            await self._status(f'🔄 Syncing with Gmail for {month_label(month)} site photos…')
+            result = await self._api('POST', '/api/gmail/import', {})
+            found = await self._find_report(project_id, month)
+            if found:
+                lines = [f"📥 **{i['subject']}** from {i['from']}: {i['added']} photo(s) → report {i['report_id']}"
+                         for i in result['imported'] if i['report_id'] == found]
+                return await self._wait_and_review(found, '\n\n'.join(lines))
+            await self._status(f'No {month_label(month)} photos in Gmail', done=True)
+        if not (project_id and month):
+            cfg = await self._api('GET', '/api/config')
+            await self._embed(setup_card(cfg, project_id, month))
+            return 'Choose the **project** and **month** in the form above and click **Start report**. I will analyse the photos you attached.'
+        report = await self._api('POST', '/api/reports', {'project_id': project_id, 'month': month})
+        if not photos:
+            return (f'**Report {report["id"]}** created for {report["project"]["name"]}, {month_label(month)}. '
+                    f'No {month_label(month)} site-photo email was found in the reports mailbox, so attach the photos in your '
+                    'next message (or email them and say *"get the photos from Gmail"*).')
+        return await self._add_photos_and_process(report['id'], photos)
+
+    async def _find_report(self, project_id: Optional[str], month: Optional[str]) -> Optional[str]:
+        """Newest report matching the project and/or month the user named."""
+        reports = (await self._api('GET', '/api/reports'))['reports']
+        match = [r for r in reports if (not month or r['month'] == month) and (not project_id or r['project_id'] == project_id)]
+        match.sort(key=lambda r: r.get('updated_at') or '', reverse=True)
+        return match[0]['id'] if match else None
+
+    async def _latest_report(self) -> Optional[str]:
+        return await self._find_report(None, None)
+
+    async def _latest_gmail_report(self) -> Optional[str]:
+        """The report the most recent Gmail import went into."""
+        status = await self._api('GET', '/api/gmail/status')
+        return next((r['report_id'] for r in status.get('recent', []) if r.get('status') == 'imported' and r.get('report_id')), None)
+
+    async def _continue_report(self, report_id: str, note: str = '') -> str:
+        """Show a report at the step it has reached, so the flow continues from there."""
+        report = await self._api('GET', f'/api/reports/{report_id}')
+        if report['status'] == 'processing':
+            return await self._wait_and_review(report_id, note)
+        if report.get('content'):  # includes approved reports: the full report screen, read-only, with the PDF
+            return await self._show_report(report_id, note)
+        return await self._show_review(report_id, note)
 
     async def _process(self, report_id: str, extra: str = '') -> str:
         await self._api('POST', f'/api/reports/{report_id}/process')
@@ -235,8 +317,10 @@ class Pipe:
 
     async def _generate(self, report_id: str) -> str:
         await self._status('Writing the report with Monthly Report Vision…')
-        await self._api('POST', f'/api/reports/{report_id}/generate')
-        await self._status('Report written', done=True)
+        report = await self._api('POST', f'/api/reports/{report_id}/generate')
+        await self._status('Report ready', done=True)
+        if report['status'] == 'approved':  # same photos, same report: hand back the approved one
+            return await self._continue_report(report_id, 'This report is already approved, so here it is again (same photos, same report).')
         return await self._show_report(report_id, 'Here is the AI draft. Edit anything, then **Approve** or **Reject**.')
 
     async def _save(self, report_id: str, cmd: dict):
@@ -270,17 +354,24 @@ class Pipe:
     async def _show_report(self, report_id: str, note: str = '') -> str:
         report = await self._api('GET', f'/api/reports/{report_id}')
         thumbs = await self._api('GET', f'/api/reports/{report_id}/thumbs?size=120')
-        await self._embed(report_card(report, thumbs))
+        base = self.valves.LINK_BASE.rstrip('/')
+        await self._embed(report_card(report, thumbs, base))
         lines = [f'**Report {report["id"]}** · {report["project"]["name"]} · {month_label(report["month"])} · status **{report["status"].replace("_", " ")}**']
         if note:
             lines.append(note)
         if report['approval_blockers'] and report['status'] == 'in_review':
-            lines.append('Approve is blocked: ' + '; '.join(report['approval_blockers']) + '. Say *"show photos"* to review them.')
+            lines.append('Before approving: ' + '; '.join(report['approval_blockers']) + '. Click **Approve** and confirm them, '
+                         'or say *"show photos"* to correct them first.')
+        if report['status'] == 'approved':
+            lines.append(f'[📄 View Report]({base}/reports/{report["id"]}/pdf) · '
+                         f'[⬇️ Download PDF]({base}/reports/{report["id"]}/pdf?download=true) · '
+                         f'[Open in Monthly Report]({self.valves.PAGE_PATH}?report={report["id"]}) · '
+                         'say *"generate again"* any time: the same photos give the same report.')
         return '\n\n'.join(lines)
 
     async def _show_approved(self, report: dict) -> str:
-        await self._embed(approved_card(report))
         base = self.valves.LINK_BASE.rstrip('/')
+        await self._embed(approved_card(report, base))
         return (
             f'**Report {report["id"]}** is approved and the PDF is ready: '
             f'[📄 View Report]({base}/reports/{report["id"]}/pdf) · '
@@ -332,7 +423,7 @@ class Pipe:
     @staticmethod
     def _split(content) -> tuple[str, list]:
         if isinstance(content, str):
-            return content, []
+            return ATTACHED_RE.sub('', content).strip(), []
         text, images = [], []
         for part in content or []:
             if part.get('type') == 'text':
@@ -345,7 +436,7 @@ class Pipe:
                         images.append(base64.b64decode(url.split(',', 1)[1]))
                     except (IndexError, ValueError):
                         continue
-        return '\n'.join(text), images
+        return ATTACHED_RE.sub('', '\n'.join(text)).strip(), images
 
     async def _image_names(self, chat_id: Optional[str]) -> list:
         """File names of the photos in each user message of this chat, oldest first."""
@@ -456,6 +547,7 @@ button { border:0; border-radius:10px; padding:9px 16px; font:600 13.5px Inter, 
 button:disabled { opacity:.5; cursor:default; }
 .primary { background:var(--brand); color:#fff; } .approve { background:#16a34a; color:#fff; } .reject { background:#fff; color:var(--bad); border:1px solid #fca5a5; }
 .ghost { background:var(--card); color:var(--fg); border:1px solid var(--line); }
+a.btn { display:inline-block; text-decoration:none; border-radius:10px; padding:9px 16px; font:600 13.5px Inter, system-ui, sans-serif; }
 .note { font-size:12.5px; color:var(--muted); } .spacer { flex:1; }
 h4 { margin:14px 0 4px; font-size:13.5px; } table { width:100%; border-collapse:collapse; font-size:12.5px; }
 td, th { text-align:left; padding:4px 6px; border-top:1px solid var(--line); } th { color:var(--muted); font-weight:500; }
@@ -467,6 +559,13 @@ SCRIPT = """
 const post = (m) => window.parent !== window && window.parent.postMessage(m, '*');
 const height = () => post({ type: 'iframe:height', height: document.documentElement.scrollHeight });
 new ResizeObserver(height).observe(document.body); height();
+const fr = document.getElementById('fresh');
+if (fr) {
+  fr.onclick = () => { document.getElementById('freshcf').style.display = 'flex'; height(); };
+  document.getElementById('freshno').onclick = () => { document.getElementById('freshcf').style.display = 'none'; height(); };
+  document.getElementById('freshok').onclick = () => send('🗑 Delete the ' + fr.dataset.label + ' report ' + fr.dataset.rid + ' and start fresh',
+    { action: 'delete_report', report: fr.dataset.rid });
+}
 const send = (label, cmd) => {
   document.querySelectorAll('button').forEach((b) => (b.disabled = true));
   const n = document.getElementById('note'); if (n) n.textContent = 'Sent to the chat. Confirm it in the Biz GPT dialog if asked.';
@@ -597,8 +696,10 @@ document.getElementById('gen').onclick = () => go('generate');"""
     return page(body, script)
 
 
-def report_card(report: dict, thumbs: dict) -> str:
+def report_card(report: dict, thumbs: dict, base: str = '/api/v1/bizgpt/monthly-report') -> str:
     content = report.get('content') or {'sections': {}}
+    approved = report['status'] == 'approved'
+    pdf = f"{base.rstrip('/')}/reports/{report['id']}/pdf"
     editable = report['status'] in ('draft', 'analyzed', 'in_review', 'rejected')
     dis = '' if editable else ' disabled'
     secs = {k: t for k, t in SECTIONS}
@@ -621,24 +722,38 @@ def report_card(report: dict, thumbs: dict) -> str:
     if report['status'] == 'rejected':
         d = report.get('decision') or {}
         banner = f'<div class="banner bad">Rejected by {e(d.get("by"))}: “{e(d.get("reason"))}”. Edit the text and click Save draft.</div>'
+    elif approved:
+        d = report.get('decision') or {}
+        banner = f'<div class="banner good"><b>✓ Approved</b> by {e(d.get("by"))} on {e(d.get("at"))}. The PDF is ready to view or download.</div>'
     blockers = report['approval_blockers'] if report['status'] == 'in_review' else []
     body = f"""<div class="card"><div class="head"><div><div class="title">MONTHLY MAINTENANCE REPORT</div>
-<div class="sub">Project: {e(report['project']['name'])} · Month: {e(month_label(report['month']))} · {e(report['id'])} · AI draft by {e(content.get('model'))} — human review required</div></div></div>
+<div class="sub">Project: {e(report['project']['name'])} · Month: {e(month_label(report['month']))} · {e(report['id'])} · {'Approved report' if approved else f'AI draft by {e(content.get("model"))} — human review required'}</div></div></div>
 <div class="body">{banner}{field('executive_summary')}{field('location_summary')}{field('work_performed')}{''.join(photos)}
 {field('issues_observations')}<h4>Missing Information</h4>{missing}{field('remarks')}
 <h4>Coordinator remarks</h4><textarea id="remarks"{dis}>{e(report.get('remarks') or '')}</textarea>
 <h4>AI Confidence Summary</h4><table><tr><th>Field</th><th>Avg AI confidence</th><th>Below {report['threshold']}%</th><th>Unknown</th><th>Human corrected</th></tr>{conf_rows}</table>
-{f'<div class="reasons" style="margin-top:10px">Approve is blocked: {e("; ".join(blockers))}</div>' if blockers else ''}</div>
-<div class="actions" id="bar"><span class="note" id="note"></span><span class="spacer"></span>
-<button class="ghost" id="save"{dis}>Save draft</button><button class="reject" id="reject"{'' if report['status'] == 'in_review' else ' disabled'}>Reject</button>
-<button class="approve" id="approve"{'' if report['status'] == 'in_review' and not blockers else ' disabled'}>Approve</button></div>
+{f'<div class="reasons" style="margin-top:10px">Before approving: {e("; ".join(blockers))}. You can confirm them when you click Approve.</div>' if blockers else ''}</div>
+{approved_bar(pdf, report) if approved else ''}<div class="actions" id="bar"{' style="display:none"' if approved else ''}><span class="note" id="note"></span><span class="spacer"></span>
+{'' if approved else fresh_button(report)}<button class="ghost" id="regen">🔁 Regenerate</button><button class="ghost" id="save"{dis}>Save draft</button><button class="reject" id="reject"{'' if report['status'] == 'in_review' else ' disabled'}>Reject</button>
+<button class="approve" id="approve"{'' if report['status'] == 'in_review' else ' disabled'}>Approve</button></div>
+<div class="actions" id="cf" style="display:none"><span class="note"><b>{report.get('needs_review', 0)} photo(s)</b> are still flagged for review.
+Approving confirms the AI values for them.</span><span class="spacer"></span>
+<button class="approve" id="cfok">Confirm photos &amp; approve</button><button class="ghost" id="cfno">Cancel</button></div>
 <div class="actions" id="rj" style="display:none"><textarea id="reason" placeholder="Reason for rejection"></textarea>
-<button class="reject" id="rjok">Confirm reject</button><button class="ghost" id="rjno">Cancel</button></div></div>"""
+<button class="reject" id="rjok">Confirm reject</button><button class="ghost" id="rjno">Cancel</button></div>{fresh_html(report)}</div>"""
     script = f"""
 const RID = {js(report['id'])};
 const payload = () => ({{ sections: Object.fromEntries([...document.querySelectorAll('textarea[data-k]')].map((t) => [t.dataset.k, t.value])), remarks: document.getElementById('remarks').value }});
 document.getElementById('save').onclick = () => send('💾 Save report draft ' + RID, {{ action: 'save_draft', report: RID, ...payload() }});
-document.getElementById('approve').onclick = () => send('✅ Approve monthly report ' + RID, {{ action: 'approve', report: RID, ...payload() }});
+document.querySelectorAll('#regen, #again').forEach((b) => (b.onclick = () => send('🔁 Generate the report again for ' + RID, {{ action: 'generate', report: RID }})));
+const FLAGGED = {js(report.get('needs_review', 0) if report['status'] == 'in_review' else 0)};
+document.getElementById('approve').onclick = () => {{
+  if (FLAGGED) {{ document.getElementById('cf').style.display = 'flex'; height(); return; }}
+  send('✅ Approve monthly report ' + RID, {{ action: 'approve', report: RID, ...payload() }});
+}};
+document.getElementById('cfno').onclick = () => {{ document.getElementById('cf').style.display = 'none'; height(); }};
+document.getElementById('cfok').onclick = () => send('✅ Confirm the flagged photos and approve monthly report ' + RID,
+  {{ action: 'approve', report: RID, confirm_flagged: true, ...payload() }});
 document.getElementById('reject').onclick = () => {{ document.getElementById('rj').style.display = 'flex'; document.getElementById('reason').focus(); height(); }};
 document.getElementById('rjno').onclick = () => {{ document.getElementById('rj').style.display = 'none'; height(); }};
 document.getElementById('rjok').onclick = () => {{ const reason = document.getElementById('reason').value.trim();
@@ -647,10 +762,32 @@ document.getElementById('rjok').onclick = () => {{ const reason = document.getEl
     return page(body, script)
 
 
-def approved_card(report: dict) -> str:
+def fresh_html(report: dict) -> str:
+    label = month_label(report['month'])
+    return f'''<div class="actions" id="freshcf" style="display:none"><span class="note">Delete the <b>{e(label)}</b> report, its photos, PDF
+and month folder? The Gmail email can then be imported again from the start.</span><span class="spacer"></span>
+<button class="reject" id="freshok">Delete &amp; start fresh</button><button class="ghost" id="freshno">Cancel</button></div>'''
+
+
+def fresh_button(report: dict) -> str:
+    return (f'<button class="ghost" id="fresh" data-rid="{e(report["id"])}" data-label="{e(month_label(report["month"]))}">'
+            '🗑 Delete &amp; start fresh</button>')
+
+
+def approved_bar(pdf: str, report: dict) -> str:
+    return f'''<div class="actions"><a class="btn primary" target="_blank" rel="noopener" href="{e(pdf)}">📄 View report</a>
+<a class="btn ghost" target="_blank" rel="noopener" href="{e(pdf)}?download=true">⬇️ Download PDF</a>
+<button class="ghost" id="again">🔁 Generate again</button>{fresh_button(report)}<span class="note">Same photos always give the same report.</span></div>'''
+
+
+def approved_card(report: dict, base: str = '/api/v1/bizgpt/monthly-report') -> str:
     d = report.get('decision') or {}
+    pdf = f"{base.rstrip('/')}/reports/{report['id']}/pdf"
     body = f"""<div class="card"><div class="body"><div class="banner good" style="font-size:15px;font-weight:700">✓ Report Approved</div>
 <table><tr><th>Project</th><td>{e(report['project']['name'])}</td></tr><tr><th>Month</th><td>{e(month_label(report['month']))}</td></tr>
 <tr><th>Approved By</th><td>{e(d.get('by'))}</td></tr><tr><th>Approved At</th><td>{e(d.get('at'))}</td></tr><tr><th>Report ID</th><td>{e(report['id'])}</td></tr></table>
-<div class="note" style="margin-top:8px">Use <b>View Report</b> or <b>Download PDF</b> below this card.</div></div></div>"""
-    return page(body)
+</div><div class="actions"><a class="btn primary" target="_blank" rel="noopener" href="{e(pdf)}">📄 View report</a>
+<a class="btn ghost" target="_blank" rel="noopener" href="{e(pdf)}?download=true">⬇️ Download PDF</a>
+<button class="ghost" id="again">🔁 Generate again</button>{fresh_button(report)}<span class="note" id="note">View, download or generate as often as you like; the same photos always give the same report.</span></div>{fresh_html(report)}</div>"""
+    script = f"""document.getElementById('again').onclick = () => send('🔁 Generate the report again for {report['id']}', {{ action: 'generate', report: {js(report['id'])} }});"""
+    return page(body, script)

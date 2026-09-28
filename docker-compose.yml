@@ -105,6 +105,9 @@ services:
     build: ./services/integrations
     image: bizgpt-integrations:local
     container_name: bizgpt-integrations
+    networks:
+      - default
+      - dify  # reaches the gmail_mcp container (fallback sender for /api/emails/send)
     restart: unless-stopped
     ports:
       - "127.0.0.1:${INTEGRATIONS_PORT:-8092}:8002"
@@ -121,6 +124,8 @@ services:
       - GOOGLE_CLOUD_PROJECT_ID=${GOOGLE_CLOUD_PROJECT_ID:-}
       - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID:-}
       - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET:-}
+      - GMAIL_MCP_URL=${INTEGRATIONS_GMAIL_MCP_URL:-http://gmail_mcp:8010/mcp}
+      - GMAIL_MCP_MAILBOX=${INTEGRATIONS_GMAIL_MCP_MAILBOX:-dbizgpt.assistant@gmail.com}
     depends_on:
       - nango-server
 

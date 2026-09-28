@@ -33,6 +33,7 @@ class Gmail:
         self.url, self.mailbox = url, mailbox
         self._session_id: str | None = None
         self._ids = itertools.count(1)
+        self._tool_params: dict[str, set[str]] | None = None
 
     async def _rpc(self, client: httpx.AsyncClient, body: dict) -> dict | None:
         headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream'}
@@ -90,9 +91,19 @@ class Gmail:
         text = await self.call('get_gmail_message_content', {'message_id': message_id})
         return parse_message(message_id, text)
 
+    async def params_of(self, tool: str) -> set[str]:
+        """Argument names the server accepts for a tool (Google Workspace MCP versions differ)."""
+        if self._tool_params is None:
+            async with httpx.AsyncClient(timeout=30) as client:
+                await self._ensure_session(client)
+                data = await self._rpc(client, {'jsonrpc': '2.0', 'id': next(self._ids), 'method': 'tools/list', 'params': {}})
+            self._tool_params = {t['name']: set((t.get('inputSchema') or {}).get('properties') or {})
+                                 for t in ((data or {}).get('result') or {}).get('tools', [])}
+        return self._tool_params.get(tool, set())
+
     async def download(self, message_id: str, attachment: dict) -> bytes:
         args = {'message_id': message_id, 'attachment_id': attachment['attachment_id'], 'return_base64': True}
-        if attachment.get('index') is not None:
+        if attachment.get('index') is not None and 'attachment_index' in await self.params_of('get_gmail_attachment_content'):
             args['attachment_index'] = attachment['index']
         text = await self.call('get_gmail_attachment_content', args)
         data = parse_attachment(text)

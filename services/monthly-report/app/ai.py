@@ -8,6 +8,7 @@ import base64
 import io
 import json
 import re
+from datetime import date
 
 import httpx
 from PIL import Image, ImageOps
@@ -273,17 +274,20 @@ def interpret_prompt(text: str, cfg: dict, report: dict | None, filenames: list[
     )
     return (
         'A maintenance coordinator wrote a chat message about a monthly photo report. Turn it into ONE action.\n'
+        f'Today is {date.today():%Y-%m-%d}; a month written without a year means that month of the current year.\n'
         f'{context}Projects: {projects}.\nStages: BEFORE, DURING, AFTER. Work types: {", ".join(cfg["work_types"])}.\n'
         f'Report text sections: {", ".join(SECTION_NAMES)}.\n\n'
         'Actions:\n'
-        '- "start": create a new report. Fill "project" (project id) and "month" (YYYY-MM) only if the message says them.\n'
+        '- "start": create or prepare a monthly report, e.g. "generate the October month report", "Taman Park October report" '
+        '(when there is no report in this chat). Fill "project" (project id) and "month" (YYYY-MM) only if the message says them.\n'
         '- "gmail_import": fetch the site photos from Gmail / email / the mailbox (e.g. "get the photos from Gmail"). '
         'Fill "project" and "month" only if the message says them.\n'
         '- "update_photos": correct photos. "changes" = list of {"photo": file name as written, "stage", "location", '
         '"work_type", "exclude": true/false}; leave out what the message does not change.\n'
         '- "process": analyse the photos. "generate": write the report. "set_text": replace a section; "section" and "text".\n'
         '- "reject" with "reason" ONLY if the message uses the word reject. "approve" ONLY if the message says approve.\n'
-        '- "status": show the report. "help": anything else.\n'
+        '- "status": show / open / continue an existing report, e.g. "show the October report". Fill "project" and "month" '
+        'only if the message says them. "help": anything else.\n'
         'Examples: "change the remarks to: X" -> {"action": "set_text", "section": "remarks", "text": "X"}; '
         '"IMG_0103 is during" -> update_photos; "0104 is grass cutting" -> update_photos; "write the report" -> generate.\n\n'
         f'Message: """{text}"""\n\n'
@@ -323,13 +327,16 @@ def normalise_intent(raw: dict, cfg: dict, photos: list[dict], zones: list[str],
         if section:
             return {'action': 'set_text', 'section': section, 'text': m.group(2).strip()[:4000]}
     out: dict = {'action': action}
-    if action in ('start', 'gmail_import'):
+    if action in ('start', 'gmail_import', 'status', 'generate'):
         # Only what the coordinator actually wrote; otherwise the chat asks with a form.
         project = resolve_project(raw.get('project'), text, cfg['projects'])
         out['project_id'] = project['id'] if project else None
         out['month'] = resolve_month(raw.get('month'), text)
     elif action == 'update_photos':
         changes, unknown = [], []
+        # The model sometimes fills fields the message never mentions; keep only what was actually said.
+        says_stage = bool(re.search(r'\b(before|during|after|in progress|pre|post)\b', text or '', re.I))
+        says_exclude = bool(re.search(r'\b(exclud\w*|includ\w*|remove|drop|skip|ignore)\b', text or '', re.I))
         for c in raw.get('changes') or []:
             if not isinstance(c, dict):
                 continue
@@ -339,13 +346,13 @@ def normalise_intent(raw: dict, cfg: dict, photos: list[dict], zones: list[str],
                 continue
             change = {'photo_id': photo['id'], 'filename': photo['filename']}
             stage = str(c.get('stage') or '').upper()
-            if stage in STAGES:
+            if stage in STAGES and says_stage:
                 change['stage'] = stage
             if (loc := _match(c.get('location'), zones)):
                 change['location'] = loc
             if (work := _match(c.get('work_type'), cfg['work_types'])):
                 change['work_type'] = work
-            if isinstance(c.get('exclude'), bool):
+            if isinstance(c.get('exclude'), bool) and says_exclude:
                 change['exclude'] = c['exclude']
             if len(change) > 2:
                 changes.append(change)

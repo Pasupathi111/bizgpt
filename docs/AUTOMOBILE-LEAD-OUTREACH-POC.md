@@ -20,7 +20,7 @@ Embed buttons post a chat message (e.g. `Send test email E-0002`); the model map
 
 ## POC email safety
 
-- `POC_RECIPIENT = 'prsap94@gmail.com'` is a code constant. `send_test_email` has no recipient parameter, so neither the model nor the UI can change where mail goes.
+- `POC_RECIPIENT = 'Chandrukhasan.ram@gmail.com'` and `POC_CC = ['naveenpradhakrishnan@gmail.com', 'prsap94@gmail.com']` are code constants. `send_test_email` has no recipient parameter, so neither the model nor the UI can change where mail goes.
 - The lead's address is stored as `intended_recipient`; `actual_recipient` is always the POC inbox; `environment=POC`.
 - Sent mail gets a `[TEST]` subject prefix and a banner naming the original intended recipient.
 - An email id can be sent once (`already_sent` afterwards); only DRAFT emails can be edited.

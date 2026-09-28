@@ -5,11 +5,15 @@ AI work lives in ai.py, deterministic business rules in logic.py; this module ow
 
 import asyncio
 import base64
+import hashlib
 import io
+import json
 import logging
 import re
+import shutil
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 
 import httpx
 from fastapi import Cookie, Depends, FastAPI, File, Header, HTTPException, Query, UploadFile
@@ -17,7 +21,7 @@ from fastapi.responses import FileResponse, Response
 from PIL import Image, ImageOps, UnidentifiedImageError
 from pydantic import BaseModel, Field
 
-from . import ai, config, logic
+from . import ai, config, library, logic
 from .gmail import MAILBOX, QUERY, Gmail, GmailError
 from .intake import import_from_gmail
 from .pdf import build_pdf
@@ -41,6 +45,7 @@ async def lifespan(_app: FastAPI):
     for r in store.list_reports():
         if r['status'] == 'processing':
             store.update_report(r['id'], status='analyzed', progress={'state': 'interrupted'})
+    _backfill_library()
     poller = asyncio.create_task(_poll_gmail()) if config.GMAIL_POLL_SECONDS and config.OPENWEBUI_API_KEY else None
     yield
     if poller:
@@ -178,7 +183,11 @@ async def _process(rid: str, auth: str, photo_ids: list[str]):
                 continue
             store.update_photo(pid, status='analyzing', error=None)
             try:
-                result = await ai.analyse_photo(photo['path'], project, cfg['work_types'], auth)
+                key = _photo_cache_key(photo['path'], project, cfg['work_types'])
+                result = store.cache_get(key)
+                if result is None:
+                    result = await ai.analyse_photo(photo['path'], project, cfg['work_types'], auth)
+                    store.cache_put(key, result)
                 store.update_photo(pid, status='analyzed', ai=result, error=None, reviewed=0)
                 done += 1
             except ai.ModelError as e:
@@ -377,7 +386,11 @@ def update_photo(rid: str, pid: str, req: PhotoUpdate, user: dict = Depends(curr
 
 @app.post('/api/reports/{rid}/generate')
 async def generate(rid: str, user: dict = Depends(current_user)):
+    """Write the report. Can be clicked any number of times: the same photos and corrections always give the same
+    report (cached by its facts), and an approved report is returned as approved."""
     report = _report_or_404(rid)
+    if report['status'] == 'approved':
+        return report_view(rid)
     _require(report, EDITABLE, 'generate the report')
     project = _project(report)
     cfg = config.load_config()
@@ -385,12 +398,21 @@ async def generate(rid: str, user: dict = Depends(current_user)):
     if not logic.active(photos):
         raise HTTPException(400, 'Process photos first: no analysed photos yet')
     validation = logic.validate(photos, project['zones'], cfg['required_stages'])
-    try:
-        sections = await ai.write_report(logic.facts(report, project, photos, validation), user['token'])
-    except ai.ModelError as e:
-        raise HTTPException(502, f'Report generation failed: {e}')
-    content = {'sections': sections, 'generated_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
-               'model': config.MODEL, 'ai_sections': dict(sections)}
+    facts = logic.facts(report, project, photos, validation)
+    fingerprint = hashlib.sha256(json.dumps([facts, config.MODEL, ai.report_prompt({})], sort_keys=True,
+                                            default=str).encode()).hexdigest()
+    current = report.get('content') or {}
+    if current.get('fingerprint') == fingerprint and report['status'] != 'rejected':
+        return report_view(rid)  # nothing changed: keep the same report (and any text edits)
+    sections = store.cache_get(f'report:{fingerprint}')
+    if sections is None:
+        try:
+            sections = await ai.write_report(facts, user['token'])
+        except ai.ModelError as e:
+            raise HTTPException(502, f'Report generation failed: {e}')
+        store.cache_put(f'report:{fingerprint}', sections)
+    content = {'sections': dict(sections), 'generated_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+               'model': config.MODEL, 'ai_sections': dict(sections), 'fingerprint': fingerprint}
     store.update_report(rid, content=content, status='in_review', decision=None)
     store.event(rid, 'report_generated', user['email'], config.MODEL)
     return report_view(rid)
@@ -428,11 +450,22 @@ def reject(rid: str, req: RejectRequest, user: dict = Depends(current_user)):
     return report_view(rid)
 
 
+class ApproveRequest(BaseModel):
+    # The approver explicitly confirms the AI values of photos that are still flagged for review.
+    confirm_flagged: bool = False
+
+
 @app.post('/api/reports/{rid}/approve')
-def approve(rid: str, user: dict = Depends(current_user)):
+def approve(rid: str, req: ApproveRequest | None = None, user: dict = Depends(current_user)):
     report = _report_or_404(rid)
     _require(report, {'in_review'}, 'approve')
     view = report_view(rid)
+    if req and req.confirm_flagged:
+        for p in view['photos']:
+            if p['needs_review']:
+                store.update_photo(p['id'], reviewed=1)
+                store.event(rid, 'photo_reviewed', user['email'], f'{p["filename"]}: confirmed at approval')
+        view = report_view(rid)
     if view['approval_blockers']:
         raise HTTPException(409, 'Cannot approve yet: ' + '; '.join(view['approval_blockers']))
     decision = {'status': 'approved', 'by': user['name'], 'by_email': user['email'],
@@ -447,7 +480,27 @@ def approve(rid: str, user: dict = Depends(current_user)):
         raise HTTPException(500, f'PDF generation failed ({type(e).__name__}); the report was not approved')
     store.update_report(rid, status='approved', decision=decision)
     store.event(rid, 'approved', user['email'], 'PDF generated')
+    try:
+        library.file_report(store, store.get_report(rid), project)
+    except OSError:  # the approval stands; the folder is rebuilt on the next start
+        log.exception('filing %s in the photo library failed', rid)
     return report_view(rid)
+
+
+@app.delete('/api/reports/{rid}')
+def delete_report(rid: str, user: dict = Depends(current_user)):
+    """Start a month fresh: remove the report, its photos, PDF and month folder, and re-arm its Gmail emails."""
+    report = _report_or_404(rid)
+    if report['status'] == 'processing':
+        raise HTTPException(409, 'Wait until the photo analysis has finished')
+    folder = library.month_detail(store, report['project_id'], report['month'])
+    if folder and folder.get('report_id') == rid:
+        shutil.rmtree(library.month_dir(store, report['project_id'], report['month']), ignore_errors=True)
+    for path in store.delete_report(rid):
+        Path(path).unlink(missing_ok=True)
+    store.pdf_path(rid).unlink(missing_ok=True)
+    log.info('report %s (%s %s) deleted by %s', rid, report['project_id'], report['month'], user['email'])
+    return {'deleted': rid, 'project_id': report['project_id'], 'month': report['month']}
 
 
 @app.get('/api/reports/{rid}/pdf')
@@ -497,6 +550,56 @@ async def interpret(req: InterpretRequest, user: dict = Depends(current_user)):
     except ai.ModelError as e:
         raise HTTPException(502, f'Could not understand the message: {e}')
     return ai.normalise_intent(raw, cfg, photos, zones, req.text)
+
+
+# ---------------------------------------------------------------- photo library (approved photos by month)
+@app.get('/api/library')
+def library_months(_user: dict = Depends(current_user)):
+    return {'months': library.list_months(store)}
+
+
+@app.get('/api/library/{project_id}/{month}')
+def library_month(project_id: str, month: str, _user: dict = Depends(current_user)):
+    detail = library.month_detail(store, project_id, month)
+    if not detail:
+        raise HTTPException(404, 'No approved report for this month yet')
+    return detail
+
+
+@app.get('/api/library/{project_id}/{month}/files/{filename}')
+def library_file(project_id: str, month: str, filename: str, download: bool = False, _user: dict = Depends(current_user)):
+    path = library.file_path(store, project_id, month, filename)
+    if not path:
+        raise HTTPException(404, 'File not found')
+    media = 'application/pdf' if path.suffix.lower() == '.pdf' else None
+    return FileResponse(path, media_type=media, filename=filename, content_disposition_type='attachment' if download else 'inline')
+
+
+def _photo_cache_key(path: str, project: dict, work_types: list[str]) -> str:
+    """Same image + same prompt + same model = same analysis, however often a month is re-run."""
+    digest = hashlib.sha256()
+    with open(path, 'rb') as fh:
+        digest.update(fh.read())
+    digest.update(json.dumps([ai.photo_prompt(work_types), config.MODEL, project.get('zones')], sort_keys=True).encode())
+    return f'photo:{digest.hexdigest()}'
+
+
+def _backfill_library():
+    """File approved reports that have no month folder yet (e.g. approved before the library existed)."""
+    latest: dict[tuple, dict] = {}
+    for r in store.list_reports():
+        if r['status'] == 'approved':
+            key = (r['project_id'], r['month'])
+            if key not in latest or r['updated_at'] > latest[key]['updated_at']:
+                latest[key] = r
+    for (project_id, month), r in latest.items():
+        detail = library.month_detail(store, project_id, month)
+        project = config.get_project(project_id)
+        if project and (not detail or detail.get('report_id') != r['id']):
+            try:
+                library.file_report(store, store.get_report(r['id']), project)
+            except OSError:
+                log.exception('library backfill failed for %s', r['id'])
 
 
 # ---------------------------------------------------------------- Gmail intake

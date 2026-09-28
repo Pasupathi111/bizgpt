@@ -20,7 +20,8 @@ from bs4 import BeautifulSoup
 from pydantic import BaseModel, Field
 
 # ---------------------------------------------------------------- POC safety (code, not config: the UI cannot change it)
-POC_RECIPIENT = 'prsap94@gmail.com'
+POC_RECIPIENT = 'Chandrukhasan.ram@gmail.com'
+POC_CC = ['naveenpradhakrishnan@gmail.com', 'prsap94@gmail.com']
 ENVIRONMENT = 'POC'
 
 STATUSES = ['New', 'Contacted', 'Interested', 'Not Interested']
@@ -355,14 +356,14 @@ class Tools:
         body = (f'[{ENVIRONMENT} TEST EMAIL]\nOriginal intended recipient: {e["intended_recipient"] or "-"}\n'
                 f'Lead: {lead["data"].get("company_name")} ({lead["id"]})\n'
                 '--------------------------------------------------\n\n' + e['body'])
-        payload = {'user_id': (__user__ or {}).get('id', ''), 'integration': 'gmail', 'to': actual,
+        payload = {'user_id': (__user__ or {}).get('id', ''), 'integration': 'gmail', 'to': actual, 'cc': POC_CC,
                    'subject': f'[TEST] {e["subject"]}', 'body': body, 'confirm': True}
-        await self._status(__event_emitter__, f'Sending test email to {actual}…')
+        await self._status(__event_emitter__, f'Sending test email to {actual} (cc {", ".join(POC_CC)})…')
         status, error, message_id = 'TEST_SENT', None, None
         try:
             result = await self._integrations('POST', '/api/emails/send', payload)
             message_id = result.get('message_id')
-            if result.get('status') != 'sent' or result.get('to') != actual:
+            if result.get('status') != 'sent' or result.get('to') != actual or result.get('cc') != POC_CC:
                 status, error = 'FAILED', f'Unexpected send result: {result}'
         except Exception as ex:
             status, error = 'FAILED', str(ex)[:400]
@@ -371,7 +372,7 @@ class Tools:
         db.commit()
         await self._status(__event_emitter__, 'Test email sent' if status == 'TEST_SENT' else 'Sending failed', done=True)
         await self._embed(__event_emitter__, _send_result_html(self._email(db, e['id']), lead))
-        return json.dumps({'status': status, 'email_id': e['id'], 'actual_recipient': actual, 'intended_recipient': e['intended_recipient'],
+        return json.dumps({'status': status, 'email_id': e['id'], 'actual_recipient': actual, 'cc': POC_CC, 'intended_recipient': e['intended_recipient'],
                            'error': error, 'instructions': 'The result card is visible. Reply in one short sentence with the outcome.'})
 
     async def recommend_lead(self, lead_id: str, __request__=None, __event_emitter__=None) -> str:
@@ -1072,7 +1073,7 @@ def _profile_html(c: dict, counts: dict, template: dict) -> str:
 <div class="sec"><div class="label">Geographic markets</div><div class="chips">{markets}</div></div>
 <div class="sec"><div class="label">Context</div>{esc(c['description'])}</div>
 <div class="sec"><div class="label">Outreach</div><div class="grid"><div class="k">Email template</div><div class="v">{esc(template['subject'])}</div>
-<div class="k">Test delivery</div><div class="v">All emails go to {POC_RECIPIENT}</div></div></div>
+<div class="k">Test delivery</div><div class="v">All emails go to {POC_RECIPIENT} (cc {', '.join(POC_CC)})</div></div></div>
 <div class="actions"><button data-ask="Generate 6 leads for {esc(c['name'])} across all its industries">Generate leads (all industries)</button>{buttons}
 <button class="ghost" data-ask="Show the {esc(c['name'])} lead list">View lead list</button></div></div>'''
     script = "document.querySelectorAll('[data-ask]').forEach(b=>b.onclick=()=>{b.disabled=true;ask(b.dataset.ask)});"
@@ -1153,14 +1154,14 @@ const D=JSON.parse(document.getElementById('data').textContent);const F=D.fields
 const form=document.getElementById('form');const e=(s)=>String(s??'').replace(/[&<>"]/g,c=>({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}}[c]));
 F.forEach(f=>{{const w=document.createElement('div');if(f.type==='textarea'||f.type==='lines')w.className='full';
 const v=V[f.key]??'';let input;
-if(f.type==='lines'){{input=`<textarea rows="4">${{e(Array.isArray(v)?v.join('\n'):v)}}</textarea>`}}
+if(f.type==='lines'){{input=`<textarea rows="4">${{e(Array.isArray(v)?v.join('\\n'):v)}}</textarea>`}}
 else if(f.type==='select'){{input=`<select>${{(f.options||[]).map(o=>`<option ${{o===v?'selected':''}}>${{e(o)}}</option>`).join('')}}</select>`}}
 else if(f.type==='textarea'){{input=`<textarea rows="3">${{e(v)}}</textarea>`}}
 else{{input=`<input type="${{f.type==='number'?'number':f.type==='email'?'email':'text'}}" value="${{e(v)}}" ${{f.readonly?'readonly':''}} ${{f.max&&f.type!=='number'?'maxlength='+f.max:''}}>`}}
 w.innerHTML=`<label>${{e(f.label)}} ${{f.required?'<span class="req">*</span>':''}}</label>${{input}}`;
 const el=w.querySelector('input,select,textarea');el.dataset.key=f.key;el.oninput=el.onchange=check;form.appendChild(w)}});
 function changes(){{const out={{}};form.querySelectorAll('[data-key]').forEach(el=>{{const k=el.dataset.key;const f=F.find(x=>x.key===k);if(f.readonly)return;
-let v=el.value;if(f.type==='number')v=v===''?'':Number(v);const old=Array.isArray(V[k])?V[k].join('\n'):(V[k]??'');if(String(v)!==String(old)){{out[k]=v;el.classList.add('dirty')}}else el.classList.remove('dirty')}});return out}}
+let v=el.value;if(f.type==='number')v=v===''?'':Number(v);const old=Array.isArray(V[k])?V[k].join('\\n'):(V[k]??'');if(String(v)!==String(old)){{out[k]=v;el.classList.add('dirty')}}else el.classList.remove('dirty')}});return out}}
 function check(){{const c=changes();document.getElementById('save').disabled=!Object.keys(c).length;document.getElementById('note').textContent=Object.keys(c).length?Object.keys(c).length+' unsaved change(s)':''}}
 document.getElementById('save').onclick=()=>{{const c=changes();if(!Object.keys(c).length)return;document.getElementById('save').disabled=true;
 document.getElementById('note').textContent='Sent to chat for saving…';ask(`Save lead ${{ID}} changes: ${{JSON.stringify(c)}}`)}};
@@ -1180,7 +1181,7 @@ def _email_preview_html(e: dict, lead: dict, saved: bool = False) -> str:
     body = f'''<div class="card"><div class="head"><div><div class="eyebrow">Email preview · {esc(e['id'])} · {esc(lead['id'])}</div>
 <div class="title">{esc(d.get('company_name'))}</div></div><div>{'<span class="badge b-ok">Edits saved</span> ' if saved else ''}{_email_status_badge(e['email_status'])}</div></div>
 <div class="sec"><div class="warn"><b>Original Lead Email:</b> {esc(e['intended_recipient'] or '—')} (not contacted)<br>
-<b>POC Delivery Email:</b> {esc(e['actual_recipient'])}<br><b>Environment:</b> {esc(e['environment'])} · <b>Status:</b> TEST EMAIL</div></div>
+<b>POC Delivery Email:</b> {esc(e['actual_recipient'])} · <b>CC:</b> {esc(', '.join(POC_CC))}<br><b>Environment:</b> {esc(e['environment'])} · <b>Status:</b> TEST EMAIL</div></div>
 <div class="sec"><div class="mail" id="view"><div class="meta"><b>To:</b> {esc(e['intended_recipient'])} → delivered to {esc(e['actual_recipient'])}<br>
 <b>Subject:</b> <span id="s">{esc(e['subject'])}</span></div><pre id="b">{esc(e['body'])}</pre></div>
 <div id="edit" style="display:none"><label class="label">Subject</label><input id="es" style="width:100%;margin-bottom:10px" maxlength="200">
@@ -1204,7 +1205,7 @@ $('send').onclick=()=>{{$('send').disabled=true;$('toggle').disabled=true;$('not
 def _send_result_html(e: dict, lead: dict) -> str:
     ok = e['email_status'] == 'TEST_SENT'
     rows = [('Lead', f'{lead["data"].get("company_name")} ({lead["id"]})'), ('Original Intended Recipient', e['intended_recipient']),
-            ('Actual POC Recipient', e['actual_recipient']), ('Subject', f'[TEST] {e["subject"]}'), ('Environment', e['environment']),
+            ('Actual POC Recipient', e['actual_recipient']), ('CC', ', '.join(POC_CC)), ('Subject', f'[TEST] {e["subject"]}'), ('Environment', e['environment']),
             ('Status', 'TEST EMAIL SENT' if ok else 'FAILED'), ('Sent at', e.get('sent_at')), ('Gmail message id', e.get('gmail_message_id'))]
     if not ok:
         rows.append(('Error', e.get('error')))
@@ -1212,7 +1213,7 @@ def _send_result_html(e: dict, lead: dict) -> str:
     head = '<div class="ok-big">✓ Email Sent</div>' if ok else '<div class="fail-big">✕ Email not sent</div>'
     body = f'''<div class="card"><div class="head"><div><div class="eyebrow">Email send result · {esc(e['id'])}</div>{head}</div>
 {_email_status_badge(e['email_status'])}</div><div class="sec"><div class="grid">{grid}</div></div>
-<div class="sec muted">POC safety: delivery is fixed to {POC_RECIPIENT}; the lead's address was not contacted.</div></div>'''
+<div class="sec muted">POC safety: delivery is fixed to {POC_RECIPIENT} (cc {', '.join(POC_CC)}); the lead's address was not contacted.</div></div>'''
     return _page(body)
 
 

@@ -13,6 +13,7 @@ import asyncio
 import base64
 import hmac
 import html
+import json
 import os
 import re
 from email.message import EmailMessage
@@ -39,6 +40,10 @@ SUPPORTED_INTEGRATIONS = {
     'outlook': os.getenv('NANGO_OUTLOOK_CONFIG_KEY', 'outlook').strip() or 'outlook',
 }
 EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+# Fallback sender for /api/emails/send when Nango is unreachable or has no Gmail connection:
+# the Google Workspace MCP server that already holds this mailbox's OAuth (used by Orders / Monthly Report).
+GMAIL_MCP_URL = os.getenv('GMAIL_MCP_URL', '').strip()
+GMAIL_MCP_MAILBOX = os.getenv('GMAIL_MCP_MAILBOX', 'dbizgpt.assistant@gmail.com').strip()
 
 app = FastAPI(title='Biz GPT Integrations', version='1.0.0')
 
@@ -92,6 +97,7 @@ class SendEmailRequest(BaseModel):
     to: str
     subject: str
     body: str
+    cc: list[str] = []
     user_email: str = ''
     confirm: bool = True
 
@@ -908,12 +914,16 @@ async def gmail_reply_to_message(
     }
 
 
-async def gmail_send_message(integration: str, *, user_id: str, to: str, subject: str, body: str, user_email: str = '') -> dict:
+async def gmail_send_message(
+    integration: str, *, user_id: str, to: str, subject: str, body: str, cc: Optional[list[str]] = None, user_email: str = ''
+) -> dict:
     connection_id, provider_key = await require_connected_email(integration, user_id=user_id)
     message = EmailMessage()
     if user_email:
         message['From'] = user_email
     message['To'] = to
+    if cc:
+        message['Cc'] = ', '.join(cc)
     message['Subject'] = subject
     message.set_content(body.strip())
     raw = base64.urlsafe_b64encode(message.as_bytes()).decode().rstrip('=')
@@ -926,7 +936,8 @@ async def gmail_send_message(integration: str, *, user_id: str, to: str, subject
     )
     ensure_proxy_ok(send_response)
     sent = send_response.json()
-    return {'integration': integration, 'status': 'sent', 'message_id': sent.get('id'), 'thread_id': sent.get('threadId'), 'to': to}
+    return {'integration': integration, 'status': 'sent', 'message_id': sent.get('id'), 'thread_id': sent.get('threadId'), 'to': to,
+            'cc': cc or []}
 
 
 @app.get('/health')
@@ -1088,13 +1099,56 @@ async def send_email(req: SendEmailRequest):
     to = req.to.strip()
     if not EMAIL_RE.match(to):
         raise HTTPException(400, 'to must be a single valid email address')
+    cc = [addr.strip() for addr in req.cc if addr.strip()]
+    if any(not EMAIL_RE.match(addr) for addr in cc):
+        raise HTTPException(400, 'cc must be a list of valid email addresses')
     if not req.subject.strip() or not req.body.strip():
         raise HTTPException(400, 'subject and body are required')
     if not req.confirm:
         return {'integration': integration, 'status': 'confirmation_required', 'message': 'Email was not sent because confirm=false.'}
-    return await gmail_send_message(
-        integration, user_id=req.user_id, to=to, subject=req.subject.strip(), body=req.body, user_email=req.user_email
-    )
+    try:
+        return await gmail_send_message(
+            integration, user_id=req.user_id, to=to, subject=req.subject.strip(), body=req.body, cc=cc, user_email=req.user_email
+        )
+    except (httpx.HTTPError, HTTPException) as e:
+        # Nango down or no Gmail connection for this user: send through the Gmail MCP mailbox instead.
+        if not GMAIL_MCP_URL or (isinstance(e, HTTPException) and e.status_code not in (409, 502)):
+            raise
+        return await gmail_mcp_send(to=to, subject=req.subject.strip(), body=req.body, cc=cc)
+
+
+async def gmail_mcp_send(*, to: str, subject: str, body: str, cc: Optional[list[str]] = None) -> dict:
+    """Send a plain-text email with the Google Workspace MCP server (streamable HTTP, one short session)."""
+    base_headers = {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream'}
+
+    async def rpc(client: httpx.AsyncClient, payload: dict, session_id: Optional[str]) -> tuple[Optional[dict], Optional[str]]:
+        headers = {**base_headers, **({'mcp-session-id': session_id} if session_id else {})}
+        resp = await client.post(GMAIL_MCP_URL, json=payload, headers=headers)
+        resp.raise_for_status()
+        raw = resp.text
+        for line in raw.splitlines():
+            if line.startswith('data:'):
+                raw = line[5:]
+        return (json.loads(raw) if raw.strip() else None), resp.headers.get('mcp-session-id', session_id)
+
+    try:
+        async with httpx.AsyncClient(timeout=90) as client:
+            _, sid = await rpc(client, {'jsonrpc': '2.0', 'id': 1, 'method': 'initialize', 'params': {
+                'protocolVersion': '2025-03-26', 'capabilities': {}, 'clientInfo': {'name': 'bizgpt-integrations', 'version': '1'}}}, None)
+            await rpc(client, {'jsonrpc': '2.0', 'method': 'notifications/initialized'}, sid)
+            data, _ = await rpc(client, {'jsonrpc': '2.0', 'id': 2, 'method': 'tools/call', 'params': {
+                'name': 'send_gmail_message',
+                'arguments': {'user_google_email': GMAIL_MCP_MAILBOX, 'to': to, 'subject': subject, 'body': body.strip(),
+                              'body_format': 'plain', **({'cc': ', '.join(cc)} if cc else {})}}}, sid)
+    except (httpx.HTTPError, ValueError) as e:
+        raise HTTPException(502, f'Gmail MCP send failed: {type(e).__name__}')
+    result = (data or {}).get('result') or {}
+    text = '\n'.join(c.get('text', '') for c in result.get('content', []) if c.get('type') == 'text')
+    if not data or 'error' in data or result.get('isError'):
+        raise HTTPException(502, f'Gmail MCP send failed: {(text or str((data or {}).get("error")))[:300]}')
+    match = re.search(r'Message ID:\s*([0-9a-f]+)', text)
+    return {'integration': 'gmail', 'status': 'sent', 'message_id': match.group(1) if match else None, 'thread_id': None,
+            'to': to, 'cc': cc or [], 'sent_via': 'gmail_mcp', 'from': GMAIL_MCP_MAILBOX}
 
 
 @app.post('/api/integrations/connect', dependencies=[Depends(require_api_key)])

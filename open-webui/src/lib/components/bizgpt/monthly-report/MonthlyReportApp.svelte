@@ -9,6 +9,7 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import AuthImage from './AuthImage.svelte';
 	import PhotoCard from './PhotoCard.svelte';
+	import PhotoLibrary from './PhotoLibrary.svelte';
 	import { api, blobUrl } from './api';
 
 	const STATUS: Record<string, { label: string; cls: string }> = {
@@ -49,6 +50,7 @@
 	let poll: ReturnType<typeof setTimeout> | null = null;
 
 	$: selectedId = $page.url.searchParams.get('report');
+	$: showLibrary = $page.url.searchParams.has('library');
 	$: if (cfg && selectedId !== (report?.id ?? null)) openReport(selectedId);
 	$: editable = report && ['draft', 'analyzed', 'in_review', 'rejected'].includes(report.status);
 	$: photoById = Object.fromEntries((report?.photos ?? []).map((p: any) => [p.id, p]));
@@ -209,8 +211,9 @@
 			if (dirty) await api(`/reports/${report.id}/draft`, { method: 'PUT', body: JSON.stringify({ remarks }) });
 			const r = await api(`/reports/${report.id}/generate`, { method: 'POST' });
 			tab = 'report';
+			if (r.status === 'approved') toast.success('Same photos, same report: this is the approved report and PDF.');
 			return r;
-		}, 'Report generated. Review and edit it, then approve.');
+		}, report?.status === 'approved' ? undefined : 'Report ready. Review and edit it, then approve.');
 	};
 
 	const saveDraft = () =>
@@ -226,11 +229,31 @@
 			return r;
 		}, 'Report rejected. Correct it and save the draft to send it back for review.');
 
-	const approve = () =>
-		run('approve', async () => {
+	const approve = () => {
+		const flagged = report?.needs_review ?? 0;
+		if (flagged && !confirm(`${flagged} photo(s) are still flagged for review. Approving confirms the AI values for them. Approve?`)) return;
+		return run('approve', async () => {
 			if (dirty) await api(`/reports/${report.id}/draft`, { method: 'PUT', body: JSON.stringify({ sections, remarks }) });
-			return api(`/reports/${report.id}/approve`, { method: 'POST' });
+			return api(`/reports/${report.id}/approve`, { method: 'POST', body: JSON.stringify({ confirm_flagged: flagged > 0 }) });
 		}, 'Report approved. PDF generated.');
+	};
+
+	const deleteReport = async () => {
+		const label = monthLabel(report.month);
+		if (!confirm(`Delete the ${label} report ${report.id} with its photos, PDF and month folder? Its Gmail email can then be imported again from the start.`)) return;
+		busy = 'delete';
+		try {
+			await api(`/reports/${report.id}`, { method: 'DELETE' });
+			toast.success(`${label} report deleted. Start it fresh from chat or with + New.`);
+			await select(null);
+			report = null;
+			await loadList();
+		} catch (e) {
+			toast.error((e as Error).message);
+		} finally {
+			busy = '';
+		}
+	};
 
 	const openPdf = async (download: boolean) => {
 		try {
@@ -271,6 +294,10 @@
 			<button class="rounded-lg bg-gray-900 px-2.5 py-1 text-xs font-medium text-white dark:bg-white dark:text-gray-900" on:click={() => select(null)}>+ New</button>
 		</div>
 		<div class="flex-1 overflow-y-auto px-2 pb-4">
+			<button
+				class="mb-2 w-full rounded-lg px-3 py-2 text-left text-xs font-medium transition {showLibrary ? 'bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300' : 'text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-850'}"
+				on:click={() => goto('?library', { keepFocus: true, noScroll: true })}
+			>📁 Photo library <span class="font-normal text-gray-400">· approved photos by month</span></button>
 			{#each reports as r (r.id)}
 				<button
 					class="mb-1 w-full rounded-lg px-3 py-2 text-left text-xs transition {report?.id === r.id ? 'bg-gray-100 dark:bg-gray-800' : 'hover:bg-gray-50 dark:hover:bg-gray-850'}"
@@ -293,6 +320,8 @@
 		<div class="mx-auto max-w-6xl px-4 py-5 md:px-6">
 			{#if loading}
 				<div class="flex justify-center py-20"><Spinner /></div>
+			{:else if showLibrary}
+				<PhotoLibrary {monthLabel} />
 			{:else if error}
 				<div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
 					Monthly Report is unavailable: {error}
@@ -349,7 +378,12 @@
 							{monthLabel(report.month)} · {report.id} · {report.photos.length} photo(s) · model {report.model}
 						</div>
 					</div>
-					<button class="text-sm text-gray-500 hover:text-gray-800 md:hidden" on:click={() => select(null)}>+ New report</button>
+					<div class="flex items-center gap-3">
+						{#if report.status !== 'approved' && report.status !== 'processing'}
+							<button class="text-sm text-rose-600 hover:text-rose-700 disabled:opacity-50" disabled={!!busy} on:click={deleteReport}>🗑 Delete &amp; start fresh</button>
+						{/if}
+						<button class="text-sm text-gray-500 hover:text-gray-800 md:hidden" on:click={() => select(null)}>+ New report</button>
+					</div>
 				</div>
 
 				{#if report.status === 'approved'}
@@ -364,6 +398,9 @@
 						<div class="mt-4 flex gap-2">
 							<button class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700" on:click={() => openPdf(false)}>View Report</button>
 							<button class="rounded-xl border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300" on:click={() => openPdf(true)}>Download PDF</button>
+							<button class="rounded-xl border border-gray-200 px-4 py-2 text-sm dark:border-gray-700" disabled={!!busy} on:click={generate}>{busy === 'generate' ? 'Generating…' : 'Generate again'}</button>
+							<button class="rounded-xl px-3 py-2 text-sm text-gray-500 hover:text-gray-800 dark:hover:text-gray-200" on:click={() => goto('?library', { keepFocus: true, noScroll: true })}>📁 Month folder</button>
+							<button class="rounded-xl px-3 py-2 text-sm text-rose-600 hover:text-rose-700 disabled:opacity-50" disabled={!!busy} on:click={deleteReport}>🗑 Delete &amp; start fresh</button>
 						</div>
 					</div>
 				{:else if report.status === 'rejected'}
@@ -578,7 +615,7 @@
 							<div class="sticky bottom-0 mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-gray-200 bg-white/95 p-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
 								{#if report.approval_blockers.length && report.status === 'in_review'}
 									<div class="w-full text-xs text-amber-700 dark:text-amber-300">
-										Approve is blocked: {report.approval_blockers.join('; ')}.
+										Before approving: {report.approval_blockers.join('; ')}. Click Approve to confirm them, or correct them in Photos first.
 										{#if report.needs_review}<button class="underline" on:click={() => (tab = 'photos')}>Review photos</button>{/if}
 									</div>
 								{/if}
@@ -593,7 +630,7 @@
 									<button class="rounded-xl border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-600 disabled:opacity-50 dark:border-rose-500/40" disabled={!!busy || report.status !== 'in_review'} on:click={() => (rejecting = true)}>Reject</button>
 									<button
 										class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-										disabled={!!busy || report.status !== 'in_review' || report.approval_blockers.length > 0}
+										disabled={!!busy || report.status !== 'in_review'}
 										on:click={approve}>{busy === 'approve' ? 'Approving…' : 'Approve'}</button
 									>
 								{/if}

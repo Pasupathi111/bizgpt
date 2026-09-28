@@ -125,7 +125,7 @@ def test_flow_offline():
         return {'business_context': 'For example, we could support your parts supply for commercial fleets.'}
     sent = {}
     async def fake_integrations(method, path, body):
-        sent.update(body); return {'status': 'sent', 'message_id': 'abc123', 'to': body['to']}
+        sent.update(body); return {'status': 'sent', 'message_id': 'abc123', 'to': body['to'], 'cc': body.get('cc', [])}
     m.search_companies, m.fetch_site = fake_search, fake_fetch
     t._ai_json = fake_ai; t._integrations = fake_integrations
     run = lambda c: json.loads(asyncio.run(c))
@@ -154,7 +154,7 @@ def test_flow_offline():
     body = t._email(t._db(), 'E-0001')['body']
     assert 'Dear Autonas team,' in body and 'Automobile Group' in body
     s = run(t.send_test_email('E-0001', __user__={'id': 'u1'}, __event_emitter__=emit))
-    assert s['status'] == 'TEST_SENT' and sent['to'] == 'prsap94@gmail.com' and s['intended_recipient'] == 'sales@autonas.com.my'
+    assert s['status'] == 'TEST_SENT' and sent['to'] == 'Chandrukhasan.ram@gmail.com' and sent['cc'] == ['naveenpradhakrishnan@gmail.com', 'prsap94@gmail.com'] and s['intended_recipient'] == 'sales@autonas.com.my'
     assert run(t.send_test_email('E-0001', __user__={'id': 'u1'}))['status'] == 'already_sent'
     # a second run skips companies that are already leads
     again = run(t.generate_leads('Automobile Group', '', 6))

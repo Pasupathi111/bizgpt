@@ -115,7 +115,7 @@ def test_intent_is_validated_against_the_report():
         {'photo': '0103', 'stage': 'during', 'location': 'Zone Q'},  # invented zone is dropped
         {'photo': 'IMG_9999', 'stage': 'AFTER'},
         {'photo': 'IMG_0104.jpg', 'work_type': 'grass cutting', 'exclude': True}]}
-    out = ai.normalise_intent(raw, cfg, photos, PROJECT['zones'])
+    out = ai.normalise_intent(raw, cfg, photos, PROJECT['zones'], '0103 is during, exclude IMG_0104 (grass cutting)')
     assert out['changes'] == [{'photo_id': 'p1', 'filename': 'IMG_0103.jpg', 'stage': 'DURING'},
                               {'photo_id': 'p2', 'filename': 'IMG_0104.jpg', 'work_type': 'Grass Cutting', 'exclude': True}]
     assert out['unknown_photos'] == ['IMG_9999']
@@ -143,3 +143,21 @@ def test_chat_project_and_month_must_be_said():
     said = ai.normalise_intent({'action': 'gmail_import', 'project': 'taman-park', 'month': '2026-09'}, cfg, [], [],
                                'Get the Taman Park September 2026 photos from Gmail')
     assert said == {'action': 'gmail_import', 'project_id': 'taman-park', 'month': '2026-09'}
+
+
+def test_intent_keeps_only_fields_the_message_mentions():
+    cfg = {'projects': [], 'work_types': WORK}
+    photos = [{'id': 'p1', 'filename': 'IMG_0304.jpg'}]
+    # The model added a stage and exclude=false that the coordinator never said.
+    raw = {'action': 'update_photos', 'changes': [
+        {'photo': 'IMG_0304.jpg', 'stage': 'DURING', 'work_type': 'grass cutting', 'exclude': False}]}
+    out = ai.normalise_intent(raw, cfg, photos, PROJECT['zones'], 'IMG_0304 is grass cutting')
+    assert out['changes'] == [{'photo_id': 'p1', 'filename': 'IMG_0304.jpg', 'work_type': 'Grass Cutting'}]
+
+
+def test_status_intent_keeps_the_month_the_user_named():
+    cfg = {'projects': [{'id': 'taman-park', 'name': 'Taman Park Landscape Maintenance'}], 'work_types': WORK}
+    out = ai.normalise_intent({'action': 'status', 'month': '2026-10'}, cfg, [], [], 'show me the October month report')
+    assert out == {'action': 'status', 'project_id': None, 'month': '2026-10'}
+    # a month the user did not write is never kept
+    assert ai.normalise_intent({'action': 'status', 'month': '2026-10'}, cfg, [], [], 'show my report')['month'] is None

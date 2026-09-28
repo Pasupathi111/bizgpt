@@ -36,6 +36,7 @@ def client(monkeypatch):
         assert 'Zone B: During photo missing' in facts['missing_information']
         return {k: f'{k} text for {facts["project"]}' for k in ai.NARRATIVE_KEYS}
 
+    main.store._exec('DELETE FROM ai_cache')  # every test sees the fake model, not an earlier test's answers
     monkeypatch.setattr(ai, 'analyse_photo', fake_analyse)
     monkeypatch.setattr(ai, 'write_report', fake_write)
     with TestClient(main.app) as c:
@@ -64,7 +65,8 @@ def test_full_workflow(client):
     rid = r['id']
     assert r['status'] == 'draft'
 
-    files = [('files', (name, jpeg(), 'image/jpeg')) for name in FAKE] + [('files', ('notes.txt', b'hello', 'text/plain'))]
+    files = [('files', (name, jpeg((i * 30 % 255, 140, 60)), 'image/jpeg')) for i, name in enumerate(FAKE)]
+    files += [('files', ('notes.txt', b'hello', 'text/plain'))]
     up = client.post(f'/api/reports/{rid}/photos', files=files).json()
     assert up['added'] == 6 and up['rejected'][0]['filename'] == 'notes.txt'
     for p in up['report']['photos']:
@@ -104,8 +106,40 @@ def test_full_workflow(client):
 
     pdf = client.get(f'/api/reports/{rid}/pdf')
     assert pdf.status_code == 200 and pdf.content.startswith(b'%PDF')
-    # Approved reports are read-only.
-    assert client.post(f'/api/reports/{rid}/generate').status_code == 409
+    # Generate again after approval: allowed, and the approved report comes back unchanged.
+    again = client.post(f'/api/reports/{rid}/generate')
+    assert again.status_code == 200 and again.json()['status'] == 'approved'
+    assert again.json()['content']['sections']['remarks'] == 'Checked on site.'
+    assert client.get(f'/api/reports/{rid}/pdf?download=true').content.startswith(b'%PDF')  # download as often as needed
+
+    # The approved photos and PDF are filed in the month folder.
+    months = client.get('/api/library').json()['months']
+    assert any(m['month'] == '2026-09' and m['report_id'] == rid and m['photo_count'] == 5 and m['pdf'] for m in months)
+    detail = client.get('/api/library/taman-park/2026-09').json()
+    assert sorted(p['filename'] for p in detail['photos']) == ['a_after.jpg', 'a_before.jpg', 'a_during.jpg', 'b_after.jpg', 'b_before.jpg']
+    assert client.get('/api/library/taman-park/2026-09/files/a_before.jpg').status_code == 200
+    assert client.get('/api/library/taman-park/2026-09/files/Monthly-Report-2026-09.pdf').content.startswith(b'%PDF')
+    assert client.get('/api/library/taman-park/2026-09/files/..%2Fmonthly_report.db').status_code == 404
+    assert client.get('/api/library/taman-park/2026-09/files/broken.jpg').status_code == 404  # excluded photo not filed
+
+
+def test_same_photos_give_the_same_report(client, monkeypatch):
+    r = client.post('/api/reports', json={'project_id': 'taman-park', 'month': '2026-08'}).json()
+    rid = r['id']
+    up = client.post(f'/api/reports/{rid}/photos', files=[('files', ('a_before.jpg', jpeg((10, 200, 10)), 'image/jpeg'))]).json()
+    for p in up['report']['photos']:
+        client.current[main.store.get_photo(rid, p['id'])['path']] = p['filename']
+    client.post(f'/api/reports/{rid}/process')
+    wait_processed(client, rid)
+    calls = []
+
+    async def counting_write(facts, auth):
+        calls.append(1)
+        return {k: f'{k} v{len(calls)}' for k in ai.NARRATIVE_KEYS}
+    monkeypatch.setattr(ai, 'write_report', counting_write)
+    first = client.post(f'/api/reports/{rid}/generate').json()['content']['sections']
+    second = client.post(f'/api/reports/{rid}/generate').json()['content']['sections']
+    assert first == second and len(calls) == 1  # clicking Generate again does not rewrite the report
 
 
 def test_intake_webhook_creates_report(client):
@@ -133,3 +167,43 @@ def test_model_unavailable_is_reported_per_photo(client, monkeypatch):
     r = wait_processed(client, rid)
     assert r['photos'][0]['status'] == 'error' and 'unavailable' in r['photos'][0]['error']
     assert r['needs_review'] == 1
+
+
+def test_approve_can_confirm_flagged_photos(client, monkeypatch):
+    async def plain_write(facts, auth):
+        return {k: k for k in ai.NARRATIVE_KEYS}
+    monkeypatch.setattr(ai, 'write_report', plain_write)
+    rid = client.post('/api/reports', json={'project_id': 'taman-park', 'month': '2026-07'}).json()['id']
+    up = client.post(f'/api/reports/{rid}/photos', files=[('files', ('b_before.jpg', jpeg((5, 90, 200)), 'image/jpeg'))]).json()
+    for p in up['report']['photos']:
+        client.current[main.store.get_photo(rid, p['id'])['path']] = p['filename']
+    client.post(f'/api/reports/{rid}/process')
+    wait_processed(client, rid)
+    r = client.post(f'/api/reports/{rid}/generate').json()
+    assert r['needs_review'] == 1  # b_before has no location sign
+    assert client.post(f'/api/reports/{rid}/approve').status_code == 409  # not without the approver's confirmation
+    r = client.post(f'/api/reports/{rid}/approve', json={'confirm_flagged': True}).json()
+    assert r['status'] == 'approved' and r['needs_review'] == 0
+    assert any('confirmed at approval' in (e.get('detail') or '') for e in main.store.events(rid))
+
+
+def test_delete_report_starts_the_month_fresh(client, monkeypatch):
+    async def plain_write(facts, auth):
+        return {k: k for k in ai.NARRATIVE_KEYS}
+    monkeypatch.setattr(ai, 'write_report', plain_write)
+    rid = client.post('/api/reports', json={'project_id': 'taman-park', 'month': '2026-06'}).json()['id']
+    up = client.post(f'/api/reports/{rid}/photos', files=[('files', ('a_before.jpg', jpeg((77, 7, 7)), 'image/jpeg'))]).json()
+    for p in up['report']['photos']:
+        client.current[main.store.get_photo(rid, p['id'])['path']] = p['filename']
+    client.post(f'/api/reports/{rid}/process')
+    wait_processed(client, rid)
+    client.post(f'/api/reports/{rid}/generate')
+    assert client.post(f'/api/reports/{rid}/approve', json={'confirm_flagged': True}).json()['status'] == 'approved'
+    assert client.get('/api/library/taman-park/2026-06').status_code == 200
+    photo_path = main.store.photos(rid)[0]['path']
+
+    assert client.delete(f'/api/reports/{rid}').json()['deleted'] == rid
+    assert client.get(f'/api/reports/{rid}').status_code == 404
+    assert client.get('/api/library/taman-park/2026-06').status_code == 404
+    assert not main.store.pdf_path(rid).exists() and not __import__('os').path.exists(photo_path)
+    assert rid not in [r['id'] for r in client.get('/api/reports').json()['reports']]

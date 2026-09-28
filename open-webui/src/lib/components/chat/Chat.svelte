@@ -764,7 +764,9 @@
 			prompt = input.prompt ?? '';
 			messageInput?.setText(prompt);
 			files = input.files ?? [];
-			selectedToolIds = input.selectedToolIds ?? [];
+			// A model with its own tools always uses exactly those; a stale selection saved in this
+			// tab (e.g. from another model's chat) must not add or replace them.
+			selectedToolIds = modelOwnToolIds() ?? input.selectedToolIds ?? [];
 			selectedSkillIds = input.selectedSkillIds ?? [];
 			selectedFilterIds = input.selectedFilterIds ?? [];
 			webSearchEnabled = input.webSearchEnabled ?? false;
@@ -1006,6 +1008,13 @@
 		terminalSkills.set([]);
 		lastTerminalSkillSelector = $selectedTerminalId;
 	}
+
+	const modelOwnToolIds = (): string[] | null => {
+		if (selectedModels.length !== 1 && !atSelectedModel) return null;
+		const model = atSelectedModel ?? $models.find((m) => m.id === selectedModels[0]);
+		const ids = model?.info?.meta?.toolIds ?? [];
+		return ids.length ? [...new Set(ids)] : null;
+	};
 
 	let settingDefaults = false;
 	const setDefaults = async () => {

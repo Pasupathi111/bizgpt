@@ -254,6 +254,29 @@ class Tools:
             return json.dumps(context)
         return HTMLResponse(content=html, headers={'Content-Disposition': 'inline'}), context
 
+    async def show_order_summary(self, __event_emitter__=None):
+        """
+        Show the order dashboard in the chat: total orders till date and how many are Active, Pending,
+        Shipping and Done, with the latest orders in each status. Call this whenever the user asks how many
+        orders there are, for an order count, order status overview, or order summary.
+        """
+        counts = {status: n for status, n, _, _ in ORDER_STATUSES}
+        total = sum(counts.values())
+        context = {
+            'status': 'order_summary_displayed',
+            'as_of': datetime.now().strftime('%Y-%m-%d'),
+            'total_orders': total,
+            'by_status': counts,
+            'instructions': 'The order summary card is visible in the chat. Reply with one short sentence giving '
+            'the total and the status split (for example "You have 248 orders till date: 42 active, 18 pending, '
+            '27 shipping and 161 done."). Do not repeat the card as a table.',
+        }
+        html = _order_summary_html(total)
+        if __event_emitter__:
+            await __event_emitter__({'type': 'embeds', 'data': {'embeds': [html]}})
+            return json.dumps(context)
+        return HTMLResponse(content=html, headers={'Content-Disposition': 'inline'}), context
+
     async def get_approval_email(self, form_id: str) -> str:
         """
         Get the standard confirmation email (to, subject, body) exactly as shown on the pending-approval card
@@ -321,6 +344,89 @@ class Tools:
                     raise RuntimeError(f'Forms service error {resp.status}: {data}')
                 return data
 
+
+
+# Static demo figures for the order summary card: (status, count, colour, latest orders).
+ORDER_STATUSES = [
+    ('Active', 42, '#2563eb', [('ORD-1248', 'Priya Sharma', '25 × Navy L'), ('ORD-1245', 'Arun Kumar', '10 × White M')]),
+    ('Pending', 18, '#d97706', [('ORD-1247', 'Meena Iyer', '40 × Black XL'), ('ORD-1244', 'Rahul Verma', '6 × Red S')]),
+    ('Shipping', 27, '#7c3aed', [('ORD-1239', 'Kavya Nair', '15 × Grey M'), ('ORD-1236', 'Sanjay Patel', '30 × Green L')]),
+    ('Done', 161, '#16a34a', [('ORD-1231', 'Divya Rao', '12 × Royal blue XL'), ('ORD-1228', 'Vikram Singh', '50 × White L')]),
+]
+
+
+def _order_summary_html(total: int) -> str:
+    """Order status summary card for the chat. Clicking a status asks Biz GPT about those orders."""
+    esc = html_escape
+    tiles, bar, lists = '', '', ''
+    for status, count, colour, orders in ORDER_STATUSES:
+        pct = count * 100 / total if total else 0
+        prompt = f'Show me the {status.lower()} orders'
+        tiles += (
+            f'<button class="tile" style="--c:{colour}" data-prompt="{esc(prompt)}">'
+            f'<span class="dot"></span><span class="name">{esc(status)}</span>'
+            f'<span class="num">{count}</span><span class="pct">{pct:.0f}%</span></button>'
+        )
+        bar += f'<span style="width:{pct:.2f}%;background:{colour}" title="{esc(status)}: {count}"></span>'
+        rows = ''.join(
+            f'<div class="row"><span class="ref">{esc(ref)}</span><span class="who">{esc(who)}</span>'
+            f'<span class="what">{esc(what)}</span><span class="pill" style="--c:{colour}">{esc(status)}</span></div>'
+            for ref, who, what in orders
+        )
+        lists += rows
+    today = datetime.now().strftime('%d %b %Y')
+    return f"""<!doctype html>
+<html><head><meta charset="utf-8"><style>
+  * {{ box-sizing: border-box; }}
+  body {{ margin: 0; font-family: Inter, system-ui, Arial, sans-serif; color: #0f172a; background: transparent; }}
+  .card {{ border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; overflow: hidden; }}
+  .head {{ display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 16px 18px 12px; }}
+  .eyebrow {{ font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #64748b; }}
+  .total {{ margin-top: 4px; font-size: 30px; font-weight: 700; line-height: 1; }}
+  .total small {{ font-size: 13px; font-weight: 500; color: #64748b; margin-left: 6px; }}
+  .asof {{ font-size: 12px; color: #64748b; white-space: nowrap; }}
+  .bar {{ display: flex; height: 8px; margin: 0 18px; border-radius: 999px; overflow: hidden; gap: 2px; background: #f1f5f9; }}
+  .tiles {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 14px 18px; }}
+  .tile {{ display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 2px 8px; padding: 12px; text-align: left;
+    border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; font: inherit; color: inherit; cursor: pointer; }}
+  .tile:hover {{ border-color: var(--c); }}
+  .dot {{ width: 8px; height: 8px; border-radius: 50%; background: var(--c); }}
+  .name {{ font-size: 12.5px; font-weight: 600; color: #475569; }}
+  .num {{ grid-column: 1 / -1; font-size: 22px; font-weight: 700; }}
+  .pct {{ grid-column: 1 / -1; font-size: 12px; color: #64748b; }}
+  .sec {{ padding: 4px 18px 14px; }}
+  .label {{ font-size: 12px; font-weight: 600; color: #64748b; margin: 6px 0 8px; }}
+  .row {{ display: grid; grid-template-columns: 82px 1fr 1fr auto; gap: 10px; align-items: center; padding: 8px 0; font-size: 13px; border-top: 1px solid #f1f5f9; }}
+  .ref {{ font-weight: 600; }} .who, .what {{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }} .what {{ color: #64748b; }}
+  .pill {{ padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; color: var(--c);
+    background: color-mix(in srgb, var(--c) 12%, transparent); }}
+  @media (max-width: 560px) {{
+    .tiles {{ grid-template-columns: repeat(2, 1fr); }}
+    .row {{ grid-template-columns: 76px 1fr auto; }} .what {{ display: none; }}
+  }}
+  @media (prefers-color-scheme: dark) {{
+    body {{ color: #e2e8f0; }} .card {{ background: #0f172a; border-color: #1e293b; }}
+    .tile {{ background: #111827; border-color: #1e293b; }} .name {{ color: #cbd5e1; }}
+    .bar {{ background: #1e293b; }} .row {{ border-color: #1e293b; }}
+  }}
+</style></head><body>
+<div class="card">
+  <div class="head">
+    <div><div class="eyebrow">Orders till date</div><div class="total">{total}<small>orders</small></div></div>
+    <div class="asof">As of {esc(today)}</div>
+  </div>
+  <div class="bar">{bar}</div>
+  <div class="tiles">{tiles}</div>
+  <div class="sec"><div class="label">Latest orders</div>{lists}</div>
+</div>
+<script>
+  const post = (m) => window.parent !== window && window.parent.postMessage(m, '*');
+  const height = () => post({{ type: 'iframe:height', height: document.documentElement.scrollHeight }});
+  new ResizeObserver(height).observe(document.body); height();
+  document.querySelectorAll('.tile').forEach((t) =>
+    t.addEventListener('click', () => post({{ type: 'input:prompt:submit', text: t.dataset.prompt }})));
+</script>
+</body></html>"""
 
 
 def _rows(values: dict, properties: dict) -> list:
