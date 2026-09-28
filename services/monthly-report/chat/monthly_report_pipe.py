@@ -238,6 +238,7 @@ class Pipe:
                           images: Optional[list]) -> str:
         """The user asked for a month's report: continue it if it exists, else fetch that month's photos from Gmail."""
         photos = images if images is not None else self._all_images(messages)
+        no_mail = ''
         existing = await self._find_report(project_id, month) if month else None
         if existing:
             if photos and await self._editable(existing):
@@ -246,29 +247,38 @@ class Pipe:
         if not photos and month:
             # Emails keep the project/month they state themselves, so another month's photos never land here.
             await self._status(f'🔄 Syncing with Gmail for {month_label(month)} site photos…')
-            result = await self._api('POST', '/api/gmail/import', {})
+            result = await self._api('POST', '/api/gmail/import', {'only_month': month})
             found = await self._find_report(project_id, month)
             if found:
                 lines = [f"📥 **{i['subject']}** from {i['from']}: {i['added']} photo(s) → report {i['report_id']}"
                          for i in result['imported'] if i['report_id'] == found]
                 return await self._wait_and_review(found, '\n\n'.join(lines))
             await self._status(f'No {month_label(month)} photos in Gmail', done=True)
+            no_mail = (f'No new {month_label(month)} site-photo email was found in **{result["mailbox"]}** (check the address '
+                       'is exactly this one and the email is not in Trash).')
         if not (project_id and month):
             cfg = await self._api('GET', '/api/config')
             await self._embed(setup_card(cfg, project_id, month))
             return 'Choose the **project** and **month** in the form above and click **Start report**. I will analyse the photos you attached.'
-        report = await self._api('POST', '/api/reports', {'project_id': project_id, 'month': month})
+        reports = (await self._api('GET', '/api/reports'))['reports']
+        empty = next((r for r in reports if r['project_id'] == project_id and r['month'] == month
+                      and r['status'] == 'draft' and not r.get('photo_count')), None)
+        report = (await self._api('GET', f"/api/reports/{empty['id']}") if empty
+                  else await self._api('POST', '/api/reports', {'project_id': project_id, 'month': month}))
         if not photos:
-            return (f'**Report {report["id"]}** created for {report["project"]["name"]}, {month_label(month)}. '
-                    f'No {month_label(month)} site-photo email was found in the reports mailbox, so attach the photos in your '
-                    'next message (or email them and say *"get the photos from Gmail"*).')
+            return (f'**Report {report["id"]}** is ready for {report["project"]["name"]}, {month_label(month)}.\n\n'
+                    + no_mail +
+                    ' Attach the photos in your next message, or email them there and ask me again.')
         return await self._add_photos_and_process(report['id'], photos)
 
     async def _find_report(self, project_id: Optional[str], month: Optional[str]) -> Optional[str]:
-        """Newest report matching the project and/or month the user named."""
+        """The month's report to continue: an approved one first, then the one furthest along, newest first.
+        Empty reports (no photos yet) never count, so asking for the month syncs Gmail instead of opening them."""
         reports = (await self._api('GET', '/api/reports'))['reports']
-        match = [r for r in reports if (not month or r['month'] == month) and (not project_id or r['project_id'] == project_id)]
-        match.sort(key=lambda r: r.get('updated_at') or '', reverse=True)
+        match = [r for r in reports if r.get('photo_count') and (not month or r['month'] == month)
+                 and (not project_id or r['project_id'] == project_id)]
+        rank = {'approved': 4, 'in_review': 3, 'rejected': 3, 'analyzed': 2, 'processing': 1}
+        match.sort(key=lambda r: (rank.get(r['status'], 0), r.get('updated_at') or ''), reverse=True)
         return match[0]['id'] if match else None
 
     async def _latest_report(self) -> Optional[str]:

@@ -160,3 +160,24 @@ def test_bounces_are_ignored_and_failed_downloads_are_retried(store, monkeypatch
     monkeypatch.setattr(fake, 'download', FakeGmail.download.__get__(fake))  # attachments downloadable again
     again = run(intake.import_from_gmail(store, fake, add_photo, 'token'))
     assert [(i['subject'], i['added']) for i in again['imported']] == [('Taman Park October 2026 photos', 1)]
+
+
+def test_only_month_leaves_other_months_pending(store, monkeypatch):
+    img = lambda n: {'index': 0, 'filename': n, 'mime': 'image/jpeg', 'attachment_id': n}  # noqa: E731
+    fake = FakeGmail({
+        'oct': {'subject': 'Taman Park October 2026 photos', 'body': '', 'images': [img('O.jpg')]},
+        'sep': {'subject': 'Taman Park September 2026 photos', 'body': '', 'images': [img('S.jpg')]},
+    })
+    months = {'Taman Park October 2026 photos': '2026-10', 'Taman Park September 2026 photos': '2026-09'}
+
+    async def fake_complete(messages, auth, json_mode=True):
+        subject = messages[0]['content'].split('Subject: ')[1].split('\n')[0]
+        return json.dumps({'is_site_photos': True, 'project': 'taman-park', 'month': months[subject]})
+    monkeypatch.setattr(ai, 'complete', fake_complete)
+    add_photo = lambda rid, name, data: store.add_photo(rid, name, data, 'image/jpeg', None) or True  # noqa: E731
+
+    sep = run(intake.import_from_gmail(store, fake, add_photo, 'token', only_month='2026-09'))
+    assert [i['subject'] for i in sep['imported']] == ['Taman Park September 2026 photos']
+    assert store.gmail_seen('oct') is None  # October untouched, still importable
+    octo = run(intake.import_from_gmail(store, fake, add_photo, 'token', only_month='2026-10'))
+    assert [i['subject'] for i in octo['imported']] == ['Taman Park October 2026 photos']

@@ -19,7 +19,8 @@ AUTOMATED_SUBJECT = re.compile(r'^(delivery status notification|undeliver(ed|abl
 
 
 async def import_from_gmail(store: Store, gmail: Gmail, add_photo, auth: str, *, project_id: str | None = None,
-                            month: str | None = None, created_by: str | None = None, limit: int = 25) -> dict:
+                            month: str | None = None, created_by: str | None = None, limit: int = 25,
+                            only_month: str | None = None) -> dict:
     """Import new site-photo emails. project_id/month (from the coordinator) override what the email says.
 
     add_photo(report_id, filename, data) -> bool stores one validated image.
@@ -58,6 +59,10 @@ async def import_from_gmail(store: Store, gmail: Gmail, add_photo, auth: str, *,
                 continue
             target_project = target_project or info['project_id']
             target_month = target_month or info['month']
+        if only_month and target_month and target_month != only_month:
+            # Asked for one month: another month's email stays pending (not recorded) for when that month is asked.
+            out['skipped'].append({**summary, 'reason': f'other month ({target_month})'})
+            continue
         if not (target_project and target_month):
             store.gmail_record(message_id, email['subject'], email['from'], 'needs_info', photos=len(email['images']),
                                detail='project or month not stated')

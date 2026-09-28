@@ -603,7 +603,8 @@ def _backfill_library():
 
 
 # ---------------------------------------------------------------- Gmail intake
-async def _run_gmail_import(auth: str, actor: str | None, project_id: str | None = None, month: str | None = None) -> dict:
+async def _run_gmail_import(auth: str, actor: str | None, project_id: str | None = None, month: str | None = None,
+                            only_month: str | None = None) -> dict:
     if project_id and not config.get_project(project_id):
         raise HTTPException(400, 'Unknown project')
     if month and not MONTH.match(month):
@@ -611,7 +612,7 @@ async def _run_gmail_import(auth: str, actor: str | None, project_id: str | None
     _gmail_state['last_check'] = datetime.now(timezone.utc).isoformat(timespec='seconds')
     try:
         result = await import_from_gmail(store, gmail, lambda rid, name, data: _store_image(rid, name, data) is None,
-                                         auth, project_id=project_id, month=month, created_by=actor)
+                                         auth, project_id=project_id, month=month, created_by=actor, only_month=only_month)
     except GmailError as e:
         _gmail_state['last_error'] = str(e)
         raise HTTPException(502, str(e))
@@ -636,12 +637,15 @@ async def _poll_gmail():
 class GmailImportRequest(BaseModel):
     project_id: str | None = None
     month: str | None = None
+    only_month: str | None = None  # import only emails that state this month (YYYY-MM)
 
 
 @app.post('/api/gmail/import')
 async def gmail_import(req: GmailImportRequest, user: dict = Depends(current_user)):
     """Fetch new site-photo emails now; their photos join the matching report and are analysed."""
-    result = await _run_gmail_import(user['token'], user['email'], req.project_id, req.month)
+    if req.only_month and not MONTH.match(req.only_month):
+        raise HTTPException(400, 'only_month must be YYYY-MM')
+    result = await _run_gmail_import(user['token'], user['email'], req.project_id, req.month, req.only_month)
     return {**result, 'mailbox': MAILBOX}
 
 
