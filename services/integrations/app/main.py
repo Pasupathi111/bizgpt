@@ -86,6 +86,16 @@ class ReplyEmailRequest(BaseModel):
     confirm: bool = True
 
 
+class SendEmailRequest(BaseModel):
+    user_id: str
+    integration: str = 'gmail'
+    to: str
+    subject: str
+    body: str
+    user_email: str = ''
+    confirm: bool = True
+
+
 class InboxSummaryRequest(BaseModel):
     user_id: str
     integration: str = 'gmail'
@@ -898,6 +908,27 @@ async def gmail_reply_to_message(
     }
 
 
+async def gmail_send_message(integration: str, *, user_id: str, to: str, subject: str, body: str, user_email: str = '') -> dict:
+    connection_id, provider_key = await require_connected_email(integration, user_id=user_id)
+    message = EmailMessage()
+    if user_email:
+        message['From'] = user_email
+    message['To'] = to
+    message['Subject'] = subject
+    message.set_content(body.strip())
+    raw = base64.urlsafe_b64encode(message.as_bytes()).decode().rstrip('=')
+    send_response = await nango_proxy_request(
+        'POST',
+        'gmail/v1/users/me/messages/send',
+        connection_id=connection_id,
+        provider_config_key=provider_key,
+        body={'raw': raw},
+    )
+    ensure_proxy_ok(send_response)
+    sent = send_response.json()
+    return {'integration': integration, 'status': 'sent', 'message_id': sent.get('id'), 'thread_id': sent.get('threadId'), 'to': to}
+
+
 @app.get('/health')
 def health():
     return {
@@ -1046,6 +1077,23 @@ async def reply_email(req: ReplyEmailRequest):
         body=req.body,
         user_email=req.user_email,
         reply_all=req.reply_all,
+    )
+
+
+@app.post('/api/emails/send', dependencies=[Depends(require_api_key)])
+async def send_email(req: SendEmailRequest):
+    integration = req.integration.strip().lower()
+    if integration != 'gmail':
+        raise HTTPException(400, 'Only Gmail is supported right now.')
+    to = req.to.strip()
+    if not EMAIL_RE.match(to):
+        raise HTTPException(400, 'to must be a single valid email address')
+    if not req.subject.strip() or not req.body.strip():
+        raise HTTPException(400, 'subject and body are required')
+    if not req.confirm:
+        return {'integration': integration, 'status': 'confirmation_required', 'message': 'Email was not sent because confirm=false.'}
+    return await gmail_send_message(
+        integration, user_id=req.user_id, to=to, subject=req.subject.strip(), body=req.body, user_email=req.user_email
     )
 
 
