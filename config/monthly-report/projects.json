@@ -1,0 +1,37 @@
+{
+  "confidence_threshold": 75,
+  "required_stages": ["BEFORE", "DURING", "AFTER"],
+  "work_types": [
+    "Grass Cutting",
+    "Tree Maintenance",
+    "Hedge Trimming",
+    "Drain Cleaning",
+    "Litter Picking",
+    "Painting",
+    "Pothole Repair",
+    "Pavement Repair",
+    "Lighting Repair",
+    "Playground Repair",
+    "General Cleaning"
+  ],
+  "projects": [
+    {
+      "id": "taman-park",
+      "name": "Taman Park Landscape Maintenance",
+      "client": "City Parks Department",
+      "zones": ["Zone A", "Zone B", "Zone C"]
+    },
+    {
+      "id": "harbour-road",
+      "name": "Harbour Road Civil Maintenance",
+      "client": "Public Works Department",
+      "zones": ["Zone A", "Zone B"]
+    },
+    {
+      "id": "greenfield-estate",
+      "name": "Greenfield Estate Facilities Upkeep",
+      "client": "Greenfield Residents Association",
+      "zones": ["Block 1", "Block 2", "Block 3", "Car Park"]
+    }
+  ]
+}

@@ -15,7 +15,8 @@
 
 	$: workspace = [
 		{ id: 'dify', label: 'Biz Workflows', href: withBasePath('/lead-generation'), icon: 'workflow', tone: 'text-violet-500', match: '/lead-generation' },
-		{ id: 'inbox', label: 'Biz Inbox', href: withBasePath('/inbox'), icon: 'inbox', tone: 'text-rose-500', match: '/inbox' }
+		{ id: 'inbox', label: 'Biz Inbox', href: withBasePath('/inbox'), icon: 'inbox', tone: 'text-rose-500', match: '/inbox' },
+		{ id: 'monthly-report', label: 'Monthly Report', href: withBasePath('/monthly-report'), icon: 'chart', tone: 'text-emerald-400', match: '/monthly-report' }
 	] as Item[];
 
 	$: productivity = [

@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 DB_PATH = Path(os.getenv('AUTOMATION_DB_PATH', '/data/executions.jsonl'))
+PUBLIC_URL = os.getenv('AUTOMATION_PUBLIC_URL', 'http://localhost:8091').rstrip('/')
 
 app = FastAPI(title='Biz GPT Automation', version='1.0.0')
 
@@ -67,7 +68,7 @@ async def receive_leads(request: Request):
     return {
         'status': 'accepted',
         'execution_id': execution['execution_id'],
-        'execution_url': f'http://localhost:8091/executions/{execution["execution_id"]}',
+        'execution_url': f'{PUBLIC_URL}/executions/{execution["execution_id"]}',
         'saved_leads': execution['lead_count'],
         'message': f'Stored {execution["lead_count"]} generated leads for follow-up.',
     }

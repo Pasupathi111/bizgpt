@@ -1,0 +1,49 @@
+{
+  "id": "monthly_report_request",
+  "title": "Monthly maintenance report",
+  "description": "Start an AI-assisted monthly maintenance photo report for a project and month. Photos are uploaded and reviewed on the Monthly Report page.",
+  "keywords": [
+    "monthly report",
+    "maintenance report",
+    "photo report",
+    "before after photos",
+    "site photos"
+  ],
+  "schema": {
+    "type": "object",
+    "required": ["project", "month"],
+    "properties": {
+      "project": {
+        "type": "string",
+        "title": "Project",
+        "enum": [
+          "Taman Park Landscape Maintenance",
+          "Harbour Road Civil Maintenance",
+          "Greenfield Estate Facilities Upkeep"
+        ]
+      },
+      "month": {
+        "type": "string",
+        "title": "Month",
+        "description": "Reporting month as YYYY-MM, for example 2026-09.",
+        "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+      },
+      "remarks": {
+        "type": "string",
+        "title": "Coordinator remarks",
+        "maxLength": 1000
+      }
+    }
+  },
+  "ui_schema": {
+    "ui:order": ["project", "month", "remarks"],
+    "remarks": {"ui:widget": "textarea", "ui:options": {"rows": 2}}
+  },
+  "action": {
+    "type": "webhook",
+    "url": "http://bizgpt-monthly-report:8000/api/intake",
+    "reference_prefix": "MR"
+  },
+  "submit_label": "Create report",
+  "success_message": "Monthly report {reference} created for {project}, {month}. Next: open Monthly Report ( /monthly-report?report={reference} ), upload the site photos and click Process Photos."
+}

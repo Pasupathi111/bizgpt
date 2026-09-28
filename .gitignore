@@ -19,3 +19,4 @@ backups/
 
 # Claude Code local state / worktrees
 .claude/
+.pytest_cache/

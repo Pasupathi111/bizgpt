@@ -27,6 +27,7 @@ from open_webui.internal.db import get_async_db_context
 from open_webui.utils.access_control import has_connection_access
 from open_webui.utils.auth import get_verified_user
 from open_webui.utils.mcp.client import MCPClient
+from open_webui.bizgpt import monthly_report as bizgpt_monthly_report
 from open_webui.bizgpt import whatsapp as bizgpt_whatsapp
 from sqlalchemy import select
 
@@ -34,6 +35,8 @@ log = logging.getLogger(__name__)
 router = APIRouter()
 # Integrations → WhatsApp (admin), served as /api/v1/bizgpt/whatsapp.
 router.include_router(bizgpt_whatsapp.router)
+# Monthly Report POC (any signed-in user), served as /api/v1/bizgpt/monthly-report.
+router.include_router(bizgpt_monthly_report.router)
 
 BIZGPT_API_URL = os.getenv('BIZGPT_API_URL', 'http://bizgpt-api:8003').rstrip('/')
 FORMS_API_URL = os.getenv('FORMS_API_URL', 'http://bizgpt-forms:8000').rstrip('/')

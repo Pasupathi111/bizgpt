@@ -164,6 +164,8 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:${AUTOMATION_PORT:-8091}:8001"
+    environment:
+      - AUTOMATION_PUBLIC_URL=${AUTOMATION_PUBLIC_URL:-http://localhost:8091}
     volumes:
       - bizgpt-automation-data:/data
 
@@ -234,7 +236,36 @@ services:
       timeout: 3s
       retries: 10
 
+
+  # AI-Assisted Monthly Report Delivery (POC): photos -> vision AI -> grouping/validation -> review -> PDF.
+  # Isolated from the other projects; uses only the monthly-report-vision model.
+  bizgpt-monthly-report:
+    build: ./services/monthly-report
+    image: bizgpt-monthly-report:local
+    container_name: bizgpt-monthly-report
+    networks:
+      - default
+      - dify  # reaches the gmail_mcp container for the Gmail photo intake
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MONTHLY_REPORT_PORT:-8106}:8000"
+    environment:
+      - OPENWEBUI_BASE_URL=http://open-webui:8080
+      - MONTHLY_REPORT_MODEL=${MONTHLY_REPORT_MODEL:-monthly-report-vision}
+      - MONTHLY_REPORT_CONFIDENCE_THRESHOLD=${MONTHLY_REPORT_CONFIDENCE_THRESHOLD:-75}
+      - MONTHLY_REPORT_MODEL_TIMEOUT=${MONTHLY_REPORT_MODEL_TIMEOUT:-240}
+      - MONTHLY_REPORT_GMAIL_MCP_URL=${MONTHLY_REPORT_GMAIL_MCP_URL:-http://gmail_mcp:8010/mcp}
+      - MONTHLY_REPORT_MAILBOX=${MONTHLY_REPORT_MAILBOX:-dbizgpt.assistant@gmail.com}
+      - MONTHLY_REPORT_GMAIL_QUERY=${MONTHLY_REPORT_GMAIL_QUERY:-}
+      # Automatic mailbox check every N seconds (0 = only when asked in chat / on the page).
+      # Needs a Biz GPT API key so the model can be called without a signed-in user.
+      - MONTHLY_REPORT_GMAIL_POLL_SECONDS=${MONTHLY_REPORT_GMAIL_POLL_SECONDS:-0}
+      - MONTHLY_REPORT_OPENWEBUI_API_KEY=${MONTHLY_REPORT_OPENWEBUI_API_KEY:-}
+    volumes:
+      - ./config/monthly-report:/config:ro
+      - bizgpt-monthly-report-data:/data
 volumes:
+  bizgpt-monthly-report-data:
   whatsapp-db-data:
   bizgpt-api-data:
   bizgpt-webui-data:

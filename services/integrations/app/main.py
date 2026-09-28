@@ -329,7 +329,7 @@ def nango_headers() -> dict[str, str]:
     if not NANGO_SECRET_KEY:
         raise HTTPException(
             503,
-            'NANGO_SECRET_KEY is not configured. Set it in bizgpt/.env so Biz GPT can create connect sessions.',
+            'NANGO_SECRET_KEY is not configured. Set it in .env so Biz GPT can create connect sessions.',
         )
     return {'Authorization': f'Bearer {NANGO_SECRET_KEY}'}
 

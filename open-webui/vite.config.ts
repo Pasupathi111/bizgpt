@@ -30,6 +30,12 @@ export default defineConfig({
 	},
 	server: {
 		proxy: {
+			// Dev only: Monthly Report POC service (in Docker the Biz GPT backend proxies this path).
+			'/api/v1/bizgpt/monthly-report': {
+				target: process.env.MONTHLY_REPORT_DEV_URL || 'http://localhost:8106',
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/api\/v1\/bizgpt\/monthly-report/, '/api')
+			},
 			'/api': {
 				target: backendTarget,
 				changeOrigin: true,

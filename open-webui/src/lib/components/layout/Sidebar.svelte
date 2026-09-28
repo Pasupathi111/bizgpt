@@ -85,6 +85,7 @@
 	import SearchIcon from './Sidebar/icons/Search.svelte';
 	import ChartBar from '../icons/ChartBar.svelte';
 	import Cube from '../icons/Cube.svelte';
+	import BizIcon from '$lib/components/bizgpt/dashboard/Icon.svelte';
 	import InboxIcon from '../bizgpt/icons/Inbox.svelte';
         import BizNav from '../bizgpt/sidebar/BizNav.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
@@ -1077,6 +1078,31 @@
                                                                                 : 'group-hover:bg-white/[0.08]'}"
 								>
 									<InboxIcon className="size-4" strokeWidth="1.5" />
+								</div>
+							</a>
+						</Tooltip>
+					</div>
+
+					<div>
+						<Tooltip content={$i18n.t('Monthly Report')} placement="right">
+							<a
+								class=" cursor-pointer flex size-8 items-center justify-center transition group"
+								href={withBasePath('/monthly-report')}
+								on:click={async (e) => {
+									e.stopImmediatePropagation();
+									e.preventDefault();
+									goto(withBasePath('/monthly-report'));
+									itemClickHandler();
+								}}
+								draggable="false"
+								aria-label={$i18n.t('Monthly Report')}
+							>
+								<div
+									class="self-center flex size-[calc(30px*var(--app-text-scale,1))] items-center justify-center rounded-lg transition {$page.url.pathname.startsWith('/monthly-report')
+										? 'bg-white/[0.1] text-white'
+										: 'group-hover:bg-white/[0.08]'}"
+								>
+									<BizIcon name="chart" className="size-4" strokeWidth="1.5" />
 								</div>
 							</a>
 						</Tooltip>
