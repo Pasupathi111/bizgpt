@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+.env.bak*
 
 # Python
 __pycache__/
@@ -17,6 +18,9 @@ backups/
 *.log
 .DS_Store
 
+# Testing / QA artifacts
+.playwright-mcp/
+.pytest_cache/
+
 # Claude Code local state / worktrees
 .claude/
-.pytest_cache/
